@@ -77,11 +77,28 @@ def get_sources(gpx: GPX):
 
 
 @app.route("/")
-@app.route("/<gpx>")
-def index(gpx=None):
+@app.route("/<gpx_filename>")
+def index(gpx_filename=None):
     assert GPX_PATH is not None
     gpx_files = get_gpx_files(GPX_PATH)
-    return render_template('index.html', gpx_files=gpx_files, gpx=gpx)
+
+    gpx_data = {}
+    if gpx_filename:
+        filepath = os.path.join(GPX_PATH, gpx_filename)
+        if os.path.exists(filepath):
+
+            with open(filepath, 'r', encoding='utf-8') as gpx_file:
+                gpx = gpxpy.parse(gpx_file)
+
+            distance_meters = gpx.length_3d()
+            distance_km = distance_meters / 1000
+
+            gpx_data = {
+                'filename': gpx_filename,
+                'name': gpx.name,
+                'distance': f"{distance_km:.2f}",
+            }
+    return render_template('index.html', gpx_files=gpx_files, gpx=gpx_data)
 
 
 @app.route("/map/<gpx>")
@@ -93,7 +110,7 @@ def map(gpx=None):
     if not os.path.exists(filepath):
         abort(404)
 
-    with open(filepath, 'r') as gpx_file:
+    with open(filepath, 'r', encoding='utf-8') as gpx_file:
         gpx = gpxpy.parse(gpx_file)
 
     bounds = gpx.get_bounds()

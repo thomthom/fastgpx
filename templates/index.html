@@ -34,7 +34,7 @@
 
   <div>
 
-    <h3>{{ gpx }}</h3>
+    <h3>{{ gpx.name }}</h3>
 
     <script>
       function getQueryParam(param) {
@@ -44,17 +44,24 @@
 
       const width = getQueryParam('width') || '600';
       const height = getQueryParam('height') || '400';
-      const src = '/map/{{ gpx }}';
+      const src = '/map/{{ gpx.filename }}';
 
       document.write(`<iframe src="${src}" width="${width}" height="${height}"></iframe>`);
     </script>
+
+    {% if gpx %}
+    <div>
+      <div><b>Filename:</b> {{ gpx.filename }}</div>
+      <div><b>Distance:</b> {{ gpx.distance }} km</div>
+    </div>
+    {% endif %}
 
     <hr>
 
     <ul class="gpxList">
       {% for gpx_file in gpx_files %}
       <li>
-        <a href="{{ url_for('index', gpx=gpx_file, **request.args) }}">
+        <a href="{{ url_for('index', gpx_filename=gpx_file, **request.args) }}">
           {{ gpx_file }}
         </a>
       </li>
