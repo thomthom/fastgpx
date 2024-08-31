@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Add a line to a map using a GeoJSON source</title>
+  <title>Map Frame</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
@@ -25,6 +25,7 @@
 <body>
   <div id="map"></div>
   <script>
+
     mapboxgl.accessToken = '{{ mapbox_access_token }}';
     const map = new mapboxgl.Map({
       container: 'map',
@@ -36,32 +37,13 @@
     });
 
     map.on('load', () => {
-      map.addSource('route', {
-        'type': 'geojson',
-        'data': {
-          'type': 'Feature',
-          'properties': {},
-          'geometry': {
-            'type': 'LineString',
-            'coordinates': [
-              {{ coords }}
-            ]
-          }
-        }
-      });
-      map.addLayer({
-        'id': 'route',
-        'type': 'line',
-        'source': 'route',
-        'layout': {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        'paint': {
-          'line-color': '#b33',
-          'line-width': 4
-        }
-      });
+      {% for source_id, source in sources.items() %}
+      map.addSource("{{ source_id }}", {{ source | tojson }});
+      {% endfor %}
+
+      {% for layer in layers %}
+      map.addLayer({{ layer | tojson }});
+      {% endfor %}
     });
   </script>
 

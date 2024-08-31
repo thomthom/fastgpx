@@ -1,8 +1,9 @@
 import os
 
 import gpxpy
+from gpxpy.gpx import GPX
 import requests
-from flask import Flask, abort, render_template
+from flask import Flask, abort, jsonify, render_template
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,15 +23,57 @@ def get_gpx_files(path: str):
     return gpx_files
 
 
-def get_gpx_polyline(gpx):
-    coords = []
-    for tracks in gpx.tracks:
-        for segments in tracks.segments:
-            for point in segments.points:
-                # long, lat
-                coords.append(f'[{point.longitude},{point.latitude}]')
-    coords_js = ",\n              ".join(coords)
-    return coords_js
+def feature_collection(features: list):
+    return {
+        'type': 'geojson',
+        'data': {
+                'type': 'FeatureCollection',
+                'features': features,
+        }
+    }
+
+
+# https://datatracker.ietf.org/doc/html/rfc7946#autoid-13
+def lines_feature(coordinates: list):
+    return {
+        'type': 'Feature',
+        'geometry': {
+            'type': 'MultiLineString',
+            'coordinates': coordinates,
+        }
+    }
+
+
+def points_feature(coordinates: list):
+    return {
+        'type': 'Feature',
+        'geometry': {
+            'type': 'MultiPoint',
+            'coordinates': coordinates,
+        }
+    }
+
+
+def get_sources(gpx: GPX):
+    segments = [
+        [
+            [[point.longitude, point.latitude] for point in segment.points]
+            for segment in track.segments
+        ]
+        for track in gpx.tracks
+    ]
+    routes = [lines_feature(segment) for segment in segments]
+
+    points = [segments[0][0][0], segments[-1][-1][-1]]
+    route_points = [points_feature([point]) for point in points]
+    route_start, route_end = route_points
+
+    sources = {
+        'paths': feature_collection(routes),
+        'route-start': feature_collection([route_start]),
+        'route-end': feature_collection([route_end]),
+    }
+    return sources
 
 
 @app.route("/")
@@ -57,11 +100,54 @@ def map(gpx=None):
     assert bounds is not None
     bbox = f'[{bounds.min_longitude},{bounds.min_latitude},{bounds.max_longitude},{bounds.max_latitude}]'
 
-    coords = get_gpx_polyline(gpx)
+    sources = get_sources(gpx)
+    layers = [
+        {
+            'id': 'route',
+            'type': 'line',
+            'source': 'paths',
+            'paint': {
+                'line-color': '#b33',
+                'line-width': 4,
+            },
+            # 'filter': ['==', '$type', 'LineString']
+        },
+        {
+            'id': 'routeStart',
+            'type': 'circle',
+            'source': 'route-start',
+            'paint': {
+                'circle-radius': 6,
+                'circle-color': '#22B422'
+            },
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            # 'filter': ['==', '$type', 'Point']
+        },
+        {
+            'id': 'routeEnd',
+            'type': 'circle',
+            'source': 'route-end',
+            'paint': {
+                'circle-radius': 6,
+                'circle-color': '#B42222'
+            },
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            # 'filter': ['==', '$type', 'Point']
+        },
+    ]
+    stats = {}
 
     params = {
-        'bounds': bbox,
-        'coords': coords,
         'mapbox_access_token': MAPBOX_ACCESS_TOKEN,
+        'bounds': bbox,
+        'stats': stats,
+        'sources': sources,
+        'layers': layers,
     }
     return render_template('map.html', **params)
