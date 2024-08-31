@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPX Map Generator</title>
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f0f0f0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    iframe {
+      border: none;
+      background-color: #ddd;
+    }
+
+    .gpxList {
+      max-height: 15em;
+      overflow-y: scroll;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div>
+
+    <h3>{{ gpx }}</h3>
+
+    <script>
+      function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+      }
+
+      const width = getQueryParam('width') || '600';
+      const height = getQueryParam('height') || '400';
+      const src = '/map/{{ gpx }}';
+
+      document.write(`<iframe src="${src}" width="${width}" height="${height}"></iframe>`);
+    </script>
+
+    <hr>
+
+    <ul class="gpxList">
+      {% for gpx_file in gpx_files %}
+      <li>
+        <a href="{{ url_for('index', gpx=gpx_file, **request.args) }}">
+          {{ gpx_file }}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+
+  </div>
+
+</body>
+
+</html>
