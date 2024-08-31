@@ -1,7 +1,9 @@
 import os
 
 import gpxpy
+import gpxpy.geo
 from gpxpy.gpx import GPX
+
 import requests
 from flask import Flask, abort, jsonify, render_template
 from dotenv import load_dotenv
@@ -54,6 +56,14 @@ def points_feature(coordinates: list):
     }
 
 
+def calculate_distance(point1, point2):
+    """Calculate the distance between two points in meters."""
+    return gpxpy.geo.haversine_distance(
+        point1[1], point1[0],
+        point2[1], point2[0]
+    )
+
+
 def get_sources(gpx: GPX):
     segments = [
         [
@@ -64,12 +74,30 @@ def get_sources(gpx: GPX):
     ]
     routes = [lines_feature(segment) for segment in segments]
 
+    connections = []
+    for track_segments in segments:
+        for i in range(len(track_segments) - 1):
+            last_point = track_segments[i][-1]
+            first_point = track_segments[i + 1][0]
+
+            # Calculate the distance between the last point of the current segment
+            # and the first point of the next segment
+            distance_between_segments = calculate_distance(last_point, first_point)
+
+            # Only add the connection if the distance is greater than 500 meters
+            if distance_between_segments > 500:
+                connections.append([last_point, first_point])
+    connections_points = [lines_feature([point]) for point in connections]
+
+    print('connections:', len(connections))
+
     points = [segments[0][0][0], segments[-1][-1][-1]]
     route_points = [points_feature([point]) for point in points]
     route_start, route_end = route_points
 
     sources = {
         'paths': feature_collection(routes),
+        'connections': feature_collection(connections_points),
         'route-start': feature_collection([route_start]),
         'route-end': feature_collection([route_end]),
     }
@@ -127,6 +155,20 @@ def map(gpx=None):
                 'line-color': '#b33',
                 'line-width': 4,
             },
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+        },
+        {
+            'id': 'betweens',
+            'type': 'line',
+            'source': 'connections',
+            'paint': {
+                'line-color': '#b33',
+                'line-width': 2,
+                'line-dasharray': [3, 3],
+            },
             # 'filter': ['==', '$type', 'LineString']
         },
         {
@@ -137,10 +179,6 @@ def map(gpx=None):
                 'circle-radius': 6,
                 'circle-color': '#22B422'
             },
-            'layout': {
-                'line-join': 'round',
-                'line-cap': 'round'
-            },
             # 'filter': ['==', '$type', 'Point']
         },
         {
@@ -150,10 +188,6 @@ def map(gpx=None):
             'paint': {
                 'circle-radius': 6,
                 'circle-color': '#B42222'
-            },
-            'layout': {
-                'line-join': 'round',
-                'line-cap': 'round'
             },
             # 'filter': ['==', '$type', 'Point']
         },
