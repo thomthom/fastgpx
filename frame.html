@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centered IFRAME</title>
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f0f0f0;
+    }
+
+    iframe {
+      border: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <script>
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    const width = getQueryParam('width') || '600';
+    const height = getQueryParam('height') || '400';
+    const src = './output/map.html';
+
+    document.write(`<iframe src="${src}" width="${width}" height="${height}"></iframe>`);
+  </script>
+
+</body>
+
+</html>
