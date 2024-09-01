@@ -126,7 +126,7 @@ def index(gpx_filename=None):
                 'name': gpx.name,
                 'distance': f"{distance_km:.2f}",
             }
-    return render_template('index.html', gpx_files=gpx_files, gpx=gpx_data)
+    return render_template('index.html.j2', gpx_files=gpx_files, gpx=gpx_data)
 
 
 @app.route("/map/<gpx>")
@@ -201,4 +201,4 @@ def map(gpx=None):
         'sources': sources,
         'layers': layers,
     }
-    return render_template('map.html', **params)
+    return render_template('map.html.j2', **params)
