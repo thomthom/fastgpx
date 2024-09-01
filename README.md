@@ -10,3 +10,5 @@ https://github.com/watergis/maplibre-gl-export/tree/main/packages/mapbox-gl-expo
 
 https://www.mapbox.com/impact-tools/print-maps
 https://blog.mapbox.com/designing-the-vintage-style-in-mapbox-studio-9da4aa2a627f
+
+Loading GPX files isn't fast. Cache meta data.
