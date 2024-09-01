@@ -45,6 +45,12 @@
       {% for layer in layers %}
       map.addLayer({{ layer | tojson }});
       {% endfor %}
+
+      {% for marker in markers %}
+      new mapboxgl.Marker({{ marker.options | tojson }})
+          .setLngLat({{ marker.position }})
+          .addTo(map);
+      {% endfor %}
     });
   </script>
 

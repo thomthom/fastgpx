@@ -192,13 +192,32 @@ def map(gpx=None):
             # 'filter': ['==', '$type', 'Point']
         },
     ]
-    stats = {}
+
+    marker_scale = 0.6
+    markers = []
+    for layer in layers:
+        if layer['type'] != 'circle':
+            continue
+        layer_source = layer['source']
+        layer_color = layer['paint']['circle-color']
+        source = sources[layer_source]
+        for feature in source['data']['features']:
+            if feature['geometry']['type'] == 'MultiPoint':
+                for position in feature['geometry']['coordinates']:
+                    marker = {
+                        'options': {
+                            'color': layer_color,
+                            'scale': marker_scale,
+                        },
+                        'position': position,
+                    }
+                    markers.append(marker)
 
     params = {
         'mapbox_access_token': MAPBOX_ACCESS_TOKEN,
         'bounds': bbox,
-        'stats': stats,
         'sources': sources,
         'layers': layers,
+        'markers': markers,
     }
     return render_template('map.html.j2', **params)
