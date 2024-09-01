@@ -33,7 +33,8 @@
       bounds: {{ bounds }},
       fitBoundsOptions: {
         padding: { left: 50, top: 50, right: 50, bottom: 50 },
-      }
+      },
+      preserveDrawingBuffer: true, // To allow the map to be saved as an image.
     });
 
     map.on('load', () => {

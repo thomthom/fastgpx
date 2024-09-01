@@ -28,6 +28,7 @@
       overflow-y: scroll;
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 
 <body>
@@ -46,13 +47,14 @@
       const height = getQueryParam('height') || '400';
       const src = '/map/{{ gpx.filename }}';
 
-      document.write(`<iframe src="${src}" width="${width}" height="${height}"></iframe>`);
+      document.write(`<iframe id="mapFrame" src="${src}" width="${width}" height="${height}"></iframe>`);
     </script>
 
     {% if gpx %}
     <div>
       <div><b>Filename:</b> {{ gpx.filename }}</div>
       <div><b>Distance:</b> {{ gpx.distance }} km</div>
+      <div><button id="saveBtn">Save as Image</button></div>
     </div>
     {% endif %}
 
@@ -69,6 +71,23 @@
     </ul>
 
   </div>
+
+  <script>
+    document.getElementById('saveBtn').addEventListener('click', function () {
+      const iframe = document.getElementById('mapFrame');
+
+      // Use html2canvas to capture the content of the iframe
+      html2canvas(iframe.contentWindow.document.body).then(canvas => {
+        // Create a link element to trigger the download
+        const link = document.createElement('a');
+        link.download = 'map-image.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }).catch(function (error) {
+        console.error('Error capturing the iframe:', error);
+      });
+    });
+  </script>
 
 </body>
 
