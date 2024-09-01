@@ -121,10 +121,18 @@ def index(gpx_filename=None):
             distance_meters = gpx.length_3d()
             distance_km = distance_meters / 1000
 
+            time = gpx.get_time_bounds()
+            if time.start_time and time.end_time:
+                duration = time.end_time - time.start_time
+            else:
+                duration = 'Unknown'
+
             gpx_data = {
                 'filename': gpx_filename,
                 'name': gpx.name,
                 'distance': f"{distance_km:.2f}",
+                'time': time,
+                'duration': duration,
             }
     return render_template('index.html.j2', gpx_files=gpx_files, gpx=gpx_data)
 

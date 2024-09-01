@@ -53,6 +53,9 @@
     {% if gpx %}
     <div>
       <div><b>Filename:</b> {{ gpx.filename }}</div>
+      <div><b>Start Time:</b> {{ gpx.time.start_time }}</div>
+      <div><b>End Time:</b> {{ gpx.time.end_time }}</div>
+      <div><b>Duration:</b> {{ gpx.duration }}</div>
       <div><b>Distance:</b> {{ gpx.distance }} km</div>
       <div><button id="saveBtn">Save as Image</button></div>
     </div>
