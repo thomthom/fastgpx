@@ -1,8 +1,9 @@
+from datetime import datetime, timedelta
 import os
 
 import gpxpy
 import gpxpy.geo
-from gpxpy.gpx import GPX
+from gpxpy.gpx import GPX, GPXBounds, TimeBounds
 
 import requests
 from flask import Flask, abort, jsonify, render_template
@@ -89,7 +90,7 @@ def get_sources(gpx: GPX):
                 connections.append([last_point, first_point])
     connections_points = [lines_feature([point]) for point in connections]
 
-    print('connections:', len(connections))
+    print('> connections:', len(connections))
 
     points = [segments[0][0][0], segments[-1][-1][-1]]
     route_points = [points_feature([point]) for point in points]
@@ -102,6 +103,56 @@ def get_sources(gpx: GPX):
         'route-end': feature_collection([route_end]),
     }
     return sources
+
+
+@app.route("/all")
+def all():
+    assert GPX_PATH is not None
+    gpx_files = get_gpx_files(GPX_PATH)
+
+    gpx_data = {
+        'filename': 'all',
+        'name': 'Multiple files',
+        'distance': 0.0,
+        'time': TimeBounds(None, None),
+        'duration': timedelta(),
+    }
+    start_time = None
+    end_time = None
+
+    for gpx_filename in gpx_files:
+        filepath = os.path.join(GPX_PATH, gpx_filename)
+        if os.path.exists(filepath):
+
+            print(f'Processing {filepath} ...')
+            with open(filepath, 'r', encoding='utf-8') as gpx_file:
+                gpx = gpxpy.parse(gpx_file)
+
+            print(f'> length_3d()')
+            distance_meters = gpx.length_3d()
+
+            print(f'> get_time_bounds()')
+            time = gpx.get_time_bounds()
+            assert isinstance(gpx_data['time'], TimeBounds)
+            if time.start_time and time.end_time:
+                duration = time.end_time - time.start_time
+                gpx_data['duration'] += duration
+
+                if start_time is None:
+                    start_time = time.start_time
+                else:
+                    start_time = min(time.start_time, start_time)
+
+                if end_time is None:
+                    end_time = time.end_time
+                else:
+                    end_time = max(time.end_time, end_time)
+
+            gpx_data['distance'] += distance_meters
+
+    gpx_data['time'] = TimeBounds(start_time, end_time)
+    gpx_data['distance'] = f"{(gpx_data['distance'] / 1000):.2f}"
+    return render_template('index.html.j2', gpx_files=gpx_files, gpx=gpx_data)
 
 
 @app.route("/")
@@ -142,18 +193,44 @@ def map(gpx=None):
     assert GPX_PATH is not None
     assert gpx is not None
 
-    filepath = os.path.join(GPX_PATH, gpx)
-    if not os.path.exists(filepath):
-        abort(404)
+    if gpx == 'all':
+        gpx_files = get_gpx_files(GPX_PATH)
+    else:
+        filepath = os.path.join(GPX_PATH, gpx)
+        if not os.path.exists(filepath):
+            abort(404)
+        gpx_files = [gpx]
 
-    with open(filepath, 'r', encoding='utf-8') as gpx_file:
-        gpx = gpxpy.parse(gpx_file)
+    map_bounds = None
+    map_sources = dict()
+    for gpx_filename in gpx_files:
+        filepath = os.path.join(GPX_PATH, gpx_filename)
 
-    bounds = gpx.get_bounds()
-    assert bounds is not None
-    bbox = f'[{bounds.min_longitude},{bounds.min_latitude},{bounds.max_longitude},{bounds.max_latitude}]'
+        print(f'{filepath} ...')
+        with open(filepath, 'r', encoding='utf-8') as gpx_file:
+            gpx = gpxpy.parse(gpx_file)
 
-    sources = get_sources(gpx)
+        bounds = gpx.get_bounds()
+        assert bounds is not None
+
+        if map_bounds is None:
+            map_bounds = bounds
+        else:
+            map_bounds = map_bounds.max_bounds(bounds=bounds)
+
+        sources = get_sources(gpx)
+        # TODO: Ideally create a connection line if the start of a new GPX is
+        #   far enough away from the end of the last one.
+        #   Example: Ending a day on a ferry and starting the next day on the
+        #   other end. The ride after the ferry was too short to be recorded.
+        for key, value in sources.items():
+            if key not in map_sources:
+                print('> assign sources')
+                map_sources[key] = value
+            else:
+                print('> merge sources')
+                map_sources[key]['data']['features'].extend(value['data']['features'])
+
     layers = [
         {
             'id': 'route',
@@ -201,31 +278,47 @@ def map(gpx=None):
         },
     ]
 
+    if len(gpx_files) > 1:
+        # Kludge to not display the green start points.
+        # del layers[2]
+        # layers[2]['paint']['circle-color'] = '#B42222'
+
+        # Don't display start/end points.
+        layers.pop()
+        layers.pop()
+
     marker_scale = 0.6
     markers = []
-    for layer in layers:
-        if layer['type'] != 'circle':
-            continue
-        layer_source = layer['source']
-        layer_color = layer['paint']['circle-color']
-        source = sources[layer_source]
-        for feature in source['data']['features']:
-            if feature['geometry']['type'] == 'MultiPoint':
-                for position in feature['geometry']['coordinates']:
-                    marker = {
-                        'options': {
-                            'color': layer_color,
-                            'scale': marker_scale,
-                        },
-                        'position': position,
-                    }
-                    markers.append(marker)
+    if len(gpx_files) == 1:
+        for layer in layers:
+            if layer['type'] != 'circle':
+                continue
+            layer_source = layer['source']
+            layer_color = layer['paint']['circle-color']
+            source = map_sources[layer_source]
+            for feature in source['data']['features']:
+                if feature['geometry']['type'] == 'MultiPoint':
+                    for position in feature['geometry']['coordinates']:
+                        marker = {
+                            'options': {
+                                'color': layer_color,
+                                'scale': marker_scale,
+                            },
+                            'position': position,
+                        }
+                        markers.append(marker)
+
+    assert map_bounds is not None
+    bbox = f'[{map_bounds.min_longitude},{map_bounds.min_latitude},{map_bounds.max_longitude},{map_bounds.max_latitude}]'
+
+    padding = 50 if len(gpx_files) == 1 else 10
 
     params = {
         'mapbox_access_token': MAPBOX_ACCESS_TOKEN,
         'bounds': bbox,
-        'sources': sources,
+        'sources': map_sources,
         'layers': layers,
         'markers': markers,
+        'padding': padding,
     }
     return render_template('map.html.j2', **params)
