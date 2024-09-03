@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import os
+import time
 
 import gpxpy
 import gpxpy.geo
@@ -201,6 +202,8 @@ def map(gpx=None):
             abort(404)
         gpx_files = [gpx]
 
+    start_time = time.perf_counter()
+
     map_bounds = None
     map_sources = dict()
     for gpx_filename in gpx_files:
@@ -230,6 +233,11 @@ def map(gpx=None):
             else:
                 print('> merge sources')
                 map_sources[key]['data']['features'].extend(value['data']['features'])
+
+    end_time = time.perf_counter()
+
+    execution_time = end_time - start_time
+    print(f"Execution time: {execution_time} seconds")
 
     layers = [
         {
