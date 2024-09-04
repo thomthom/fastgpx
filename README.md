@@ -47,10 +47,16 @@ xml_etree 5463043.740615641 meters
 xml_etree 5463043.740615641 meters
 xml_etree: 2.333200 seconds (Average: 0.777733 seconds)
 
-tinyxml2
+C++ (Surface ARM64)
 ```
 GPX Reader
 C:\Users\thoma\Source\gpx-maps\gpx\2024 Great Roadtrip
+
+tinyxml2
 Total Length: 5456930.710560566
-Elapsed time: 0.4641285 seconds
+Elapsed time: 0.4957163 seconds
+
+pugixml
+Total Length: 5456930.710560566
+Elapsed time: 0.2605081 seconds
 ```

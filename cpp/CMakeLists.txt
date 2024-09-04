@@ -9,11 +9,18 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
   GIT_TAG        321ea883b7190d4e85cae5512a12e5eaa8f8731f # v10.0.0
 )
-FetchContent_MakeAvailable(tinyxml2)
+
+FetchContent_Declare(
+  pugixml
+  GIT_REPOSITORY https://github.com/zeux/pugixml.git
+  GIT_TAG        db78afc2b7d8f043b4bc6b185635d949ea2ed2a8 # v1.14
+)
+
+FetchContent_MakeAvailable(tinyxml2 pugixml)
 
 add_executable(gpxreader main.cpp)
 set_property(TARGET gpxreader PROPERTY CXX_STANDARD 23)
 set_property(TARGET gpxreader PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET gpxreader PROPERTY CXX_EXTENSIONS OFF)
-target_link_libraries(gpxreader tinyxml2)
+target_link_libraries(gpxreader tinyxml2 pugixml)
 

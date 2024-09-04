@@ -7,6 +7,8 @@
 
 #include <tinyxml2.h>
 
+#include <pugixml.hpp>
+
 
 double haversine(double lat1, double lon1, double lat2, double lon2) {
     const double R = 6371e3; // Earth radius in meters
@@ -28,7 +30,7 @@ double haversine(double lat1, double lon1, double lat2, double lon2) {
 }
 
 
-double gpx_length(const std::filesystem::path path) {
+double tinyxml_gpx_length(const std::filesystem::path path) {
 
   auto doc = tinyxml2::XMLDocument();
   doc.LoadFile(path.string().c_str());
@@ -64,6 +66,48 @@ double gpx_length(const std::filesystem::path path) {
 }
 
 
+double pugixml_gpx_length(const std::filesystem::path& path) {
+  pugi::xml_document doc;
+
+  // Load the GPX file
+  pugi::xml_parse_result result = doc.load_file(path.string().c_str());
+  if (!result) {
+      // std::cerr << "Failed to load GPX file: " << result.description() << "\n";
+      return 0.0;
+  }
+
+  pugi::xml_node root = doc.child("gpx");
+
+  double total_distance = 0.0;
+
+  // Iterate over each <trk> element
+  for (pugi::xml_node track = root.child("trk"); track; track = track.next_sibling("trk")) {
+      // Iterate over each <trkseg> element
+      for (pugi::xml_node segment = track.child("trkseg"); segment; segment = segment.next_sibling("trkseg")) {
+          double segment_distance = 0.0;
+
+          pugi::xml_node prev_trkpt;
+          // Iterate over each <trkpt> in the segment
+          for (pugi::xml_node trkpt = segment.child("trkpt"); trkpt; trkpt = trkpt.next_sibling("trkpt")) {
+              if (prev_trkpt) {
+                  // Get current and previous trackpoint lat/lon attributes
+                  double lat1 = prev_trkpt.attribute("lat").as_double();
+                  double lon1 = prev_trkpt.attribute("lon").as_double();
+                  double lat2 = trkpt.attribute("lat").as_double();
+                  double lon2 = trkpt.attribute("lon").as_double();
+
+                  // Compute distance between two points
+                  segment_distance += haversine(lat1, lon1, lat2, lon2);
+              }
+              prev_trkpt = trkpt;
+          }
+          total_distance += segment_distance;
+      }
+  }
+
+  return total_distance;
+}
+
 int main() {
   std::println("GPX Reader");
 
@@ -76,21 +120,39 @@ int main() {
     return 0;
   }
 
-  auto start = std::chrono::high_resolution_clock::now();
-  double total_length = 0.0;
-  for (const auto& entry : std::filesystem::directory_iterator(path)) {
-    if (entry.path().extension() != ".gpx") {
-      continue;
+  // tinyxml2
+  std::println("tinyxml2");
+  {
+    auto start = std::chrono::high_resolution_clock::now();
+    double total_length = 0.0;
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+      if (entry.path().extension() != ".gpx") {
+        continue;
+      }
+      total_length += tinyxml_gpx_length(entry.path());
     }
-
-    // std::println("* {}", entry.path().stem().string());
-    total_length += gpx_length(entry.path());
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+    std::println("Total Length: {}", total_length);
+    std::println("Elapsed time: {} seconds", duration.count());
   }
-  auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> duration = end - start;
 
-  std::println("Total Length: {}", total_length);
-  std::println("Elapsed time: {} seconds", duration.count());
+  // pugixml
+  std::println("pugixml");
+  {
+    auto start = std::chrono::high_resolution_clock::now();
+    double total_length = 0.0;
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+      if (entry.path().extension() != ".gpx") {
+        continue;
+      }
+      total_length += pugixml_gpx_length(entry.path());
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+    std::println("Total Length: {}", total_length);
+    std::println("Elapsed time: {} seconds", duration.count());
+  }
 
   return 0;
 }
