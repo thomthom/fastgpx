@@ -11,14 +11,18 @@ https://github.com/watergis/maplibre-gl-export/tree/main/packages/mapbox-gl-expo
 https://www.mapbox.com/impact-tools/print-maps
 https://blog.mapbox.com/designing-the-vintage-style-in-mapbox-studio-9da4aa2a627f
 
-Loading GPX files isn't fast. Cache meta data.
+# GPX/XML Performance
 
+Loading GPX files isn't fast. Cache meta data.
 
 gpxpy docs says the lxml is faster. It is used automatically if available.
 When testing that seemed not to be the case. Maybe stdlib xml lib has gotten faster?
 
+## Python
 
-Without `lxml`
+### Hal9000
+
+#### Without `lxml`
 ```
 Running 2 benchmarks with 3 iterations...
 Running gpxpy ...
@@ -33,7 +37,7 @@ xml_etree 5463043.740615641 meters
 xml_etree: 2.538976 seconds (Average: 0.846325 seconds)
 ```
 
-With `lxml`
+#### With `lxml`
 ```
 Running 2 benchmarks with 3 iterations...
 Running gpxpy ...
@@ -46,8 +50,25 @@ xml_etree 5463043.740615641 meters
 xml_etree 5463043.740615641 meters
 xml_etree 5463043.740615641 meters
 xml_etree: 2.333200 seconds (Average: 0.777733 seconds)
+```
 
-C++ (Surface ARM64)
+## C++
+
+### Hal9000
+```
+GPX Reader
+C:\Users\Thomas\SourceTree\route-map\gpx\2024 Great Roadtrip
+
+tinyxml2
+Total Length: 5456930.710560566
+Elapsed time: 0.4980144 seconds
+
+pugixml
+Total Length: 5456930.710560566
+Elapsed time: 0.1890089 seconds
+```
+
+### Surface ARM64
 ```
 GPX Reader
 C:\Users\thoma\Source\gpx-maps\gpx\2024 Great Roadtrip
