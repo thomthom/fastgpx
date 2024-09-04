@@ -23,5 +23,5 @@
   "[python]": {
     "editor.tabSize": 4
   },
-  "cmake.sourceDirectory": "C:/Users/thoma/Source/gpx-maps/cpp"
+  "cmake.sourceDirectory": "${workspaceFolder}/cpp"
 }
