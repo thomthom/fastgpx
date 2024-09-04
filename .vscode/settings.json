@@ -5,7 +5,11 @@
   "javascript.inlayHints.propertyDeclarationTypes.enabled": true,
   "javascript.inlayHints.variableTypes.enabled": true,
   "files.associations": {
-    "*.gpx": "xml"
+    "*.gpx": "xml",
+    ".env*": "dotenv",
+    "format": "cpp",
+    "filesystem": "cpp",
+    "print": "cpp"
   },
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
@@ -18,5 +22,6 @@
   ],
   "[python]": {
     "editor.tabSize": 4
-  }
+  },
+  "cmake.sourceDirectory": "C:/Users/thoma/Source/gpx-maps/cpp"
 }

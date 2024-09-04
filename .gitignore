@@ -1,6 +1,7 @@
 __pycache__
 .venv
 .env
+/build/
 /output/
 
 /*.png

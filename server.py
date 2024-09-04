@@ -4,6 +4,7 @@ import time
 
 import gpxpy
 import gpxpy.geo
+import gpxpy.parser
 from gpxpy.gpx import GPX, GPXBounds, TimeBounds
 
 import requests
@@ -11,6 +12,8 @@ from flask import Flask, abort, jsonify, render_template
 from dotenv import load_dotenv
 
 load_dotenv()
+
+gpxpy
 
 MAPBOX_ACCESS_TOKEN = os.getenv('MAPBOX_ACCESS_TOKEN')
 GPX_PATH = os.getenv('GPX_PATH')
