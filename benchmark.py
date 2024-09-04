@@ -6,31 +6,12 @@ from math import radians, sin, cos, sqrt, atan2
 
 import gpxpy
 from gpxpy.geo import EARTH_RADIUS
-from gpxpy.geo import length_2d, length_3d
+from gpxpy.geo import length_2d, length_3d, Location
 
 
-# # Haversine formula to calculate the distance between two GPS coordinates
-# # https://github.com/jedie/gpxpy/blob/b371de31826cfecc049a57178d168b04a7f6d0d8/gpxpy/geo.py#L38
-# def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-#     # R = 6371.0  # Radius of the Earth in kilometers
-#     # R = 6371000.0  # Radius of the Earth in meters
-#     # https://github.com/jedie/gpxpy/commit/b371de31826cfecc049a57178d168b04a7f6d0d8
-#     # EARTH_RADIUS = 6378.137 * 1000
-#     R = EARTH_RADIUS
-#     lat1_rad = radians(lat1)
-#     lon1_rad = radians(lon1)
-#     lat2_rad = radians(lat2)
-#     lon2_rad = radians(lon2)
-
-#     dlat = lat2_rad - lat1_rad
-#     dlon = lon2_rad - lon1_rad
-
-#     a = sin(dlat / 2) ** 2 + cos(lat1_rad) * cos(lat2_rad) * sin(dlon / 2) ** 2
-#     c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
-#     return R * c  # Distance in kilometers
-
-# WGS84 Earth radius in meters (same as gpxpy)
+# https://github.com/jedie/gpxpy/commit/b371de31826cfecc049a57178d168b04a7f6d0d8
+# https://github.com/jedie/gpxpy/blob/b371de31826cfecc049a57178d168b04a7f6d0d8/gpxpy/geo.py#L38
+# https://github.com/jedie/gpxpy/blob/b371de31826cfecc049a57178d168b04a7f6d0d8/gpxpy/geo.py#L166
 EARTH_RADIUS = 6378.137 * 1000
 
 
@@ -75,26 +56,37 @@ def read_gpxpy():
     return total_length
 
 
-def calculate_gpx_length(file_path: str) -> float:
-    tree = ET.parse(file_path)
-    root = tree.getroot()
-
-    # Namespace handling for GPX
-    ns = {'gpx': 'http://www.topografix.com/GPX/1/1'}
-
+def calculate_segment_length(trkseg) -> float:
     total_distance = 0.0
     prev_point = None
 
-    # Find all track points ('trkpt')
-    for trkpt in root.findall('.//gpx:trkpt', ns):
+    ns = {'gpx': 'http://www.topografix.com/GPX/1/1'}
+    for trkpt in trkseg.findall('.//gpx:trkpt', ns):
         lat = float(trkpt.attrib['lat'])
         lon = float(trkpt.attrib['lon'])
 
         if prev_point is not None:
             total_distance += haversine(prev_point[0], prev_point[1], lat, lon)
-            # total_distance += length_2d((prev_point[0], prev_point[1]), (lat, lon))
 
         prev_point = (lat, lon)
+
+    return total_distance
+
+
+def calculate_gpx_length(file_path: str) -> float:
+    tree = ET.parse(file_path)
+    root = tree.getroot()
+
+    # Namespace for GPX 1.1
+    ns = {'gpx': 'http://www.topografix.com/GPX/1/1'}
+
+    total_distance = 0.0
+
+    # Iterate over all tracks (trk)
+    for trk in root.findall('.//gpx:trk', ns):
+        # Each track can have multiple track segments (trkseg)
+        for trkseg in trk.findall('.//gpx:trkseg', ns):
+            total_distance += calculate_segment_length(trkseg)
 
     return total_distance
 
@@ -114,7 +106,7 @@ benchmarks = [
     {'name': 'xml_etree', 'function': read_xml_etree},
 ]
 
-iterations = 1
+iterations = 3
 print(f'Running {len(benchmarks)} benchmarks with {iterations} iterations...')
 for benchmark in benchmarks:
     func = benchmark['function']
