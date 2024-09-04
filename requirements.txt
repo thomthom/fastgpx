@@ -1,6 +1,7 @@
 flask
 geopy
 gpxpy
+lxml
 mapbox
 pillow
 polyline

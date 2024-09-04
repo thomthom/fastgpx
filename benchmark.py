@@ -8,6 +8,7 @@ import gpxpy
 from gpxpy.geo import EARTH_RADIUS
 from gpxpy.geo import length_2d, length_3d, Location
 
+from lxml import etree
 
 # https://github.com/jedie/gpxpy/commit/b371de31826cfecc049a57178d168b04a7f6d0d8
 # https://github.com/jedie/gpxpy/blob/b371de31826cfecc049a57178d168b04a7f6d0d8/gpxpy/geo.py#L38
@@ -43,6 +44,8 @@ def get_gpx_files(path: str):
 
 GPX_PATH = 'gpx/2024 Great Roadtrip'
 
+# gpxpy
+
 
 def read_gpxpy():
     total_length = 0.0
@@ -55,8 +58,10 @@ def read_gpxpy():
     print('gpxpy', total_length, 'meters')
     return total_length
 
+# xml.etree
 
-def calculate_segment_length(trkseg) -> float:
+
+def xml_etree_calculate_segment_length(trkseg) -> float:
     total_distance = 0.0
     prev_point = None
 
@@ -73,7 +78,7 @@ def calculate_segment_length(trkseg) -> float:
     return total_distance
 
 
-def calculate_gpx_length(file_path: str) -> float:
+def xml_etree_calculate_gpx_length(file_path: str) -> float:
     tree = ET.parse(file_path)
     root = tree.getroot()
 
@@ -86,7 +91,7 @@ def calculate_gpx_length(file_path: str) -> float:
     for trk in root.findall('.//gpx:trk', ns):
         # Each track can have multiple track segments (trkseg)
         for trkseg in trk.findall('.//gpx:trkseg', ns):
-            total_distance += calculate_segment_length(trkseg)
+            total_distance += xml_etree_calculate_segment_length(trkseg)
 
     return total_distance
 
@@ -95,15 +100,65 @@ def read_xml_etree():
     total_length = 0.0
     gpx_files = get_gpx_files(GPX_PATH)
     for gpx_filepath in gpx_files:
-        length = calculate_gpx_length(gpx_filepath)
+        length = xml_etree_calculate_gpx_length(gpx_filepath)
         total_length += length
     print('xml_etree', total_length, 'meters')
     return total_length
 
 
+# lxml
+
+
+def lxml_calculate_segment_length(trkseg) -> float:
+    total_distance = 0.0
+    prev_point = None
+
+    # Find all track points in this segment
+    for trkpt in trkseg.findall('.//{http://www.topografix.com/GPX/1/1}trkpt'):
+        lat = float(trkpt.attrib['lat'])
+        lon = float(trkpt.attrib['lon'])
+
+        if prev_point is not None:
+            total_distance += haversine(prev_point[0], prev_point[1], lat, lon)
+
+        prev_point = (lat, lon)
+
+    return total_distance
+
+# Function to calculate total length of GPX file, considering multiple track segments
+
+
+def lxml_calculate_gpx_length(file_path: str) -> float:
+    tree = etree.parse(file_path)
+    root = tree.getroot()
+
+    total_distance = 0.0
+
+    # Iterate over all tracks (trk)
+    for trk in root.findall('.//{http://www.topografix.com/GPX/1/1}trk'):
+        # Each track can have multiple track segments (trkseg)
+        for trkseg in trk.findall('.//{http://www.topografix.com/GPX/1/1}trkseg'):
+            total_distance += lxml_calculate_segment_length(trkseg)
+
+    return total_distance
+
+
+def read_lxml():
+    total_length = 0.0
+    gpx_files = get_gpx_files(GPX_PATH)
+    for gpx_filepath in gpx_files:
+        length = lxml_calculate_gpx_length(gpx_filepath)
+        total_length += length
+    print('lxml', total_length, 'meters')
+    return total_length
+
+# Benchmarks:
+
+
 benchmarks = [
-    {'name': 'gpxpy', 'function': read_gpxpy},
     {'name': 'xml_etree', 'function': read_xml_etree},
+    {'name': 'lxml', 'function': read_lxml},
+    {'name': 'gpxpy', 'function': read_gpxpy},
 ]
 
 iterations = 3
