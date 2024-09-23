@@ -171,10 +171,13 @@ double pugixml_gpx_length(const std::filesystem::path& path)
   pugi::xml_document doc;
 
   // Load the GPX file
-  pugi::xml_parse_result result = doc.load_file(path.string().c_str());
+  const auto path16 = utf8_to_utf16(path.string());
+  pugi::xml_parse_result result = doc.load_file(path16.c_str());
+  // pugi::xml_parse_result result = doc.load_file(path.string().c_str());
   if (!result)
   {
     // std::cerr << "Failed to load GPX file: " << result.description() << "\n";
+    std::println("Failed to load GPX file: {} - {}", result.description(), path.string());
     return 0.0;
   }
 

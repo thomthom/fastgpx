@@ -177,7 +177,9 @@ def read_pugixml():
     total_length = 0.0
     gpx_files = get_gpx_files(GPX_PATH)
     for gpx_filepath in gpx_files:
-        length = gpxcpp.pugixml_gpx_length(gpx_filepath)
+        fullpath = os.path.abspath(gpx_filepath)
+        length = gpxcpp.pugixml_gpx_length(fullpath)
+        # length = gpxcpp.pugixml_gpx_length(gpx_filepath)
         total_length += length
     print('pugixml', total_length, 'meters')
     return total_length
