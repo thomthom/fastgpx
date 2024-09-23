@@ -159,10 +159,15 @@ def read_tinyxml():
     total_length = 0.0
     gpx_files = get_gpx_files(GPX_PATH)
     for gpx_filepath in gpx_files:
-        print(f'gpx_filepath: {gpx_filepath}')
+        # print(f'gpx_filepath: {gpx_filepath}')
         fullpath = os.path.abspath(gpx_filepath)
-        print(f'fullpath: {fullpath}')
+        # print(f'fullpath: {fullpath}')
+
         length = gpxcpp.tinyxml_gpx_length(fullpath)
+
+        # gpxdata = open(fullpath).read()
+        # length = gpxcpp.tinyxml_gpx_length(gpxdata)
+
         total_length += length
     print('tinyxml', total_length, 'meters')
     return total_length
@@ -189,6 +194,10 @@ benchmarks = [
 ]
 
 print(gpxcpp.process_string('Hi C Extension'))
+
+print(f"Python script PID: {os.getpid()}")
+# print("Press Enter to continue...")
+# input()
 
 iterations = 3
 print(f'Running {len(benchmarks)} benchmarks with {iterations} iterations...')

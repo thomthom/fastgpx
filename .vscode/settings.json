@@ -10,7 +10,9 @@
     "format": "cpp",
     "filesystem": "cpp",
     "print": "cpp",
-    "chrono": "cpp"
+    "chrono": "cpp",
+    "xlocinfo": "cpp",
+    "xstring": "cpp"
   },
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
