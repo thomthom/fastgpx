@@ -10,6 +10,8 @@ from gpxpy.geo import length_2d, length_3d, Location
 
 from lxml import etree
 
+import gpxcpp
+
 # https://github.com/jedie/gpxpy/commit/b371de31826cfecc049a57178d168b04a7f6d0d8
 # https://github.com/jedie/gpxpy/blob/b371de31826cfecc049a57178d168b04a7f6d0d8/gpxpy/geo.py#L38
 # https://github.com/jedie/gpxpy/blob/b371de31826cfecc049a57178d168b04a7f6d0d8/gpxpy/geo.py#L166
@@ -152,14 +154,41 @@ def read_lxml():
     print('lxml', total_length, 'meters')
     return total_length
 
+
+def read_tinyxml():
+    total_length = 0.0
+    gpx_files = get_gpx_files(GPX_PATH)
+    for gpx_filepath in gpx_files:
+        print(f'gpx_filepath: {gpx_filepath}')
+        fullpath = os.path.abspath(gpx_filepath)
+        print(f'fullpath: {fullpath}')
+        length = gpxcpp.tinyxml_gpx_length(fullpath)
+        total_length += length
+    print('tinyxml', total_length, 'meters')
+    return total_length
+
+
+def read_pugixml():
+    total_length = 0.0
+    gpx_files = get_gpx_files(GPX_PATH)
+    for gpx_filepath in gpx_files:
+        length = gpxcpp.pugixml_gpx_length(gpx_filepath)
+        total_length += length
+    print('pugixml', total_length, 'meters')
+    return total_length
+
 # Benchmarks:
 
 
 benchmarks = [
-    {'name': 'xml_etree', 'function': read_xml_etree},
-    {'name': 'lxml', 'function': read_lxml},
-    {'name': 'gpxpy', 'function': read_gpxpy},
+    # {'name': 'xml_etree', 'function': read_xml_etree},
+    # {'name': 'lxml', 'function': read_lxml},
+    # {'name': 'gpxpy', 'function': read_gpxpy},
+    {'name': 'tinyxml (C++)', 'function': read_tinyxml},
+    {'name': 'pugixml (C++)', 'function': read_pugixml},
 ]
+
+print(gpxcpp.process_string('Hi C Extension'))
 
 iterations = 3
 print(f'Running {len(benchmarks)} benchmarks with {iterations} iterations...')

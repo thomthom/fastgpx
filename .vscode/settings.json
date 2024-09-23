@@ -9,7 +9,8 @@
     ".env*": "dotenv",
     "format": "cpp",
     "filesystem": "cpp",
-    "print": "cpp"
+    "print": "cpp",
+    "chrono": "cpp"
   },
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
