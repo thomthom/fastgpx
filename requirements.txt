@@ -5,5 +5,7 @@ lxml
 mapbox
 pillow
 polyline
+pybind11
 python-dotenv
 requests
+scikit-build-core

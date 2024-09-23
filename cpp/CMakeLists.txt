@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 3.30.2)
+# cmake_minimum_required(VERSION 3.30.2)
 
-project(GpxReader)
+# project(GpxReader)
+# project(${SKBUILD_PROJECT_NAME} LANGUAGES CXX)
 
 include(FetchContent)
 
@@ -24,3 +25,13 @@ set_property(TARGET gpxreader PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET gpxreader PROPERTY CXX_EXTENSIONS OFF)
 target_link_libraries(gpxreader tinyxml2 pugixml)
 
+
+set(PYBIND11_NEWPYTHON ON)
+find_package(pybind11 CONFIG REQUIRED)
+
+pybind11_add_module(gpxcpp gpxcpp.cpp)
+set_property(TARGET gpxreader PROPERTY CXX_STANDARD 23)
+set_property(TARGET gpxreader PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET gpxreader PROPERTY CXX_EXTENSIONS OFF)
+
+install(TARGETS gpxcpp LIBRARY DESTINATION .)

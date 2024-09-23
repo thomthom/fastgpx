@@ -81,3 +81,11 @@ pugixml
 Total Length: 5456930.710560566
 Elapsed time: 0.2605081 seconds
 ```
+
+# Python C Extension
+
+```sh
+python setup.py build_ext --inplace
+```
+
+Once set up, you can build the C++ extension with a simple `pip install .` or `pip install --editable .` for development builds.

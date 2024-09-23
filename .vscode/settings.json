@@ -23,5 +23,8 @@
   "[python]": {
     "editor.tabSize": 4
   },
-  "cmake.sourceDirectory": "${workspaceFolder}/cpp"
+  // "cmake.sourceDirectory": "${workspaceFolder}/cpp",
+  "cmake.configureArgs": [
+    "-DCMAKE_PREFIX_PATH=${workspaceFolder}/.venv/Lib/site-packages/pybind11/share/cmake/pybind11"
+  ]
 }
