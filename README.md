@@ -82,6 +82,40 @@ Total Length: 5456930.710560566
 Elapsed time: 0.2605081 seconds
 ```
 
+```
+Running 5 benchmarks with 3 iterations...
+
+Running gpxpy ...
+gpxpy 5463041.784135511 meters
+gpxpy 5463041.784135511 meters
+gpxpy 5463041.784135511 meters
+gpxpy: 50.182288 seconds (Average: 16.727429 seconds)
+
+Running xml_etree ...
+xml_etree 5463043.740615641 meters
+xml_etree 5463043.740615641 meters
+xml_etree 5463043.740615641 meters
+xml_etree: 8.269050 seconds (Average: 2.756350 seconds)
+
+Running lxml ...
+lxml 5463043.740615641 meters
+lxml 5463043.740615641 meters
+lxml 5463043.740615641 meters
+lxml: 8.479702 seconds (Average: 2.826567 seconds)
+
+Running tinyxml (C++) ...
+tinyxml 5456930.710560566 meters
+tinyxml 5456930.710560566 meters
+tinyxml 5456930.710560566 meters
+tinyxml (C++): 2.699880 seconds (Average: 0.899960 seconds)
+
+Running pugixml (C++) ...
+pugixml 2481753.2382055665 meters
+pugixml 2481753.2382055665 meters
+pugixml 2481753.2382055665 meters
+pugixml (C++): 0.381095 seconds (Average: 0.127032 seconds)
+```
+
 # Python C Extension
 
 ```sh

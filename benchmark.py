@@ -186,9 +186,9 @@ def read_pugixml():
 
 
 benchmarks = [
-    # {'name': 'xml_etree', 'function': read_xml_etree},
-    # {'name': 'lxml', 'function': read_lxml},
     # {'name': 'gpxpy', 'function': read_gpxpy},
+    {'name': 'xml_etree', 'function': read_xml_etree},
+    {'name': 'lxml', 'function': read_lxml},
     {'name': 'tinyxml (C++)', 'function': read_tinyxml},
     {'name': 'pugixml (C++)', 'function': read_pugixml},
 ]
