@@ -129,7 +129,7 @@ def lxml_calculate_segment_length(trkseg) -> float:
 
 
 def lxml_calculate_gpx_length(file_path: str) -> float:
-    tree = etree.parse(file_path)
+    tree = etree.parse(file_path, None)
     root = tree.getroot()
 
     total_distance = 0.0
@@ -165,6 +165,7 @@ iterations = 3
 print(f'Running {len(benchmarks)} benchmarks with {iterations} iterations...')
 for benchmark in benchmarks:
     func = benchmark['function']
+    print()
     print(f"Running {benchmark['name']} ...")
     execution_time = timeit.timeit(func, number=iterations)
     average_time = execution_time / iterations

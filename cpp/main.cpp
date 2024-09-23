@@ -132,6 +132,7 @@ int main()
   }
 
   // tinyxml2
+  std::println("");
   std::println("tinyxml2");
   {
     auto start = std::chrono::high_resolution_clock::now();
@@ -151,6 +152,7 @@ int main()
   }
 
   // pugixml
+  std::println("");
   std::println("pugixml");
   {
     auto start = std::chrono::high_resolution_clock::now();
