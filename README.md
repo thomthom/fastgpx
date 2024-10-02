@@ -118,8 +118,4 @@ pugixml (C++): 0.381095 seconds (Average: 0.127032 seconds)
 
 # Python C Extension
 
-```sh
-python setup.py build_ext --inplace
-```
-
 Once set up, you can build the C++ extension with a simple `pip install .` or `pip install --editable .` for development builds.

@@ -30,4 +30,7 @@
   "cmake.configureArgs": [
     "-DCMAKE_PREFIX_PATH=${workspaceFolder}/.venv/Lib/site-packages/pybind11/share/cmake/pybind11"
   ]
+  // "python.autoComplete.extraPaths": [
+  //   "${workspaceFolder}/.venv/lib/site-packages"
+  // ],
 }

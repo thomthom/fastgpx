@@ -4,4 +4,7 @@ __pycache__
 /build/
 /output/
 
+.mypy_cache/
+.pytest_cache/
+
 /*.png
