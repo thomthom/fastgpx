@@ -10,6 +10,8 @@ from gpxpy.geo import length_2d, length_3d, Location
 
 from lxml import etree
 
+from colorama import Fore, Back, Style
+
 import gpxcpp
 
 # https://github.com/jedie/gpxpy/commit/b371de31826cfecc049a57178d168b04a7f6d0d8
@@ -195,29 +197,38 @@ benchmarks = [
     {'name': 'pugixml (C++)', 'function': read_pugixml},
 ]
 
-print('Testing C extension...')
-print(gpxcpp.process_string('Hi C Extension'))
+print(Fore.LIGHTBLACK_EX + 'Testing C extension...')
+print(Fore.LIGHTBLACK_EX + gpxcpp.process_string('Hi C Extension'))
 
 # print(f"Python script PID: {os.getpid()}")
 # print("Press Enter to continue...")
 # input()
 
 print()
-print('Computing expected distance with gpxpy...')
+print('Computing expected distance with gpxpy...' + Fore.LIGHTMAGENTA_EX)
 # gpxpy is _very_ slow, so omitting from doing multiple benchmark runs with it.
 expected = read_gpxpy()
 print()
 
 iterations = 3
-print(f'Running {len(benchmarks)} benchmarks with {iterations} iterations...')
+print(Fore.CYAN + f'Running {len(benchmarks)} benchmarks with {iterations} iterations...')
 for benchmark in benchmarks:
     func = benchmark['function']
     print()
-    print(f"Running {benchmark['name']} ...")
+    # Benchmark timings:
+    print(Fore.LIGHTYELLOW_EX + f"Running {benchmark['name']} ..." + Fore.LIGHTBLACK_EX)
     execution_time = timeit.timeit(func, number=iterations)
     average_time = execution_time / iterations
-    print(f"{benchmark['name']}: {execution_time:.6f} seconds (Average: {average_time:.6f} seconds)")
+    print(Fore.LIGHTYELLOW_EX +
+          f"{benchmark['name']}: {execution_time:.6f} seconds (Average: {average_time:.6f} seconds)" + Fore.YELLOW)
+    # Print info about result accuracy:
     result = func()
-    deviation = expected - result
+    name = benchmark['name'].split(' ')[0]
+    indent = ' ' * len(name)
+    print(Fore.YELLOW +
+          f"{indent} {expected} meters (expected)")
+    deviation = result - expected
     percent = (deviation / expected) * 100
-    print(f'Distance deviation: {deviation} meters ({percent:.4f}%)')
+    print(Fore.LIGHTMAGENTA_EX + f'Distance deviation: {deviation} meters ({percent:.4f}%)')
+
+print(Fore.RESET)
