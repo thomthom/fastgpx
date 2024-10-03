@@ -43,3 +43,21 @@ def test_pugixml_segment_length3d(gpx, gpx_path):
     expected = gpx.tracks[0].segments[0].length_3d()
     distance = gpxcpp.pugixml_gpx_length(gpx_path)
     assert distance == pytest.approx(expected)
+
+
+def test_pugixml_gpx_length2d(gpx, gpx_path):
+    distance = gpxcpp.pugixml_gpx_length(gpx_path)
+    expected = gpx.length_2d()
+    assert distance == pytest.approx(expected)
+
+
+def test_pugixml_track_length2d(gpx, gpx_path):
+    expected = gpx.tracks[0].length_2d()
+    distance = gpxcpp.pugixml_gpx_length(gpx_path)
+    assert distance == pytest.approx(expected)
+
+
+def test_pugixml_segment_length2d(gpx, gpx_path):
+    expected = gpx.tracks[0].segments[0].length_2d()
+    distance = gpxcpp.pugixml_gpx_length(gpx_path)
+    assert distance == pytest.approx(expected)
