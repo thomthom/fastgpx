@@ -1,5 +1,6 @@
 import math
 import os
+import time
 import timeit
 import xml.etree.ElementTree as ET
 from math import radians, sin, cos, sqrt, atan2
@@ -207,7 +208,11 @@ print(Fore.LIGHTBLACK_EX + gpxcpp.process_string('Hi C Extension'))
 print()
 print('Computing expected distance with gpxpy...' + Fore.LIGHTMAGENTA_EX)
 # gpxpy is _very_ slow, so omitting from doing multiple benchmark runs with it.
+t = time.perf_counter()
 expected = read_gpxpy()
+d = time.perf_counter()
+e = d - t
+print(Fore.LIGHTYELLOW_EX + f'gpxpy: {e:.6f} seconds')
 print()
 
 iterations = 3
