@@ -195,11 +195,18 @@ benchmarks = [
     {'name': 'pugixml (C++)', 'function': read_pugixml},
 ]
 
+print('Testing C extension...')
 print(gpxcpp.process_string('Hi C Extension'))
 
-print(f"Python script PID: {os.getpid()}")
+# print(f"Python script PID: {os.getpid()}")
 # print("Press Enter to continue...")
 # input()
+
+print()
+print('Computing expected distance with gpxpy...')
+# gpxpy is _very_ slow, so omitting from doing multiple benchmark runs with it.
+expected = read_gpxpy()
+print()
 
 iterations = 3
 print(f'Running {len(benchmarks)} benchmarks with {iterations} iterations...')
@@ -210,3 +217,7 @@ for benchmark in benchmarks:
     execution_time = timeit.timeit(func, number=iterations)
     average_time = execution_time / iterations
     print(f"{benchmark['name']}: {execution_time:.6f} seconds (Average: {average_time:.6f} seconds)")
+    result = func()
+    deviation = expected - result
+    percent = (deviation / expected) * 100
+    print(f'Distance deviation: {deviation} meters ({percent:.4f}%)')
