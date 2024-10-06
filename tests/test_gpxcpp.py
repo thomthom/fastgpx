@@ -109,7 +109,7 @@ def test_segment_length():
     assert distance == pytest.approx(expected)
 
 
-def test_sebug_segment_length():
+def test_debug_segment_length():
     path = 'gpx/test/debug-segment.gpx'
     with open(path, 'r', encoding='utf-8') as gpx_file:
         gpx = gpxpy.parse(gpx_file)

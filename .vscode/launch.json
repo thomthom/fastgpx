@@ -18,8 +18,25 @@
       "name": "Attach to Python (Manual PID Input)",
       "type": "cppvsdbg",
       "request": "attach",
-      // "processId": "${input:pidInput}"
       "processId": "24952"
+    },
+    {
+      "name": "Python Debugger: Python File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "justMyCode": false
+    },
+    {
+      "name": "Python: Debug Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "purpose": [
+        "debug-test"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false
     }
   ],
   "inputs": [

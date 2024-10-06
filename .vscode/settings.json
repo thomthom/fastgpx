@@ -106,7 +106,12 @@
   // "cmake.sourceDirectory": "${workspaceFolder}/cpp",
   "cmake.configureArgs": [
     "-DCMAKE_PREFIX_PATH=${workspaceFolder}/.venv/Lib/site-packages/pybind11/share/cmake/pybind11"
-  ]
+  ],
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
   // "python.autoComplete.extraPaths": [
   //   "${workspaceFolder}/.venv/lib/site-packages"
   // ],
