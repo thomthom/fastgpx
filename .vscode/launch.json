@@ -15,6 +15,22 @@
       "console": "externalTerminal"
     },
     {
+      "name": "(Windows) PyTest",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "args": [
+        "-m",
+        "pytest",
+        "-k",
+        "test_debug_segment_length"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Attach to Python (Manual PID Input)",
       "type": "cppvsdbg",
       "request": "attach",
