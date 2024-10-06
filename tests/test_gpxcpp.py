@@ -87,3 +87,32 @@ def test_fastgpx_segment_length2d(gpx, gpx_path):
     expected = gpx.tracks[0].segments[0].length_2d()
     distance = gpxcpp.fastgpx_segment_length(gpx_path, 0, 0)
     assert distance == pytest.approx(expected)
+
+# single segment
+
+
+def test_two_point_segment_length():
+    path = 'gpx/test/two-points.gpx'
+    with open(path, 'r', encoding='utf-8') as gpx_file:
+        gpx = gpxpy.parse(gpx_file)
+    expected = gpx.tracks[0].segments[0].length_2d()
+    distance = gpxcpp.fastgpx_segment_length(path, 0, 0)
+    assert distance == pytest.approx(expected)
+
+
+def test_segment_length():
+    path = 'gpx/test/segment.gpx'
+    with open(path, 'r', encoding='utf-8') as gpx_file:
+        gpx = gpxpy.parse(gpx_file)
+    expected = gpx.tracks[0].segments[0].length_2d()
+    distance = gpxcpp.fastgpx_segment_length(path, 0, 0)
+    assert distance == pytest.approx(expected)
+
+
+def test_sebug_segment_length():
+    path = 'gpx/test/debug-segment.gpx'
+    with open(path, 'r', encoding='utf-8') as gpx_file:
+        gpx = gpxpy.parse(gpx_file)
+    expected = gpx.tracks[0].segments[0].length_2d()
+    distance = gpxcpp.fastgpx_segment_length(path, 0, 0)
+    assert distance == pytest.approx(expected)

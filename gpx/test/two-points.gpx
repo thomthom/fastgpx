@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="BMW Motorrad Connected">
+  <metadata>
+    <name></name>
+  </metadata>
+  <trk>
+    <name></name>
+    <trkseg>
+      <trkpt lat="63.42202" lon="10.427408">
+        <ele>152.0</ele>
+        <time>2024-05-18T07:50:00Z</time>
+      </trkpt>
+      <trkpt lat="61.421593" lon="13.084786">
+        <ele>442.0</ele>
+        <time>2024-05-18T16:46:18Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
