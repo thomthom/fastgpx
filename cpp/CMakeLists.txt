@@ -19,17 +19,17 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(tinyxml2 pugixml)
 
-add_executable(gpxreader main.cpp gpx.hpp gpx.cpp)
-set_property(TARGET gpxreader PROPERTY CXX_STANDARD 23)
-set_property(TARGET gpxreader PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET gpxreader PROPERTY CXX_EXTENSIONS OFF)
-target_link_libraries(gpxreader PRIVATE tinyxml2 pugixml)
+# add_executable(gpxreader main.cpp gpx.hpp gpx.cpp fastgpx.hpp fastgpx.cpp)
+# set_property(TARGET gpxreader PROPERTY CXX_STANDARD 23)
+# set_property(TARGET gpxreader PROPERTY CXX_STANDARD_REQUIRED ON)
+# set_property(TARGET gpxreader PROPERTY CXX_EXTENSIONS OFF)
+# target_link_libraries(gpxreader PRIVATE tinyxml2 pugixml)
 
 
 set(PYBIND11_NEWPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 
-pybind11_add_module(gpxcpp gpxcpp.cpp gpx.hpp gpx.cpp)
+pybind11_add_module(gpxcpp gpxcpp.cpp gpx.hpp gpx.cpp fastgpx.hpp fastgpx.cpp)
 set_property(TARGET gpxcpp PROPERTY CXX_STANDARD 23)
 set_property(TARGET gpxcpp PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET gpxcpp PROPERTY CXX_EXTENSIONS OFF)
