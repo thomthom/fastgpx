@@ -6,5 +6,25 @@ build-backend = "scikit_build_core.build"
 cmake.build-type = "Release"
 
 [project]
-name = "sleipnir"
+name = "route-map"
 version = "0.0.1"
+
+# Specify dependencies here, replacing the need for requirements.txt
+dependencies = [
+  "colorama",
+  "flask",
+  "geopy",
+  "gpxpy",
+  "lxml",
+  "mapbox",
+  "pillow",
+  "polyline",
+  "python-dotenv",
+  "requests",
+  "pybind11",
+  "scikit-build-core",
+]
+
+[project.optional-dependencies]
+# Optionally define dev dependencies for testing, development, etc.
+dev = ["pytest", "pybind11-stubgen"]

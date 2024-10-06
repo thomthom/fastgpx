@@ -128,3 +128,23 @@ pip install --editable .
 ```sh
 pybind11-stubgen gpxcpp -o .
 ```
+
+# pyproject.toml
+
+> Installing Dependencies with pyproject.toml
+>
+> You no longer need to use `pip install -r requirements.txt`. Instead, you can simply install dependencies directly using:
+>
+> ```sh
+> pip install .
+> ```
+
+> For Development Dependencies:
+>
+> To install development dependencies (like `pytest` and `pybind11-stubgen`), you can use the `--extra` option (assuming you defined them under dev):
+>
+> ```sh
+> pip install .[dev]
+> ```
+>
+> This will install both the main dependencies and the development dependencies defined in the dev section of `pyproject.toml`.
