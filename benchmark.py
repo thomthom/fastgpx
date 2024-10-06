@@ -187,6 +187,17 @@ def read_pugixml():
     print('pugixml', total_length, 'meters')
     return total_length
 
+
+def read_fastgpx():
+    total_length = 0.0
+    gpx_files = get_gpx_files(GPX_PATH)
+    for gpx_filepath in gpx_files:
+        fullpath = os.path.abspath(gpx_filepath)
+        length = gpxcpp.fastgpx_gpx_length(fullpath)
+        total_length += length
+    print('fastgpx', total_length, 'meters')
+    return total_length
+
 # Benchmarks:
 
 
@@ -196,6 +207,7 @@ benchmarks = [
     {'name': 'lxml', 'function': read_lxml},
     {'name': 'tinyxml (C++)', 'function': read_tinyxml},
     {'name': 'pugixml (C++)', 'function': read_pugixml},
+    {'name': 'fastgpx', 'function': read_fastgpx},
 ]
 
 print(Fore.LIGHTBLACK_EX + 'Testing C extension...')
