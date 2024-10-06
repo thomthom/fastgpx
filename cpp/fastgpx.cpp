@@ -201,12 +201,12 @@ namespace fastgpx
 
   double distance2d(LatLong ll1, LatLong ll2, bool use_haversine = false)
   {
-    return distance(ll1, ll2, use_haversine, false);
+    return distance(ll1, ll2, use_haversine, true);
   }
 
   double distance3d(LatLong ll1, LatLong ll2, bool use_haversine = false)
   {
-    return distance(ll1, ll2, use_haversine, true);
+    return distance(ll1, ll2, use_haversine, false);
   }
 
   // Segment

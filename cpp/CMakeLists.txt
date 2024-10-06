@@ -34,13 +34,13 @@ target_link_libraries(fastgpx PRIVATE pugixml)
 
 
 
-# set(PYBIND11_NEWPYTHON ON)
-# find_package(pybind11 CONFIG REQUIRED)
+set(PYBIND11_NEWPYTHON ON)
+find_package(pybind11 CONFIG REQUIRED)
 
-# pybind11_add_module(gpxcpp gpxcpp.cpp gpx.hpp gpx.cpp fastgpx.hpp fastgpx.cpp)
-# set_property(TARGET gpxcpp PROPERTY CXX_STANDARD 23)
-# set_property(TARGET gpxcpp PROPERTY CXX_STANDARD_REQUIRED ON)
-# set_property(TARGET gpxcpp PROPERTY CXX_EXTENSIONS OFF)
-# target_link_libraries(gpxcpp PRIVATE tinyxml2 pugixml)
+pybind11_add_module(gpxcpp gpxcpp.cpp gpx.hpp gpx.cpp fastgpx.hpp fastgpx.cpp)
+set_property(TARGET gpxcpp PROPERTY CXX_STANDARD 23)
+set_property(TARGET gpxcpp PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET gpxcpp PROPERTY CXX_EXTENSIONS OFF)
+target_link_libraries(gpxcpp PRIVATE tinyxml2 pugixml)
 
-# install(TARGETS gpxcpp LIBRARY DESTINATION .)
+install(TARGETS gpxcpp LIBRARY DESTINATION .)
