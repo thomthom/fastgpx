@@ -3,7 +3,8 @@ requires = ["scikit-build-core", "pybind11"]
 build-backend = "scikit_build_core.build"
 # cmake.source-dir = "./cpp"
 # cmake.build-type = "Debug"
-cmake.build-type = "Release"
+# cmake.build-type = "Release"
+cmake.build-type = "RelWithDebInfo"
 
 [project]
 name = "route-map"

@@ -32,7 +32,7 @@ set_property(TARGET fastgpx PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET fastgpx PROPERTY CXX_EXTENSIONS OFF)
 target_link_libraries(fastgpx PRIVATE pugixml)
 
-
+find_package(Python3 3.11 EXACT REQUIRED COMPONENTS Interpreter Development)
 
 set(PYBIND11_NEWPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
@@ -44,3 +44,11 @@ set_property(TARGET gpxcpp PROPERTY CXX_EXTENSIONS OFF)
 target_link_libraries(gpxcpp PRIVATE tinyxml2 pugixml)
 
 install(TARGETS gpxcpp LIBRARY DESTINATION .)
+
+# Assuming your CMakeLists.txt has successfully built the `gpxcpp` target
+add_custom_command(TARGET gpxcpp POST_BUILD
+    # Replace this with the path to your virtual environment's site-packages directory
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:gpxcpp>"  # This is the .pyd file
+        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/gpxcpp.cp311-win_amd64.pyd"  # Adjust for your virtual env
+)

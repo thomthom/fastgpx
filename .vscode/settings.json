@@ -103,9 +103,14 @@
   "[python]": {
     "editor.tabSize": 4
   },
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  "cmake.configureSettings": {
+    "PYTHON_EXECUTABLE": "${workspaceFolder}/.venv/Scripts/python.exe"
+  },
   // "cmake.sourceDirectory": "${workspaceFolder}/cpp",
   "cmake.configureArgs": [
-    "-DCMAKE_PREFIX_PATH=${workspaceFolder}/.venv/Lib/site-packages/pybind11/share/cmake/pybind11"
+    "-DCMAKE_PREFIX_PATH=${workspaceFolder}/.venv/Lib/site-packages/pybind11/share/cmake/pybind11",
+    "-DPYTHON_EXECUTABLE=.venv/Scripts/python.exe"
   ],
   "python.testing.pytestArgs": [
     "tests"
