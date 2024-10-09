@@ -10,6 +10,10 @@
 
 namespace py = pybind11;
 
+// TODO: def_readwrite for functions returning a container
+// reference ends up returning a copy. Not ideal.
+// https://pybind11.readthedocs.io/en/stable/advanced/cast/stl.html
+
 PYBIND11_MODULE(fastgpx, m)
 {
   py::class_<fastgpx::LatLong>(m, "LatLong")
