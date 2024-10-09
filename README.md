@@ -129,6 +129,10 @@ pip install --editable .
 pybind11-stubgen gpxcpp -o .
 ```
 
+```sh
+pybind11-stubgen fastgpx -o .
+```
+
 # pyproject.toml
 
 > Installing Dependencies with pyproject.toml

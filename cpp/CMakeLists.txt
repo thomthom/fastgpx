@@ -21,11 +21,11 @@ set_property(TARGET gpxreader PROPERTY CXX_EXTENSIONS OFF)
 target_link_libraries(gpxreader PRIVATE tinyxml2 pugixml)
 
 
-add_executable(fastgpx app.cpp fastgpx.hpp fastgpx.cpp)
-set_property(TARGET fastgpx PROPERTY CXX_STANDARD 23)
-set_property(TARGET fastgpx PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET fastgpx PROPERTY CXX_EXTENSIONS OFF)
-target_link_libraries(fastgpx PRIVATE pugixml)
+add_executable(fastgpxcli app.cpp fastgpx.hpp fastgpx.cpp)
+set_property(TARGET fastgpxcli PROPERTY CXX_STANDARD 23)
+set_property(TARGET fastgpxcli PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET fastgpxcli PROPERTY CXX_EXTENSIONS OFF)
+target_link_libraries(fastgpxcli PRIVATE pugixml)
 
 find_package(Python3 3.11 EXACT REQUIRED COMPONENTS Interpreter Development)
 
@@ -44,4 +44,18 @@ add_custom_command(TARGET gpxcpp POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:gpxcpp>"  # This is the .pyd file
         "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/gpxcpp.cp311-win_amd64.pyd"
+)
+
+pybind11_add_module(fastgpx python_fastgpx.cpp fastgpx.hpp fastgpx.cpp)
+set_property(TARGET fastgpx PROPERTY CXX_STANDARD 23)
+set_property(TARGET fastgpx PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET fastgpx PROPERTY CXX_EXTENSIONS OFF)
+target_link_libraries(fastgpx PRIVATE tinyxml2 pugixml)
+
+install(TARGETS fastgpx LIBRARY DESTINATION .)
+
+add_custom_command(TARGET fastgpx POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:fastgpx>"  # This is the .pyd file
+        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx.cp311-win_amd64.pyd"
 )
