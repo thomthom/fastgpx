@@ -1,8 +1,3 @@
-# cmake_minimum_required(VERSION 3.30.2)
-
-# project(GpxReader)
-# project(${SKBUILD_PROJECT_NAME} LANGUAGES CXX)
-
 include(FetchContent)
 
 FetchContent_Declare(
@@ -45,10 +40,8 @@ target_link_libraries(gpxcpp PRIVATE tinyxml2 pugixml)
 
 install(TARGETS gpxcpp LIBRARY DESTINATION .)
 
-# Assuming your CMakeLists.txt has successfully built the `gpxcpp` target
 add_custom_command(TARGET gpxcpp POST_BUILD
-    # Replace this with the path to your virtual environment's site-packages directory
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:gpxcpp>"  # This is the .pyd file
-        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/gpxcpp.cp311-win_amd64.pyd"  # Adjust for your virtual env
+        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/gpxcpp.cp311-win_amd64.pyd"
 )
