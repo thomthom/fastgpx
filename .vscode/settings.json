@@ -116,7 +116,10 @@
     "tests"
   ],
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true
+  "python.testing.pytestEnabled": true,
+  "cSpell.words": [
+    "fastgpx"
+  ]
   // "python.autoComplete.extraPaths": [
   //   "${workspaceFolder}/.venv/lib/site-packages"
   // ],
