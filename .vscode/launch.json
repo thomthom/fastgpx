@@ -2,41 +2,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "(Windows) Launch",
-      "type": "cppvsdbg",
-      "request": "launch",
-      "program": "${workspaceFolder}/.venv/Scripts/python.exe",
-      "args": [
-        "benchmark.py"
-      ],
-      "stopAtEntry": false,
-      "cwd": "${workspaceFolder}",
-      "environment": [],
-      "console": "externalTerminal"
-    },
-    {
-      "name": "(Windows) PyTest",
-      "type": "cppvsdbg",
-      "request": "launch",
-      "program": "${workspaceFolder}/.venv/Scripts/python.exe",
-      "args": [
-        "-m",
-        "pytest",
-        "-k",
-        "test_debug_segment_length"
-      ],
-      "stopAtEntry": false,
-      "cwd": "${workspaceFolder}",
-      "environment": [],
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Attach to Python (Manual PID Input)",
-      "type": "cppvsdbg",
-      "request": "attach",
-      "processId": "24952"
-    },
-    {
       "name": "Python Debugger: Python File",
       "type": "debugpy",
       "request": "launch",
@@ -53,14 +18,36 @@
       ],
       "console": "integratedTerminal",
       "justMyCode": false
-    }
-  ],
-  "inputs": [
+    },
     {
-      "id": "pidInput", // This will be referenced in the processId field
-      "type": "promptString",
-      "description": "Enter the Python process ID (PID):",
-      "default": "" // Optionally provide a default value
-    }
+      "name": "Python C++ Debugger",
+      "type": "pythoncpp",
+      "request": "launch",
+      "pythonConfig": "default",
+      "cppConfig": "default (win) Attach"
+    },
+    {
+      "name": "PyTest C++ Debugger",
+      "type": "pythoncpp",
+      "request": "launch",
+      "pythonLaunchName": "Python: Debug PyTest",
+      "cppConfig": "default (win) Attach"
+    },
+    {
+      "name": "Python: Debug PyTest",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/.venv/Scripts/pytest.exe",
+      "args": [
+        "${file}",
+        "-k",
+        "test_debug_segment_length"
+      ],
+      "purpose": [
+        "debug-test"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
   ]
 }
