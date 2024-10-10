@@ -88,6 +88,7 @@ set_property(TARGET fastgpx_test PROPERTY CXX_STANDARD 23)
 set_property(TARGET fastgpx_test PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET fastgpx_test PROPERTY CXX_EXTENSIONS OFF)
 target_link_libraries(fastgpx_test PRIVATE Catch2::Catch2WithMain fastgpx-static)
+target_compile_definitions(fastgpx_test PRIVATE FASTGPX_PROJECT_DIR="${CMAKE_SOURCE_DIR}")
 
 include(CTest)
 include(Catch)

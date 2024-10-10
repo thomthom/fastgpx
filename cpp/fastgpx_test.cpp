@@ -7,10 +7,11 @@
 
 using Catch::Matchers::WithinRel;
 
+const auto project_path = std::filesystem::path(FASTGPX_PROJECT_DIR);
+
 TEST_CASE("Two-point single segment track", "[parse][simple]")
 {
-  // TODO: Find a portable way to resolve the path to the test files.
-  const auto path = std::filesystem::path("../../../gpx/test/debug-segment.gpx");
+  const auto path = project_path / "gpx/test/debug-segment.gpx";
   const auto gpx = fastgpx::ParseGpx(path);
 
   SECTION("loads all the tracks and segments")
@@ -36,8 +37,7 @@ TEST_CASE("Two-point single segment track", "[parse][simple]")
 
 TEST_CASE("TopCamp 2024 GPX file", "[parse][real_world]")
 {
-  // TODO: Find a portable way to resolve the path to the test files.
-  const auto path = std::filesystem::path("../../../gpx/2024 TopCamp/Connected_20240518_094959_.gpx");
+  const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
   const auto gpx = fastgpx::ParseGpx(path);
 
   SECTION("loads all the tracks and segments")
