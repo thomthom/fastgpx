@@ -121,7 +121,7 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
                     }),
             }));
 
-    const std::filesystem::path path(gpx_path_name);
+    const auto path = project_path / gpx_path_name;
     const auto gpx = fastgpx::ParseGpx(path);
 
     CAPTURE(gpx_path_name);
