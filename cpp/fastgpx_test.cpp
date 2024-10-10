@@ -55,70 +55,67 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
 {
   SECTION("Matches expected values")
   {
-    std::string gpx_path_name;
-    ExpectedGpx expected;
-    std::tie(gpx_path_name, expected) =
+    const auto [gpx_path_name, expected] =
         GENERATE(table<std::string, ExpectedGpx>(
             {
-                std::make_tuple(
-                    "gpx/2024 TopCamp/Connected_20240518_094959_.gpx",
-                    ExpectedGpx{
-                        .tracks = {
-                            ExpectedTrack{
-                                .segments = {
-                                    // 0
-                                    ExpectedSegment{
-                                        .length2d = {17824.19175882741183159},
-                                        .length3d = {17859.48257500379986595},
-                                    },
-                                    // 1
-                                    ExpectedSegment{
-                                        .length2d = {10061.19192487031432393},
-                                        .length3d = {10112.42294839789610705},
-                                    },
-                                    // 2
-                                    ExpectedSegment{
-                                        .length2d = {98386.76161200449860189},
-                                        .length3d = {98501.43746740205097012},
-                                    },
-                                    // 3
-                                    ExpectedSegment{
-                                        .length2d = {102427.57726620219182223},
-                                        .length3d = {102504.92180776111490559},
-                                    },
-                                    // 4
-                                    ExpectedSegment{
-                                        .length2d = {1118.01310707499260388},
-                                        .length3d = {1148.03872186123771826},
-                                    },
-                                    // 5
-                                    ExpectedSegment{
-                                        .length2d = {6833.24760896845145908},
-                                        .length3d = {6835.74003269745844591},
-                                    },
-                                    // 6
-                                    ExpectedSegment{
-                                        .length2d = {44184.33701133414433571},
-                                        .length3d = {44217.56724880077672424},
-                                    },
-                                    // 7
-                                    ExpectedSegment{
-                                        .length2d = {67033.87632726262381766},
-                                        .length3d = {67071.42442790411587339},
-                                    },
-                                    // 8
-                                    ExpectedSegment{
-                                        .length2d = {35404.20735848945332691},
-                                        .length3d = {35434.91161590197589248},
-                                    },
-                                },
-                                .length2d = 383273.40397503407439217,
-                                .length3d = 383685.94684573041740805,
-                            },
-                        },
-                        .length2d = 383273.40397503407439217,
-                        .length3d = 383685.94684573041740805,
-                    }),
+                {"gpx/2024 TopCamp/Connected_20240518_094959_.gpx",
+                 ExpectedGpx{
+                     .tracks = {
+                         ExpectedTrack{
+                             .segments = {
+                                 // 0
+                                 ExpectedSegment{
+                                     .length2d = {17824.19175882741183159},
+                                     .length3d = {17859.48257500379986595},
+                                 },
+                                 // 1
+                                 ExpectedSegment{
+                                     .length2d = {10061.19192487031432393},
+                                     .length3d = {10112.42294839789610705},
+                                 },
+                                 // 2
+                                 ExpectedSegment{
+                                     .length2d = {98386.76161200449860189},
+                                     .length3d = {98501.43746740205097012},
+                                 },
+                                 // 3
+                                 ExpectedSegment{
+                                     .length2d = {102427.57726620219182223},
+                                     .length3d = {102504.92180776111490559},
+                                 },
+                                 // 4
+                                 ExpectedSegment{
+                                     .length2d = {1118.01310707499260388},
+                                     .length3d = {1148.03872186123771826},
+                                 },
+                                 // 5
+                                 ExpectedSegment{
+                                     .length2d = {6833.24760896845145908},
+                                     .length3d = {6835.74003269745844591},
+                                 },
+                                 // 6
+                                 ExpectedSegment{
+                                     .length2d = {44184.33701133414433571},
+                                     .length3d = {44217.56724880077672424},
+                                 },
+                                 // 7
+                                 ExpectedSegment{
+                                     .length2d = {67033.87632726262381766},
+                                     .length3d = {67071.42442790411587339},
+                                 },
+                                 // 8
+                                 ExpectedSegment{
+                                     .length2d = {35404.20735848945332691},
+                                     .length3d = {35434.91161590197589248},
+                                 },
+                             },
+                             .length2d = 383273.40397503407439217,
+                             .length3d = 383685.94684573041740805,
+                         },
+                     },
+                     .length2d = 383273.40397503407439217,
+                     .length3d = 383685.94684573041740805,
+                 }},
             }));
 
     const auto path = project_path / gpx_path_name;
