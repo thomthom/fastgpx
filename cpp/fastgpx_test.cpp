@@ -2,8 +2,9 @@
 
 #include <filesystem>
 
-#include <catch2/catch_test_macros.hpp>
+#include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 using Catch::Matchers::WithinRel;
 
@@ -59,4 +60,19 @@ TEST_CASE("TopCamp 2024 GPX file", "[parse][real_world]")
     CHECK_THAT(gpx.tracks[0].GetLength3D(), WithinRel(383685.94684573041740805));
     CHECK_THAT(gpx.GetLength3D(), WithinRel(383685.94684573041740805));
   }
+}
+
+TEST_CASE("Benchmark GPX Parsing", "[!benchmark][parse]")
+{
+  const auto path1 = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
+  BENCHMARK("Connected_20240518_094959_.gpx")
+  {
+    return fastgpx::ParseGpx(path1);
+  };
+
+  const auto path2 = project_path / "gpx/2024 TopCamp/Connected_20240520_103549_Lagerbergsgatan_35_45131_Uddevalla_Sweden.gpx";
+  BENCHMARK("Connected_20240520_103549_Lagerbergsgatan_35_45131_Uddevalla_Sweden.gpx")
+  {
+    return fastgpx::ParseGpx(path2);
+  };
 }

@@ -49,5 +49,14 @@
       "console": "integratedTerminal",
       "justMyCode": false
     },
+    {
+      "name": "Run Catch2 Tests with Benchmarks",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${command:cmake.launchTargetPath}",
+      "args": [
+        "[!benchmark]"
+      ]
+    }
   ]
 }
