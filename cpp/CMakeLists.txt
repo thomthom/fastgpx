@@ -12,7 +12,13 @@ FetchContent_Declare(
   GIT_TAG        db78afc2b7d8f043b4bc6b185635d949ea2ed2a8 # v1.14
 )
 
-FetchContent_MakeAvailable(tinyxml2 pugixml)
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG v3.7.1
+)
+
+FetchContent_MakeAvailable(tinyxml2 pugixml Catch2)
 
 add_executable(gpxreader main.cpp gpx.hpp gpx.cpp fastgpx.hpp fastgpx.cpp)
 set_property(TARGET gpxreader PROPERTY CXX_STANDARD 23)
@@ -59,3 +65,12 @@ add_custom_command(TARGET fastgpx POST_BUILD
         "$<TARGET_FILE:fastgpx>"  # This is the .pyd file
         "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx.cp311-win_amd64.pyd"
 )
+
+enable_testing()
+
+add_executable(fastgpx_test fastgpx_test.cpp)
+target_link_libraries(fastgpx_test PRIVATE Catch2::Catch2WithMain)
+
+include(CTest)
+include(Catch)
+catch_discover_tests(fastgpx_test)
