@@ -1,8 +1,6 @@
 #pragma once
 
 #include <filesystem>
-#include <tuple>
-#include <string>
 #include <vector>
 
 namespace fastgpx
@@ -23,13 +21,12 @@ namespace fastgpx
 
   struct ExpectedGpx
   {
+    std::filesystem::path path;
     std::vector<ExpectedTrack> tracks;
     double length2d; // Meters
     double length3d; // Meters
   };
 
-  using ExpectedGpxData = std::tuple<std::string, ExpectedGpx>;
-
-  std::vector<ExpectedGpxData> LoadExpectedGpxData(const std::filesystem::path json_path);
+  std::vector<ExpectedGpx> LoadExpectedGpxData(const std::filesystem::path json_path);
 
 } // namespace

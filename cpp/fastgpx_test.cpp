@@ -46,12 +46,12 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
 
   SECTION("Matches expected values")
   {
-    const auto [gpx_path_name, expected] = GENERATE_REF(from_range(expected_data));
+    const auto expected = GENERATE_REF(from_range(expected_data));
 
-    const auto path = project_path / gpx_path_name;
+    CAPTURE(expected.path);
+
+    const auto path = project_path / expected.path;
     const auto gpx = fastgpx::ParseGpx(path);
-
-    CAPTURE(gpx_path_name);
 
     REQUIRE(gpx.tracks.size() == expected.tracks.size());
     for (size_t track_index = 0; track_index < gpx.tracks.size(); track_index++)
