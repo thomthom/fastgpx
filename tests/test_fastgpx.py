@@ -19,14 +19,12 @@ def expected_gpx(gpx_path):
 
 
 def test_single_segment_length2d():
-    path = 'gpx/test/debug-segment.gpx'
+    path = Path('gpx/test/debug-segment.gpx')
     with open(path, 'r', encoding='utf-8') as gpx_file:
         expected_gpx = gpxpy.parse(gpx_file)
     expected = expected_gpx.tracks[0].segments[0].length_2d()
 
-    path_like = Path(path)
-    gpx = fastgpx.parse(path_like)
-    # gpx = fastgpx.parse(path) # This works, but static analyzer complain.
+    gpx = fastgpx.parse(path)
     # Assigning intermediate values for easier debug inspection.
     tracks = gpx.tracks
     track = tracks[0]
