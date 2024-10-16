@@ -1,4 +1,5 @@
 #include "fastgpx.hpp"
+#include "test_data.hpp"
 
 #include <filesystem>
 #include <string>
@@ -6,11 +7,15 @@
 
 #include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/generators/catch_generators.hpp>
+#include <catch2/generators/catch_generators_range.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+using Catch::Generators::from_range;
 using Catch::Generators::table;
 using Catch::Matchers::WithinRel;
+
+using namespace fastgpx;
 
 const auto project_path = std::filesystem::path(FASTGPX_PROJECT_DIR);
 
@@ -31,92 +36,14 @@ TEST_CASE("Parse two-point single segment track", "[parse][simple]")
   CHECK_THAT(gpx.GetLength3D(), WithinRel(1.70840984883766467));
 }
 
-struct ExpectedSegment
-{
-  double length2d; // Meters
-  double length3d; // Meters
-};
-
-struct ExpectedTrack
-{
-  std::vector<ExpectedSegment> segments;
-  double length2d; // Meters
-  double length3d; // Meters
-};
-
-struct ExpectedGpx
-{
-  std::vector<ExpectedTrack> tracks;
-  double length2d; // Meters
-  double length3d; // Meters
-};
-
 TEST_CASE("Parse real world GPX files", "[parse][real_world]")
 {
+  const auto json_path = project_path / "cpp/expected_gpx_data.json";
+  const auto expected_data = LoadExpectedGpxData(json_path);
+
   SECTION("Matches expected values")
   {
-    const auto [gpx_path_name, expected] =
-        GENERATE(table<std::string, ExpectedGpx>(
-            {
-                {"gpx/2024 TopCamp/Connected_20240518_094959_.gpx",
-                 ExpectedGpx{
-                     .tracks = {
-                         ExpectedTrack{
-                             .segments = {
-                                 // 0
-                                 ExpectedSegment{
-                                     .length2d = {17824.19175882741183159},
-                                     .length3d = {17859.48257500379986595},
-                                 },
-                                 // 1
-                                 ExpectedSegment{
-                                     .length2d = {10061.19192487031432393},
-                                     .length3d = {10112.42294839789610705},
-                                 },
-                                 // 2
-                                 ExpectedSegment{
-                                     .length2d = {98386.76161200449860189},
-                                     .length3d = {98501.43746740205097012},
-                                 },
-                                 // 3
-                                 ExpectedSegment{
-                                     .length2d = {102427.57726620219182223},
-                                     .length3d = {102504.92180776111490559},
-                                 },
-                                 // 4
-                                 ExpectedSegment{
-                                     .length2d = {1118.01310707499260388},
-                                     .length3d = {1148.03872186123771826},
-                                 },
-                                 // 5
-                                 ExpectedSegment{
-                                     .length2d = {6833.24760896845145908},
-                                     .length3d = {6835.74003269745844591},
-                                 },
-                                 // 6
-                                 ExpectedSegment{
-                                     .length2d = {44184.33701133414433571},
-                                     .length3d = {44217.56724880077672424},
-                                 },
-                                 // 7
-                                 ExpectedSegment{
-                                     .length2d = {67033.87632726262381766},
-                                     .length3d = {67071.42442790411587339},
-                                 },
-                                 // 8
-                                 ExpectedSegment{
-                                     .length2d = {35404.20735848945332691},
-                                     .length3d = {35434.91161590197589248},
-                                 },
-                             },
-                             .length2d = 383273.40397503407439217,
-                             .length3d = 383685.94684573041740805,
-                         },
-                     },
-                     .length2d = 383273.40397503407439217,
-                     .length3d = 383685.94684573041740805,
-                 }},
-            }));
+    const auto [gpx_path_name, expected] = GENERATE_REF(from_range(expected_data));
 
     const auto path = project_path / gpx_path_name;
     const auto gpx = fastgpx::ParseGpx(path);

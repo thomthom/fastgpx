@@ -18,7 +18,13 @@ FetchContent_Declare(
   GIT_TAG v3.7.1
 )
 
-FetchContent_MakeAvailable(tinyxml2 pugixml Catch2)
+FetchContent_Declare(
+    json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.3
+)
+
+FetchContent_MakeAvailable(tinyxml2 pugixml Catch2 json)
 
 add_executable(gpxreader main.cpp gpx.hpp gpx.cpp fastgpx.hpp fastgpx.cpp)
 set_property(TARGET gpxreader PROPERTY CXX_STANDARD 23)
@@ -83,11 +89,11 @@ target_link_libraries(fastgpxcli PRIVATE fastgpx-static)
 
 enable_testing()
 
-add_executable(fastgpx_test fastgpx_test.cpp)
+add_executable(fastgpx_test fastgpx_test.cpp test_data.hpp test_data.cpp)
 set_property(TARGET fastgpx_test PROPERTY CXX_STANDARD 23)
 set_property(TARGET fastgpx_test PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET fastgpx_test PROPERTY CXX_EXTENSIONS OFF)
-target_link_libraries(fastgpx_test PRIVATE Catch2::Catch2WithMain fastgpx-static)
+target_link_libraries(fastgpx_test PRIVATE Catch2::Catch2WithMain fastgpx-static nlohmann_json)
 target_compile_definitions(fastgpx_test PRIVATE FASTGPX_PROJECT_DIR="${CMAKE_SOURCE_DIR}")
 
 include(CTest)

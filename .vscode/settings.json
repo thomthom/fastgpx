@@ -96,7 +96,8 @@
     "future": "cpp",
     "random": "cpp",
     "regex": "cpp",
-    "stack": "cpp"
+    "stack": "cpp",
+    "any": "cpp"
   },
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
