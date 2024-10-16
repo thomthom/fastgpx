@@ -1,5 +1,7 @@
 include(FetchContent)
 
+set(TINYXML2_BUILD_TESTING OFF CACHE BOOL "Disable tinyxml2 tests" FORCE)
+
 FetchContent_Declare(
   tinyxml2
   GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
@@ -86,8 +88,6 @@ set_property(TARGET fastgpxcli PROPERTY CXX_EXTENSIONS OFF)
 target_link_libraries(fastgpxcli PRIVATE fastgpx-static)
 
 # fastgpx tests
-
-enable_testing()
 
 add_executable(fastgpx_test fastgpx_test.cpp test_data.hpp test_data.cpp)
 set_property(TARGET fastgpx_test PROPERTY CXX_STANDARD 23)
