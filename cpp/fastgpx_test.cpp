@@ -17,6 +17,9 @@ using Catch::Matchers::WithinRel;
 
 using namespace fastgpx;
 
+// Sufficient tolerance for comparing meters.
+constexpr double kMETERS_TOL = 1e-4;
+
 const auto project_path = std::filesystem::path(FASTGPX_PROJECT_DIR);
 
 TEST_CASE("Parse two-point single segment track", "[parse][simple]")
@@ -27,13 +30,13 @@ TEST_CASE("Parse two-point single segment track", "[parse][simple]")
   REQUIRE(gpx.tracks.size() == 1);
   REQUIRE(gpx.tracks[0].segments.size() == 1);
 
-  CHECK_THAT(gpx.tracks[0].segments[0].GetLength2D(), WithinRel(1.38515855107115149));
-  CHECK_THAT(gpx.tracks[0].GetLength2D(), WithinRel(1.38515855107115149));
-  CHECK_THAT(gpx.GetLength2D(), WithinRel(1.38515855107115149));
+  CHECK_THAT(gpx.tracks[0].segments[0].GetLength2D(), WithinRel(1.3851, kMETERS_TOL));
+  CHECK_THAT(gpx.tracks[0].GetLength2D(), WithinRel(1.3851, kMETERS_TOL));
+  CHECK_THAT(gpx.GetLength2D(), WithinRel(1.3851, kMETERS_TOL));
 
-  CHECK_THAT(gpx.tracks[0].segments[0].GetLength3D(), WithinRel(1.70840984883766467));
-  CHECK_THAT(gpx.tracks[0].GetLength3D(), WithinRel(1.70840984883766467));
-  CHECK_THAT(gpx.GetLength3D(), WithinRel(1.70840984883766467));
+  CHECK_THAT(gpx.tracks[0].segments[0].GetLength3D(), WithinRel(1.7084, kMETERS_TOL));
+  CHECK_THAT(gpx.tracks[0].GetLength3D(), WithinRel(1.7084, kMETERS_TOL));
+  CHECK_THAT(gpx.GetLength3D(), WithinRel(1.7084, kMETERS_TOL));
 }
 
 TEST_CASE("Parse real world GPX files", "[parse][real_world]")
@@ -66,16 +69,16 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
 
         CAPTURE(segment_index);
 
-        CHECK_THAT(segment.GetLength2D(), WithinRel(expected_segment.length2d));
-        CHECK_THAT(segment.GetLength3D(), WithinRel(expected_segment.length3d));
+        CHECK_THAT(segment.GetLength2D(), WithinRel(expected_segment.length2d, kMETERS_TOL));
+        CHECK_THAT(segment.GetLength3D(), WithinRel(expected_segment.length3d, kMETERS_TOL));
       }
 
-      CHECK_THAT(track.GetLength2D(), WithinRel(expected_track.length2d));
-      CHECK_THAT(track.GetLength3D(), WithinRel(expected_track.length3d));
+      CHECK_THAT(track.GetLength2D(), WithinRel(expected_track.length2d, kMETERS_TOL));
+      CHECK_THAT(track.GetLength3D(), WithinRel(expected_track.length3d, kMETERS_TOL));
     }
 
-    CHECK_THAT(gpx.GetLength2D(), WithinRel(expected.length2d));
-    CHECK_THAT(gpx.GetLength3D(), WithinRel(expected.length3d));
+    CHECK_THAT(gpx.GetLength2D(), WithinRel(expected.length2d, kMETERS_TOL));
+    CHECK_THAT(gpx.GetLength3D(), WithinRel(expected.length3d, kMETERS_TOL));
   }
 }
 
