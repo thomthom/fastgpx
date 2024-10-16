@@ -23,6 +23,7 @@ def test_process_string():
 # tinyxml length3d
 
 
+@pytest.mark.wip
 def test_tinyxml_gpx_length3d(gpx, gpx_path):
     distance = gpxcpp.tinyxml_gpx_length(gpx_path)
     expected = gpx.length_3d()
@@ -31,18 +32,21 @@ def test_tinyxml_gpx_length3d(gpx, gpx_path):
 # pugixml length3d
 
 
+@pytest.mark.wip
 def test_pugixml_gpx_length3d(gpx, gpx_path):
     distance = gpxcpp.pugixml_gpx_length(gpx_path)
     expected = gpx.length_3d()
     assert distance == pytest.approx(expected)
 
 
+@pytest.mark.wip
 def test_pugixml_track_length3d(gpx, gpx_path):
     expected = gpx.tracks[0].length_3d()
     distance = gpxcpp.pugixml_gpx_length(gpx_path)
     assert distance == pytest.approx(expected)
 
 
+@pytest.mark.wip
 def test_pugixml_segment_length3d(gpx, gpx_path):
     expected = gpx.tracks[0].segments[0].length_3d()
     distance = gpxcpp.pugixml_gpx_length(gpx_path)
@@ -51,18 +55,21 @@ def test_pugixml_segment_length3d(gpx, gpx_path):
 # pugixml length2d
 
 
+@pytest.mark.wip
 def test_pugixml_gpx_length2d(gpx, gpx_path):
     distance = gpxcpp.pugixml_gpx_length(gpx_path)
     expected = gpx.length_2d()
     assert distance == pytest.approx(expected)
 
 
+@pytest.mark.wip
 def test_pugixml_track_length2d(gpx, gpx_path):
     expected = gpx.tracks[0].length_2d()
     distance = gpxcpp.pugixml_gpx_length(gpx_path)
     assert distance == pytest.approx(expected)
 
 
+@pytest.mark.wip
 def test_pugixml_segment_length2d(gpx, gpx_path):
     expected = gpx.tracks[0].segments[0].length_2d()
     distance = gpxcpp.pugixml_gpx_length(gpx_path)
@@ -91,7 +98,7 @@ def test_fastgpx_segment_length2d(gpx, gpx_path):
 # single segment
 
 
-def test_two_point_segment_length():
+def test_fastgpx_two_point_segment_length():
     path = 'gpx/test/two-points.gpx'
     with open(path, 'r', encoding='utf-8') as gpx_file:
         gpx = gpxpy.parse(gpx_file)
@@ -100,7 +107,7 @@ def test_two_point_segment_length():
     assert distance == pytest.approx(expected)
 
 
-def test_segment_length():
+def test_fastgpx_segment_length():
     path = 'gpx/test/segment.gpx'
     with open(path, 'r', encoding='utf-8') as gpx_file:
         gpx = gpxpy.parse(gpx_file)
@@ -109,7 +116,7 @@ def test_segment_length():
     assert distance == pytest.approx(expected)
 
 
-def test_debug_segment_length():
+def test_fastgpx_debug_segment_length():
     path = 'gpx/test/debug-segment.gpx'
     with open(path, 'r', encoding='utf-8') as gpx_file:
         gpx = gpxpy.parse(gpx_file)
