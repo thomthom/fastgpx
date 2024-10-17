@@ -110,6 +110,7 @@ namespace fastgpx
   // If they are reversed there is a slight difference.
   // TODO: Compare against always using haversine.
   // TODO: Compare against libosmium.
+  // https://github.com/tkrajina/gpxpy/blob/09fc46b3cad16b5bf49edf8e7ae873794a959620/gpxpy/geo.py#L95-L122
   double distance(LatLong ll2, LatLong ll1, bool use_haversine = false, bool use_2d = true)
   {
     // If points too distant -- compute haversine distance:
