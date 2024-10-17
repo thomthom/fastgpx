@@ -28,42 +28,20 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(tinyxml2 pugixml Catch2 json)
 
-add_executable(gpxreader main.cpp gpx.hpp gpx.cpp fastgpx.hpp fastgpx.cpp)
-set_property(TARGET gpxreader PROPERTY CXX_STANDARD 23)
-set_property(TARGET gpxreader PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET gpxreader PROPERTY CXX_EXTENSIONS OFF)
-target_link_libraries(gpxreader PRIVATE tinyxml2 pugixml)
-
-# fastgpx
-
-find_package(Python3 3.11 EXACT REQUIRED COMPONENTS Interpreter Development)
-
-set(PYBIND11_NEWPYTHON ON)
-find_package(pybind11 CONFIG REQUIRED)
-
-pybind11_add_module(gpxcpp gpxcpp.cpp gpx.hpp gpx.cpp fastgpx.hpp fastgpx.cpp)
-set_property(TARGET gpxcpp PROPERTY CXX_STANDARD 23)
-set_property(TARGET gpxcpp PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET gpxcpp PROPERTY CXX_EXTENSIONS OFF)
-target_link_libraries(gpxcpp PRIVATE tinyxml2 pugixml)
-
-install(TARGETS gpxcpp LIBRARY DESTINATION .)
-
-add_custom_command(TARGET gpxcpp POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "$<TARGET_FILE:gpxcpp>"  # This is the .pyd file
-        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/gpxcpp.cp311-win_amd64.pyd"
-)
-
 # fastgpx static library
 
-add_library(fastgpx-static fastgpx.hpp fastgpx.cpp)
+add_library(fastgpx-static fastgpx.hpp fastgpx.cpp geom.hpp geom.cpp)
 set_property(TARGET fastgpx-static PROPERTY CXX_STANDARD 23)
 set_property(TARGET fastgpx-static PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET fastgpx-static PROPERTY CXX_EXTENSIONS OFF)
 target_link_libraries(fastgpx-static PUBLIC tinyxml2 pugixml)
 
 # fastgpx python module
+
+find_package(Python3 3.11 EXACT REQUIRED COMPONENTS Interpreter Development)
+
+set(PYBIND11_NEWPYTHON ON)
+find_package(pybind11 CONFIG REQUIRED)
 
 pybind11_add_module(fastgpx python_fastgpx.cpp)
 set_property(TARGET fastgpx PROPERTY CXX_STANDARD 23)
@@ -99,3 +77,27 @@ target_compile_definitions(fastgpx_test PRIVATE FASTGPX_PROJECT_DIR="${CMAKE_SOU
 include(CTest)
 include(Catch)
 catch_discover_tests(fastgpx_test)
+
+# experimental Python C Extension
+
+pybind11_add_module(gpxcpp gpxcpp.cpp gpx.hpp gpx.cpp)
+set_property(TARGET gpxcpp PROPERTY CXX_STANDARD 23)
+set_property(TARGET gpxcpp PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET gpxcpp PROPERTY CXX_EXTENSIONS OFF)
+target_link_libraries(gpxcpp PRIVATE tinyxml2 pugixml fastgpx-static)
+
+install(TARGETS gpxcpp LIBRARY DESTINATION .)
+
+add_custom_command(TARGET gpxcpp POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:gpxcpp>"  # This is the .pyd file
+        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/gpxcpp.cp311-win_amd64.pyd"
+)
+
+# experimantal CLI app
+
+add_executable(gpxreader main.cpp gpx.hpp gpx.cpp)
+set_property(TARGET gpxreader PROPERTY CXX_STANDARD 23)
+set_property(TARGET gpxreader PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET gpxreader PROPERTY CXX_EXTENSIONS OFF)
+target_link_libraries(gpxreader PRIVATE tinyxml2 pugixml fastgpx-static)
