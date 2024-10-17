@@ -19,10 +19,16 @@ GPX_PATH = 'gpx/2024 Great Roadtrip'
 
 
 def main():
-    # files = get_gpx_files(GPX_PATH)
-    files = ["gpx/2024 TopCamp/Connected_20240518_094959_.gpx"]
+    # files = ["gpx/2024 TopCamp/Connected_20240518_094959_.gpx"]
+
+    files = []
+    files.extend(get_gpx_files('gpx/2024 Great Roadtrip'))
+    files.extend(get_gpx_files('gpx/2024 Sommertur'))
+    files.extend(get_gpx_files('gpx/2024 TopCamp'))
+
     data = []
     for gpx_filepath in files:
+        print(gpx_filepath)
         fullpath = os.path.abspath(gpx_filepath)
         assert os.path.exists(fullpath)
 

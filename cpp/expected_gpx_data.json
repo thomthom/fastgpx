@@ -1,6 +1,1686 @@
 [
   {
-    "path": "gpx/2024 TopCamp/Connected_20240518_094959_.gpx",
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240731_113605_N\u00e4s\u00e5ker_Sollefte\u00e5.gpx",
+    "length2d": 407963.0186,
+    "length3d": 408179.7285,
+    "tracks": [
+      {
+        "length2d": 407963.0186,
+        "length3d": 408179.7285,
+        "segments": [
+          {
+            "length2d": 117730.5007,
+            "length3d": 117787.7894
+          },
+          {
+            "length2d": 48325.2249,
+            "length3d": 48401.2181
+          },
+          {
+            "length2d": 36.5299,
+            "length3d": 38.3459
+          },
+          {
+            "length2d": 1769.6834,
+            "length3d": 1774.6814
+          },
+          {
+            "length2d": 147200.3894,
+            "length3d": 147239.6327
+          },
+          {
+            "length2d": 89804.8294,
+            "length3d": 89838.8067
+          },
+          {
+            "length2d": 3095.8609,
+            "length3d": 3099.2543
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240804_113139_\u00d6stra_Skolgatan_93331_Arvidsjaur.gpx",
+    "length2d": 339213.9833,
+    "length3d": 339411.7256,
+    "tracks": [
+      {
+        "length2d": 339213.9833,
+        "length3d": 339411.7256,
+        "segments": [
+          {
+            "length2d": 33763.4864,
+            "length3d": 33777.1969
+          },
+          {
+            "length2d": 152576.3037,
+            "length3d": 152610.0106
+          },
+          {
+            "length2d": 126.1292,
+            "length3d": 144.8071
+          },
+          {
+            "length2d": 151664.239,
+            "length3d": 151696.2451
+          },
+          {
+            "length2d": 513.3948,
+            "length3d": 596.8851
+          },
+          {
+            "length2d": 570.4302,
+            "length3d": 586.5808
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240805_100631_V\u00e4nortstorget_98131_Kiruna.gpx",
+    "length2d": 548738.692,
+    "length3d": 548971.2118,
+    "tracks": [
+      {
+        "length2d": 548738.692,
+        "length3d": 548971.2118,
+        "segments": [
+          {
+            "length2d": 949.8207,
+            "length3d": 957.4472
+          },
+          {
+            "length2d": 94322.9569,
+            "length3d": 94351.5523
+          },
+          {
+            "length2d": 14.1472,
+            "length3d": 20.1354
+          },
+          {
+            "length2d": 59118.9737,
+            "length3d": 59130.1543
+          },
+          {
+            "length2d": 34.9423,
+            "length3d": 35.0116
+          },
+          {
+            "length2d": 131692.8649,
+            "length3d": 131722.7039
+          },
+          {
+            "length2d": 81553.0613,
+            "length3d": 81576.1088
+          },
+          {
+            "length2d": 526.6292,
+            "length3d": 529.9269
+          },
+          {
+            "length2d": 172.9263,
+            "length3d": 173.3132
+          },
+          {
+            "length2d": 91361.519,
+            "length3d": 91427.6016
+          },
+          {
+            "length2d": 88990.8504,
+            "length3d": 89047.2566
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240806_102330_Holmboevegen_8_9010_Troms\u00f8.gpx",
+    "length2d": 294206.7999,
+    "length3d": 294462.6134,
+    "tracks": [
+      {
+        "length2d": 294206.7999,
+        "length3d": 294462.6134,
+        "segments": [
+          {
+            "length2d": 17740.3018,
+            "length3d": 17756.9575
+          },
+          {
+            "length2d": 185.7099,
+            "length3d": 185.7113
+          },
+          {
+            "length2d": 135434.7321,
+            "length3d": 135524.8503
+          },
+          {
+            "length2d": 403.3738,
+            "length3d": 422.0421
+          },
+          {
+            "length2d": 13086.5922,
+            "length3d": 13089.3745
+          },
+          {
+            "length2d": 42424.3211,
+            "length3d": 42468.263
+          },
+          {
+            "length2d": 59135.1704,
+            "length3d": 59161.5397
+          },
+          {
+            "length2d": 2755.3857,
+            "length3d": 2782.2073
+          },
+          {
+            "length2d": 0.3868,
+            "length3d": 0.3868
+          },
+          {
+            "length2d": 17508.752,
+            "length3d": 17520.4291
+          },
+          {
+            "length2d": 10.1472,
+            "length3d": 10.1853
+          },
+          {
+            "length2d": 13.8551,
+            "length3d": 13.8551
+          },
+          {
+            "length2d": 5508.0719,
+            "length3d": 5526.8114
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240807_090148_Salvegen_9118_Brensholmen.gpx",
+    "length2d": 207036.3892,
+    "length3d": 207428.7892,
+    "tracks": [
+      {
+        "length2d": 207036.3892,
+        "length3d": 207428.7892,
+        "segments": [
+          {
+            "length2d": 8010.0976,
+            "length3d": 8031.257
+          },
+          {
+            "length2d": 49972.2653,
+            "length3d": 49997.0872
+          },
+          {
+            "length2d": 464.9014,
+            "length3d": 494.0935
+          },
+          {
+            "length2d": 61.014,
+            "length3d": 131.808
+          },
+          {
+            "length2d": 711.6391,
+            "length3d": 713.2112
+          },
+          {
+            "length2d": 11136.4118,
+            "length3d": 11142.1124
+          },
+          {
+            "length2d": 204.7358,
+            "length3d": 213.0627
+          },
+          {
+            "length2d": 27612.5906,
+            "length3d": 27624.1814
+          },
+          {
+            "length2d": 12591.3025,
+            "length3d": 12596.639
+          },
+          {
+            "length2d": 13.3692,
+            "length3d": 33.0852
+          },
+          {
+            "length2d": 84.0221,
+            "length3d": 96.6812
+          },
+          {
+            "length2d": 3762.4207,
+            "length3d": 3814.7686
+          },
+          {
+            "length2d": 43735.7516,
+            "length3d": 43771.9219
+          },
+          {
+            "length2d": 3962.0945,
+            "length3d": 4008.784
+          },
+          {
+            "length2d": 14213.9966,
+            "length3d": 14228.1271
+          },
+          {
+            "length2d": 27663.3118,
+            "length3d": 27692.6383
+          },
+          {
+            "length2d": 167.6417,
+            "length3d": 167.6728
+          },
+          {
+            "length2d": 2668.8229,
+            "length3d": 2671.6578
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240808_105105_Harstadg\u00e5rdsveien_7_9405_Harstad.gpx",
+    "length2d": 249923.9597,
+    "length3d": 250139.0763,
+    "tracks": [
+      {
+        "length2d": 249923.9597,
+        "length3d": 250139.0763,
+        "segments": [
+          {
+            "length2d": 43230.964,
+            "length3d": 43256.4182
+          },
+          {
+            "length2d": 68997.8613,
+            "length3d": 69036.6626
+          },
+          {
+            "length2d": 335.5343,
+            "length3d": 353.9807
+          },
+          {
+            "length2d": 46441.1336,
+            "length3d": 46479.8033
+          },
+          {
+            "length2d": 2762.0144,
+            "length3d": 2766.0502
+          },
+          {
+            "length2d": 18.0284,
+            "length3d": 34.3339
+          },
+          {
+            "length2d": 18720.781,
+            "length3d": 18740.9474
+          },
+          {
+            "length2d": 5810.9756,
+            "length3d": 5815.1065
+          },
+          {
+            "length2d": 63596.8547,
+            "length3d": 63641.4749
+          },
+          {
+            "length2d": 9.8124,
+            "length3d": 14.2986
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240809_112648_Birger_Eriksens_Vei_8392_S\u00f8rv\u00e5gen.gpx",
+    "length2d": 332382.5674,
+    "length3d": 332921.4824,
+    "tracks": [
+      {
+        "length2d": 332382.5674,
+        "length3d": 332921.4824,
+        "segments": [
+          {
+            "length2d": 11011.1237,
+            "length3d": 11016.3371
+          },
+          {
+            "length2d": 91307.0816,
+            "length3d": 91364.3298
+          },
+          {
+            "length2d": 17536.4363,
+            "length3d": 17647.141
+          },
+          {
+            "length2d": 12.9096,
+            "length3d": 32.0096
+          },
+          {
+            "length2d": 22862.1538,
+            "length3d": 22875.7647
+          },
+          {
+            "length2d": 17395.1365,
+            "length3d": 17400.2444
+          },
+          {
+            "length2d": 40261.5381,
+            "length3d": 40419.5173
+          },
+          {
+            "length2d": 30019.3013,
+            "length3d": 30066.8633
+          },
+          {
+            "length2d": 57567.7771,
+            "length3d": 57592.4532
+          },
+          {
+            "length2d": 8.8354,
+            "length3d": 19.8167
+          },
+          {
+            "length2d": 12.0678,
+            "length3d": 25.1395
+          },
+          {
+            "length2d": 15051.8427,
+            "length3d": 15099.9671
+          },
+          {
+            "length2d": 29336.3635,
+            "length3d": 29361.8986
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240811_135858_Fur\u00f8yveien_8178_Halsa.gpx",
+    "length2d": 207686.4148,
+    "length3d": 208061.3003,
+    "tracks": [
+      {
+        "length2d": 207686.4148,
+        "length3d": 208061.3003,
+        "segments": [
+          {
+            "length2d": 30002.0797,
+            "length3d": 30034.6476
+          },
+          {
+            "length2d": 63654.3632,
+            "length3d": 63716.2671
+          },
+          {
+            "length2d": 12696.7783,
+            "length3d": 12699.7516
+          },
+          {
+            "length2d": 20761.3081,
+            "length3d": 20770.784
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 0.049
+          },
+          {
+            "length2d": 35200.444,
+            "length3d": 35276.7265
+          },
+          {
+            "length2d": 11429.107,
+            "length3d": 11438.4936
+          },
+          {
+            "length2d": 122.286,
+            "length3d": 139.3395
+          },
+          {
+            "length2d": 30541.9792,
+            "length3d": 30619.9593
+          },
+          {
+            "length2d": 121.7418,
+            "length3d": 170.531
+          },
+          {
+            "length2d": 2967.9546,
+            "length3d": 2975.7721
+          },
+          {
+            "length2d": 188.3729,
+            "length3d": 218.979
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240812_112800_.gpx",
+    "length2d": 193995.8831,
+    "length3d": 194125.2813,
+    "tracks": [
+      {
+        "length2d": 193995.8831,
+        "length3d": 194125.2813,
+        "segments": [
+          {
+            "length2d": 181.3021,
+            "length3d": 187.2181
+          },
+          {
+            "length2d": 12700.1516,
+            "length3d": 12716.3396
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 0.0
+          },
+          {
+            "length2d": 14857.8651,
+            "length3d": 14864.6969
+          },
+          {
+            "length2d": 1135.6287,
+            "length3d": 1151.9866
+          },
+          {
+            "length2d": 67735.1072,
+            "length3d": 67784.3005
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 0.0
+          },
+          {
+            "length2d": 325.0391,
+            "length3d": 328.2301
+          },
+          {
+            "length2d": 69878.5698,
+            "length3d": 69900.2868
+          },
+          {
+            "length2d": 16768.1062,
+            "length3d": 16773.1544
+          },
+          {
+            "length2d": 10414.1132,
+            "length3d": 10419.0684
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240813_112855_Br\u00f8nn\u00f8y.gpx",
+    "length2d": 260945.4484,
+    "length3d": 261182.5703,
+    "tracks": [
+      {
+        "length2d": 260945.4484,
+        "length3d": 261182.5703,
+        "segments": [
+          {
+            "length2d": 18366.9643,
+            "length3d": 18376.1948
+          },
+          {
+            "length2d": 16989.2469,
+            "length3d": 16998.4298
+          },
+          {
+            "length2d": 47607.4749,
+            "length3d": 47618.1938
+          },
+          {
+            "length2d": 95504.3448,
+            "length3d": 95615.6561
+          },
+          {
+            "length2d": 49378.3251,
+            "length3d": 49391.9854
+          },
+          {
+            "length2d": 1729.5691,
+            "length3d": 1732.9281
+          },
+          {
+            "length2d": 3865.9316,
+            "length3d": 3869.2467
+          },
+          {
+            "length2d": 11.017,
+            "length3d": 32.0899
+          },
+          {
+            "length2d": 27341.6954,
+            "length3d": 27373.0901
+          },
+          {
+            "length2d": 150.8792,
+            "length3d": 174.7556
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240814_103410_Harald_Bothners_Veg_36_7052_Trondheim.gpx",
+    "length2d": 176429.1852,
+    "length3d": 176611.0133,
+    "tracks": [
+      {
+        "length2d": 176429.1852,
+        "length3d": 176611.0133,
+        "segments": [
+          {
+            "length2d": 134.8455,
+            "length3d": 145.5815
+          },
+          {
+            "length2d": 8626.4237,
+            "length3d": 8674.4766
+          },
+          {
+            "length2d": 142889.6443,
+            "length3d": 142988.3777
+          },
+          {
+            "length2d": 317.2645,
+            "length3d": 321.5856
+          },
+          {
+            "length2d": 22533.1482,
+            "length3d": 22545.8242
+          },
+          {
+            "length2d": 1927.859,
+            "length3d": 1935.1676
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240816_104218_Tistamvegen_5_6797_Utvik.gpx",
+    "length2d": 337231.4526,
+    "length3d": 337543.3429,
+    "tracks": [
+      {
+        "length2d": 337231.4526,
+        "length3d": 337543.3429,
+        "segments": [
+          {
+            "length2d": 130635.9798,
+            "length3d": 130703.8862
+          },
+          {
+            "length2d": 408.8539,
+            "length3d": 413.7722
+          },
+          {
+            "length2d": 16125.103,
+            "length3d": 16137.3747
+          },
+          {
+            "length2d": 60950.3553,
+            "length3d": 61012.7065
+          },
+          {
+            "length2d": 13.7956,
+            "length3d": 13.8915
+          },
+          {
+            "length2d": 13709.142,
+            "length3d": 13741.3369
+          },
+          {
+            "length2d": 25683.9932,
+            "length3d": 25723.8156
+          },
+          {
+            "length2d": 5501.5232,
+            "length3d": 5519.6648
+          },
+          {
+            "length2d": 9798.9183,
+            "length3d": 9804.8792
+          },
+          {
+            "length2d": 15652.6557,
+            "length3d": 15655.7967
+          },
+          {
+            "length2d": 34130.5364,
+            "length3d": 34142.0065
+          },
+          {
+            "length2d": 2421.0964,
+            "length3d": 2424.444
+          },
+          {
+            "length2d": 22139.3893,
+            "length3d": 22151.2527
+          },
+          {
+            "length2d": 16.4735,
+            "length3d": 16.6646
+          },
+          {
+            "length2d": 43.6369,
+            "length3d": 81.8509
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240816_201722_.gpx",
+    "length2d": 11493.9345,
+    "length3d": 11510.6783,
+    "tracks": [
+      {
+        "length2d": 11493.9345,
+        "length3d": 11510.6783,
+        "segments": [
+          {
+            "length2d": 11493.9345,
+            "length3d": 11510.6783
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240817_110959_Kraftverksvegen_31_4127_Lysebotn.gpx",
+    "length2d": 186021.7531,
+    "length3d": 186425.8857,
+    "tracks": [
+      {
+        "length2d": 186021.7531,
+        "length3d": 186425.8857,
+        "segments": [
+          {
+            "length2d": 34085.4047,
+            "length3d": 34108.2843
+          },
+          {
+            "length2d": 9423.5424,
+            "length3d": 9468.6118
+          },
+          {
+            "length2d": 9777.1836,
+            "length3d": 9794.9688
+          },
+          {
+            "length2d": 9568.3431,
+            "length3d": 9607.178
+          },
+          {
+            "length2d": 4127.4651,
+            "length3d": 4134.3937
+          },
+          {
+            "length2d": 13807.1029,
+            "length3d": 13864.9873
+          },
+          {
+            "length2d": 3188.9126,
+            "length3d": 3200.3571
+          },
+          {
+            "length2d": 359.5784,
+            "length3d": 362.9742
+          },
+          {
+            "length2d": 32398.6343,
+            "length3d": 32535.7789
+          },
+          {
+            "length2d": 25070.1191,
+            "length3d": 25096.8084
+          },
+          {
+            "length2d": 12811.5151,
+            "length3d": 12820.8155
+          },
+          {
+            "length2d": 31403.952,
+            "length3d": 31430.7275
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240817_175455_.gpx",
+    "length2d": 53128.6205,
+    "length3d": 53196.4737,
+    "tracks": [
+      {
+        "length2d": 53128.6205,
+        "length3d": 53196.4737,
+        "segments": [
+          {
+            "length2d": 27039.7785,
+            "length3d": 27072.2549
+          },
+          {
+            "length2d": 1514.366,
+            "length3d": 1519.3569
+          },
+          {
+            "length2d": 3044.6628,
+            "length3d": 3049.8535
+          },
+          {
+            "length2d": 1705.1429,
+            "length3d": 1717.9943
+          },
+          {
+            "length2d": 19824.6703,
+            "length3d": 19837.014
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240818_113411_Kraftverksvegen_31_4127_Lysebotn.gpx",
+    "length2d": 189274.0751,
+    "length3d": 189550.8367,
+    "tracks": [
+      {
+        "length2d": 189274.0751,
+        "length3d": 189550.8367,
+        "segments": [
+          {
+            "length2d": 19365.3616,
+            "length3d": 19374.3822
+          },
+          {
+            "length2d": 56720.9852,
+            "length3d": 56781.9773
+          },
+          {
+            "length2d": 27913.6806,
+            "length3d": 27935.03
+          },
+          {
+            "length2d": 6.1993,
+            "length3d": 6.3119
+          },
+          {
+            "length2d": 8668.1598,
+            "length3d": 8689.1993
+          },
+          {
+            "length2d": 39694.0028,
+            "length3d": 39745.8762
+          },
+          {
+            "length2d": 27245.11,
+            "length3d": 27328.6765
+          },
+          {
+            "length2d": 653.4665,
+            "length3d": 653.7314
+          },
+          {
+            "length2d": 8580.0862,
+            "length3d": 8585.7091
+          },
+          {
+            "length2d": 427.0233,
+            "length3d": 449.9427
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240819_110406_Kraftverksvegen_31_4127_Lysebotn.gpx",
+    "length2d": 282353.2994,
+    "length3d": 282933.0466,
+    "tracks": [
+      {
+        "length2d": 282353.2994,
+        "length3d": 282933.0466,
+        "segments": [
+          {
+            "length2d": 9576.4036,
+            "length3d": 9589.3035
+          },
+          {
+            "length2d": 176.6398,
+            "length3d": 207.4035
+          },
+          {
+            "length2d": 10454.8348,
+            "length3d": 10458.1235
+          },
+          {
+            "length2d": 2132.3806,
+            "length3d": 2137.1635
+          },
+          {
+            "length2d": 21.3029,
+            "length3d": 28.7814
+          },
+          {
+            "length2d": 101110.8638,
+            "length3d": 101293.6084
+          },
+          {
+            "length2d": 11222.4869,
+            "length3d": 11226.5737
+          },
+          {
+            "length2d": 9.6467,
+            "length3d": 10.306
+          },
+          {
+            "length2d": 11124.5183,
+            "length3d": 11138.4026
+          },
+          {
+            "length2d": 115.3502,
+            "length3d": 122.8999
+          },
+          {
+            "length2d": 6428.0781,
+            "length3d": 6431.6651
+          },
+          {
+            "length2d": 15780.8935,
+            "length3d": 15787.1332
+          },
+          {
+            "length2d": 0.9175,
+            "length3d": 37.3061
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 2.395
+          },
+          {
+            "length2d": 23738.1707,
+            "length3d": 23756.2232
+          },
+          {
+            "length2d": 62367.912,
+            "length3d": 62538.5247
+          },
+          {
+            "length2d": 4418.2108,
+            "length3d": 4428.6503
+          },
+          {
+            "length2d": 89.1298,
+            "length3d": 89.1857
+          },
+          {
+            "length2d": 11632.6717,
+            "length3d": 11676.9384
+          },
+          {
+            "length2d": 139.1461,
+            "length3d": 140.2125
+          },
+          {
+            "length2d": 8772.4978,
+            "length3d": 8786.3903
+          },
+          {
+            "length2d": 3041.2435,
+            "length3d": 3045.856
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240820_121406_Kyrkjevegen_188_4137_\u00c5rdal_i_Ryfylke.gpx",
+    "length2d": 125157.1148,
+    "length3d": 125533.0474,
+    "tracks": [
+      {
+        "length2d": 125157.1148,
+        "length3d": 125533.0474,
+        "segments": [
+          {
+            "length2d": 96060.125,
+            "length3d": 96213.8485
+          },
+          {
+            "length2d": 179.9992,
+            "length3d": 190.6236
+          },
+          {
+            "length2d": 4267.3094,
+            "length3d": 4359.869
+          },
+          {
+            "length2d": 5573.0293,
+            "length3d": 5583.6347
+          },
+          {
+            "length2d": 14292.6027,
+            "length3d": 14344.525
+          },
+          {
+            "length2d": 2404.2453,
+            "length3d": 2413.2874
+          },
+          {
+            "length2d": 2379.8039,
+            "length3d": 2427.2592
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240821_121412_Songesand_Lysebotn_Songesand.gpx",
+    "length2d": 177323.9451,
+    "length3d": 177742.874,
+    "tracks": [
+      {
+        "length2d": 177323.9451,
+        "length3d": 177742.874,
+        "segments": [
+          {
+            "length2d": 31721.7328,
+            "length3d": 31797.579
+          },
+          {
+            "length2d": 30319.8416,
+            "length3d": 30511.9698
+          },
+          {
+            "length2d": 1076.092,
+            "length3d": 1078.9675
+          },
+          {
+            "length2d": 49129.4197,
+            "length3d": 49201.7039
+          },
+          {
+            "length2d": 824.8459,
+            "length3d": 824.9052
+          },
+          {
+            "length2d": 64252.0131,
+            "length3d": 64327.7486
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240822_105633_Fodnesvegen_6887_L\u00e6rdal.gpx",
+    "length2d": 212292.4696,
+    "length3d": 212607.8974,
+    "tracks": [
+      {
+        "length2d": 212292.4696,
+        "length3d": 212607.8974,
+        "segments": [
+          {
+            "length2d": 19296.8364,
+            "length3d": 19367.9165
+          },
+          {
+            "length2d": 4357.4931,
+            "length3d": 4362.8444
+          },
+          {
+            "length2d": 826.1314,
+            "length3d": 829.7958
+          },
+          {
+            "length2d": 61430.4012,
+            "length3d": 61500.9819
+          },
+          {
+            "length2d": 73948.1237,
+            "length3d": 74001.8278
+          },
+          {
+            "length2d": 52410.6814,
+            "length3d": 52495.6464
+          },
+          {
+            "length2d": 10.1802,
+            "length3d": 32.1673
+          },
+          {
+            "length2d": 12.6223,
+            "length3d": 16.7174
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240823_102100_Otto_Nielsens_Veg_2_7052_Trondheim.gpx",
+    "length2d": 294048.3351,
+    "length3d": 294283.9353,
+    "tracks": [
+      {
+        "length2d": 294048.3351,
+        "length3d": 294283.9353,
+        "segments": [
+          {
+            "length2d": 424.5222,
+            "length3d": 425.6193
+          },
+          {
+            "length2d": 20.0176,
+            "length3d": 20.2155
+          },
+          {
+            "length2d": 6554.3752,
+            "length3d": 6569.7989
+          },
+          {
+            "length2d": 101421.893,
+            "length3d": 101510.6782
+          },
+          {
+            "length2d": 2397.4018,
+            "length3d": 2397.9237
+          },
+          {
+            "length2d": 1910.4248,
+            "length3d": 1911.1294
+          },
+          {
+            "length2d": 43586.6261,
+            "length3d": 43628.2346
+          },
+          {
+            "length2d": 1516.7104,
+            "length3d": 1516.9993
+          },
+          {
+            "length2d": 19257.7177,
+            "length3d": 19267.4284
+          },
+          {
+            "length2d": 309.5686,
+            "length3d": 312.803
+          },
+          {
+            "length2d": 116558.9255,
+            "length3d": 116631.4548
+          },
+          {
+            "length2d": 90.1522,
+            "length3d": 91.6503
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240824_100438_Otto_Nielsens_Veg_2_7052_Trondheim.gpx",
+    "length2d": 339316.9568,
+    "length3d": 339600.7131,
+    "tracks": [
+      {
+        "length2d": 339316.9568,
+        "length3d": 339600.7131,
+        "segments": [
+          {
+            "length2d": 10610.122,
+            "length3d": 10616.4817
+          },
+          {
+            "length2d": 186950.8092,
+            "length3d": 187046.568
+          },
+          {
+            "length2d": 9751.0842,
+            "length3d": 9848.0579
+          },
+          {
+            "length2d": 51583.1023,
+            "length3d": 51602.1604
+          },
+          {
+            "length2d": 80298.7905,
+            "length3d": 80355.9834
+          },
+          {
+            "length2d": 115.4733,
+            "length3d": 121.9698
+          },
+          {
+            "length2d": 1.5398,
+            "length3d": 3.4445
+          },
+          {
+            "length2d": 6.0355,
+            "length3d": 6.0474
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240824_174027_Lundamo_Trondheim.gpx",
+    "length2d": 36877.4857,
+    "length3d": 36877.4857,
+    "tracks": [
+      {
+        "length2d": 36877.4857,
+        "length3d": 36877.4857,
+        "segments": [
+          {
+            "length2d": 36877.4857,
+            "length3d": 36877.4857
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Great Roadtrip\\Connected_20240824_patched.gpx",
+    "length2d": 376194.4425,
+    "length3d": 376478.1989,
+    "tracks": [
+      {
+        "length2d": 376194.4425,
+        "length3d": 376478.1989,
+        "segments": [
+          {
+            "length2d": 10610.122,
+            "length3d": 10616.4817
+          },
+          {
+            "length2d": 186950.8092,
+            "length3d": 187046.568
+          },
+          {
+            "length2d": 9751.0842,
+            "length3d": 9848.0579
+          },
+          {
+            "length2d": 51583.1023,
+            "length3d": 51602.1604
+          },
+          {
+            "length2d": 80298.7905,
+            "length3d": 80355.9834
+          },
+          {
+            "length2d": 115.4733,
+            "length3d": 121.9698
+          },
+          {
+            "length2d": 1.5398,
+            "length3d": 3.4445
+          },
+          {
+            "length2d": 6.0355,
+            "length3d": 6.0474
+          },
+          {
+            "length2d": 36877.4857,
+            "length3d": 36877.4857
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Sommertur\\Connected_20240622_102935_Kvikneveien_4694_2512_Kvikne.gpx",
+    "length2d": 262614.1781,
+    "length3d": 262996.3024,
+    "tracks": [
+      {
+        "length2d": 262614.1781,
+        "length3d": 262996.3024,
+        "segments": [
+          {
+            "length2d": 11378.1514,
+            "length3d": 11393.1822
+          },
+          {
+            "length2d": 13.6633,
+            "length3d": 49.854
+          },
+          {
+            "length2d": 94436.0549,
+            "length3d": 94486.8861
+          },
+          {
+            "length2d": 14613.2491,
+            "length3d": 14699.5926
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 0.0
+          },
+          {
+            "length2d": 21.2404,
+            "length3d": 22.7339
+          },
+          {
+            "length2d": 32134.9947,
+            "length3d": 32235.8821
+          },
+          {
+            "length2d": 709.2397,
+            "length3d": 712.2286
+          },
+          {
+            "length2d": 43939.544,
+            "length3d": 43953.9509
+          },
+          {
+            "length2d": 1478.7998,
+            "length3d": 1478.9342
+          },
+          {
+            "length2d": 16408.9932,
+            "length3d": 16409.8544
+          },
+          {
+            "length2d": 3162.2229,
+            "length3d": 3162.7379
+          },
+          {
+            "length2d": 2840.2515,
+            "length3d": 2843.6015
+          },
+          {
+            "length2d": 2445.6272,
+            "length3d": 2445.7999
+          },
+          {
+            "length2d": 25893.2645,
+            "length3d": 25930.9161
+          },
+          {
+            "length2d": 6.054,
+            "length3d": 6.2121
+          },
+          {
+            "length2d": 4519.8232,
+            "length3d": 4527.7445
+          },
+          {
+            "length2d": 8507.91,
+            "length3d": 8528.9491
+          },
+          {
+            "length2d": 105.0943,
+            "length3d": 107.2422
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Sommertur\\Connected_20240623_112155_.gpx",
+    "length2d": 164066.6989,
+    "length3d": 164379.8235,
+    "tracks": [
+      {
+        "length2d": 164066.6989,
+        "length3d": 164379.8235,
+        "segments": [
+          {
+            "length2d": 29815.1173,
+            "length3d": 29893.0748
+          },
+          {
+            "length2d": 6.964,
+            "length3d": 7.4891
+          },
+          {
+            "length2d": 15055.112,
+            "length3d": 15076.2796
+          },
+          {
+            "length2d": 33697.7796,
+            "length3d": 33729.466
+          },
+          {
+            "length2d": 23623.562,
+            "length3d": 23648.6549
+          },
+          {
+            "length2d": 26225.0445,
+            "length3d": 26308.7683
+          },
+          {
+            "length2d": 1977.4596,
+            "length3d": 1986.1879
+          },
+          {
+            "length2d": 12.0088,
+            "length3d": 12.291
+          },
+          {
+            "length2d": 6.0044,
+            "length3d": 6.0704
+          },
+          {
+            "length2d": 16289.8766,
+            "length3d": 16317.4241
+          },
+          {
+            "length2d": 647.2123,
+            "length3d": 652.4028
+          },
+          {
+            "length2d": 242.9141,
+            "length3d": 248.5148
+          },
+          {
+            "length2d": 187.8206,
+            "length3d": 189.5291
+          },
+          {
+            "length2d": 159.6713,
+            "length3d": 161.6837
+          },
+          {
+            "length2d": 2330.5698,
+            "length3d": 2336.9102
+          },
+          {
+            "length2d": 13728.4342,
+            "length3d": 13742.361
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 0.419
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 0.102
+          },
+          {
+            "length2d": 61.1478,
+            "length3d": 62.1949
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Sommertur\\Connected_20240624_102106_Volda.gpx",
+    "length2d": 352029.6547,
+    "length3d": 352611.3912,
+    "tracks": [
+      {
+        "length2d": 352029.6547,
+        "length3d": 352611.3912,
+        "segments": [
+          {
+            "length2d": 14176.769,
+            "length3d": 14191.7508
+          },
+          {
+            "length2d": 10.3433,
+            "length3d": 10.6225
+          },
+          {
+            "length2d": 3.2524,
+            "length3d": 3.722
+          },
+          {
+            "length2d": 88225.0123,
+            "length3d": 88326.1102
+          },
+          {
+            "length2d": 238.7642,
+            "length3d": 239.0153
+          },
+          {
+            "length2d": 26465.3282,
+            "length3d": 26514.3968
+          },
+          {
+            "length2d": 31855.5455,
+            "length3d": 31902.4589
+          },
+          {
+            "length2d": 54.3077,
+            "length3d": 57.5048
+          },
+          {
+            "length2d": 48310.4859,
+            "length3d": 48324.0923
+          },
+          {
+            "length2d": 12755.3545,
+            "length3d": 12767.5529
+          },
+          {
+            "length2d": 250.5169,
+            "length3d": 250.9162
+          },
+          {
+            "length2d": 722.9906,
+            "length3d": 724.6475
+          },
+          {
+            "length2d": 41788.3064,
+            "length3d": 41846.7043
+          },
+          {
+            "length2d": 477.1079,
+            "length3d": 537.862
+          },
+          {
+            "length2d": 76396.1814,
+            "length3d": 76584.632
+          },
+          {
+            "length2d": 10224.0325,
+            "length3d": 10248.2148
+          },
+          {
+            "length2d": 75.3559,
+            "length3d": 81.1879
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Sommertur\\Connected_20240624_233423_Stranda_Eikesdalsvegen_Aursj\u00f8vegen_Sunndals\u00f8ra.gpx",
+    "length2d": 285789.3838,
+    "length3d": 285789.3838,
+    "tracks": [
+      {
+        "length2d": 285789.3838,
+        "length3d": 285789.3838,
+        "segments": [
+          {
+            "length2d": 285789.3838,
+            "length3d": 285789.3838
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Sommertur\\Connected_20240625_102547_Litldalsvegen_6600_Sunndals\u00f8ra.gpx",
+    "length2d": 210644.4132,
+    "length3d": 210972.433,
+    "tracks": [
+      {
+        "length2d": 210644.4132,
+        "length3d": 210972.433,
+        "segments": [
+          {
+            "length2d": 13747.6464,
+            "length3d": 13757.7799
+          },
+          {
+            "length2d": 203.2817,
+            "length3d": 237.2613
+          },
+          {
+            "length2d": 2840.0001,
+            "length3d": 2861.4455
+          },
+          {
+            "length2d": 5508.9749,
+            "length3d": 5531.567
+          },
+          {
+            "length2d": 12919.7039,
+            "length3d": 12931.244
+          },
+          {
+            "length2d": 20.675,
+            "length3d": 39.9227
+          },
+          {
+            "length2d": 25631.8827,
+            "length3d": 25672.8757
+          },
+          {
+            "length2d": 31594.9091,
+            "length3d": 31608.4416
+          },
+          {
+            "length2d": 65.4815,
+            "length3d": 65.8684
+          },
+          {
+            "length2d": 67589.8223,
+            "length3d": 67633.4917
+          },
+          {
+            "length2d": 8.3875,
+            "length3d": 57.0158
+          },
+          {
+            "length2d": 50513.6481,
+            "length3d": 50575.5193
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Sommertur\\Connected_20240625_150703_Svartvassvegen_1_6650_Surnadal.gpx",
+    "length2d": 103771.9319,
+    "length3d": 104017.8587,
+    "tracks": [
+      {
+        "length2d": 103771.9319,
+        "length3d": 104017.8587,
+        "segments": [
+          {
+            "length2d": 33403.6364,
+            "length3d": 33502.6777
+          },
+          {
+            "length2d": 41250.6135,
+            "length3d": 41314.5824
+          },
+          {
+            "length2d": 293.7925,
+            "length3d": 323.6201
+          },
+          {
+            "length2d": 28823.8895,
+            "length3d": 28876.9785
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Sommertur\\Connected_20240625_181119_Svartvassvegen_1_6650_Surnadal.gpx",
+    "length2d": 19169.4025,
+    "length3d": 19202.6865,
+    "tracks": [
+      {
+        "length2d": 19169.4025,
+        "length3d": 19202.6865,
+        "segments": [
+          {
+            "length2d": 77.2447,
+            "length3d": 82.8861
+          },
+          {
+            "length2d": 2456.4978,
+            "length3d": 2467.2841
+          },
+          {
+            "length2d": 16226.4926,
+            "length3d": 16239.4517
+          },
+          {
+            "length2d": 245.1234,
+            "length3d": 246.5246
+          },
+          {
+            "length2d": 164.044,
+            "length3d": 166.5399
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 Sommertur\\Connected_20240626_105521_Harald_Bothners_Veg_36_7052_Trondheim.gpx",
+    "length2d": 133385.9713,
+    "length3d": 133479.0514,
+    "tracks": [
+      {
+        "length2d": 133385.9713,
+        "length3d": 133479.0514,
+        "segments": [
+          {
+            "length2d": 161.9656,
+            "length3d": 162.7128
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 1.554
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 2.423
+          },
+          {
+            "length2d": 66594.4364,
+            "length3d": 66641.0731
+          },
+          {
+            "length2d": 18.4547,
+            "length3d": 18.573
+          },
+          {
+            "length2d": 66611.1145,
+            "length3d": 66652.7156
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 TopCamp\\Connected_20240518_094959_.gpx",
     "length2d": 383273.7475,
     "length3d": 383686.2902,
     "tracks": [
@@ -43,6 +1723,498 @@
           {
             "length2d": 35404.2329,
             "length3d": 35434.9371
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 TopCamp\\Connected_20240519_092555_Gamla_torget_1_68530_Torsby_Sweden.gpx",
+    "length2d": 239357.38,
+    "length3d": 239589.125,
+    "tracks": [
+      {
+        "length2d": 239357.38,
+        "length3d": 239589.125,
+        "segments": [
+          {
+            "length2d": 35719.2033,
+            "length3d": 35729.625
+          },
+          {
+            "length2d": 6670.7305,
+            "length3d": 6680.7458
+          },
+          {
+            "length2d": 68636.3424,
+            "length3d": 68675.7218
+          },
+          {
+            "length2d": 2975.4673,
+            "length3d": 2983.4817
+          },
+          {
+            "length2d": 1795.1572,
+            "length3d": 1796.4322
+          },
+          {
+            "length2d": 23.4192,
+            "length3d": 23.8594
+          },
+          {
+            "length2d": 12.5472,
+            "length3d": 43.5629
+          },
+          {
+            "length2d": 28383.9848,
+            "length3d": 28410.4618
+          },
+          {
+            "length2d": 3766.0651,
+            "length3d": 3775.1404
+          },
+          {
+            "length2d": 48618.634,
+            "length3d": 48636.2949
+          },
+          {
+            "length2d": 19.7888,
+            "length3d": 53.0515
+          },
+          {
+            "length2d": 22312.7679,
+            "length3d": 22323.211
+          },
+          {
+            "length2d": 5216.0623,
+            "length3d": 5217.9345
+          },
+          {
+            "length2d": 14805.7088,
+            "length3d": 14812.4875
+          },
+          {
+            "length2d": 17.7217,
+            "length3d": 39.5806
+          },
+          {
+            "length2d": 383.7796,
+            "length3d": 387.5338
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 TopCamp\\Connected_20240520_103549_Lagerbergsgatan_35_45131_Uddevalla_Sweden.gpx",
+    "length2d": 330999.403,
+    "length3d": 331249.4746,
+    "tracks": [
+      {
+        "length2d": 330999.403,
+        "length3d": 331249.4746,
+        "segments": [
+          {
+            "length2d": 21077.0576,
+            "length3d": 21113.3741
+          },
+          {
+            "length2d": 14335.8571,
+            "length3d": 14358.1104
+          },
+          {
+            "length2d": 8320.437,
+            "length3d": 8328.9514
+          },
+          {
+            "length2d": 45.6298,
+            "length3d": 45.8837
+          },
+          {
+            "length2d": 108267.3846,
+            "length3d": 108359.0482
+          },
+          {
+            "length2d": 109085.4755,
+            "length3d": 109135.6204
+          },
+          {
+            "length2d": 14.3988,
+            "length3d": 14.4894
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 0.0
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 0.0
+          },
+          {
+            "length2d": 1.3554,
+            "length3d": 3.946
+          },
+          {
+            "length2d": 1.1849,
+            "length3d": 4.5983
+          },
+          {
+            "length2d": 69850.6224,
+            "length3d": 69885.4526
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 TopCamp\\Connected_20240521_095426_\u00d6stra_M\u00e5rtensgatan_3_22361_Lund_Sweden.gpx",
+    "length2d": 334354.7012,
+    "length3d": 334526.3309,
+    "tracks": [
+      {
+        "length2d": 334354.7012,
+        "length3d": 334526.3309,
+        "segments": [
+          {
+            "length2d": 149897.0121,
+            "length3d": 149968.761
+          },
+          {
+            "length2d": 21171.6841,
+            "length3d": 21179.4834
+          },
+          {
+            "length2d": 26.652,
+            "length3d": 26.8384
+          },
+          {
+            "length2d": 66853.0666,
+            "length3d": 66868.8122
+          },
+          {
+            "length2d": 93677.606,
+            "length3d": 93708.192
+          },
+          {
+            "length2d": 1224.0228,
+            "length3d": 1238.9856
+          },
+          {
+            "length2d": 1252.7441,
+            "length3d": 1265.109
+          },
+          {
+            "length2d": 12.7867,
+            "length3d": 24.3722
+          },
+          {
+            "length2d": 239.1269,
+            "length3d": 245.777
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 TopCamp\\Connected_20240525_091930_Sejer\u00f8vej_4583_Sj\u00e6llands_Odde_Denmark.gpx",
+    "length2d": 364040.9605,
+    "length3d": 364159.8412,
+    "tracks": [
+      {
+        "length2d": 364040.9605,
+        "length3d": 364159.8412,
+        "segments": [
+          {
+            "length2d": 24989.6598,
+            "length3d": 24998.2033
+          },
+          {
+            "length2d": 146020.2011,
+            "length3d": 146040.0763
+          },
+          {
+            "length2d": 28072.8374,
+            "length3d": 28089.5014
+          },
+          {
+            "length2d": 1286.7801,
+            "length3d": 1286.9539
+          },
+          {
+            "length2d": 20076.2854,
+            "length3d": 20092.6139
+          },
+          {
+            "length2d": 47.8949,
+            "length3d": 48.6314
+          },
+          {
+            "length2d": 29439.1931,
+            "length3d": 29451.0385
+          },
+          {
+            "length2d": 718.638,
+            "length3d": 734.4678
+          },
+          {
+            "length2d": 109611.412,
+            "length3d": 109636.7378
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 0.078
+          },
+          {
+            "length2d": 3297.387,
+            "length3d": 3300.1429
+          },
+          {
+            "length2d": 10.3717,
+            "length3d": 10.452
+          },
+          {
+            "length2d": 470.3,
+            "length3d": 470.9441
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 TopCamp\\Connected_20240526_000731_Norway.gpx",
+    "length2d": 260024.6169,
+    "length3d": 260375.1873,
+    "tracks": [
+      {
+        "length2d": 260024.6169,
+        "length3d": 260375.1873,
+        "segments": [
+          {
+            "length2d": 5667.6796,
+            "length3d": 5676.2408
+          },
+          {
+            "length2d": 281.9728,
+            "length3d": 283.3079
+          },
+          {
+            "length2d": 2036.69,
+            "length3d": 2044.3709
+          },
+          {
+            "length2d": 15.273,
+            "length3d": 48.0593
+          },
+          {
+            "length2d": 37134.178,
+            "length3d": 37174.9145
+          },
+          {
+            "length2d": 72147.9317,
+            "length3d": 72232.4845
+          },
+          {
+            "length2d": 16.8936,
+            "length3d": 17.1865
+          },
+          {
+            "length2d": 61619.7804,
+            "length3d": 61673.5617
+          },
+          {
+            "length2d": 78838.1878,
+            "length3d": 78922.8606
+          },
+          {
+            "length2d": 113.0891,
+            "length3d": 139.3012
+          },
+          {
+            "length2d": 2152.9407,
+            "length3d": 2162.8994
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 TopCamp\\Connected_20240527_102505_Gol.gpx",
+    "length2d": 287628.564,
+    "length3d": 288003.2992,
+    "tracks": [
+      {
+        "length2d": 287628.564,
+        "length3d": 288003.2992,
+        "segments": [
+          {
+            "length2d": 460.0693,
+            "length3d": 463.9572
+          },
+          {
+            "length2d": 114.9104,
+            "length3d": 149.8171
+          },
+          {
+            "length2d": 34236.8508,
+            "length3d": 34296.7485
+          },
+          {
+            "length2d": 1170.8086,
+            "length3d": 1171.8198
+          },
+          {
+            "length2d": 37941.025,
+            "length3d": 37964.9593
+          },
+          {
+            "length2d": 42.5673,
+            "length3d": 42.9838
+          },
+          {
+            "length2d": 60506.6514,
+            "length3d": 60589.1958
+          },
+          {
+            "length2d": 87.767,
+            "length3d": 90.5428
+          },
+          {
+            "length2d": 0.0,
+            "length3d": 0.0
+          },
+          {
+            "length2d": 4610.4164,
+            "length3d": 4614.7125
+          },
+          {
+            "length2d": 83016.8605,
+            "length3d": 83109.5526
+          },
+          {
+            "length2d": 65299.8533,
+            "length3d": 65367.2766
+          },
+          {
+            "length2d": 140.7839,
+            "length3d": 141.7331
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 TopCamp\\Connected_20240528_091449_Domb\u00e5s_Dovre.gpx",
+    "length2d": 359043.6069,
+    "length3d": 359559.0692,
+    "tracks": [
+      {
+        "length2d": 359043.6069,
+        "length3d": 359559.0692,
+        "segments": [
+          {
+            "length2d": 55229.3391,
+            "length3d": 55298.5652
+          },
+          {
+            "length2d": 4956.3282,
+            "length3d": 4968.2064
+          },
+          {
+            "length2d": 325.9308,
+            "length3d": 326.2022
+          },
+          {
+            "length2d": 32724.4327,
+            "length3d": 32790.2102
+          },
+          {
+            "length2d": 20062.6873,
+            "length3d": 20098.1122
+          },
+          {
+            "length2d": 620.3913,
+            "length3d": 620.5144
+          },
+          {
+            "length2d": 14567.3789,
+            "length3d": 14597.2748
+          },
+          {
+            "length2d": 29602.8121,
+            "length3d": 29627.7128
+          },
+          {
+            "length2d": 3009.5592,
+            "length3d": 3047.6779
+          },
+          {
+            "length2d": 37340.1159,
+            "length3d": 37369.8272
+          },
+          {
+            "length2d": 676.1868,
+            "length3d": 676.4193
+          },
+          {
+            "length2d": 32946.8167,
+            "length3d": 32987.9857
+          },
+          {
+            "length2d": 79.3671,
+            "length3d": 79.6501
+          },
+          {
+            "length2d": 27202.7741,
+            "length3d": 27219.5554
+          },
+          {
+            "length2d": 10.3623,
+            "length3d": 10.5454
+          },
+          {
+            "length2d": 18868.9753,
+            "length3d": 18890.8945
+          },
+          {
+            "length2d": 48366.3543,
+            "length3d": 48391.5919
+          },
+          {
+            "length2d": 0.8224,
+            "length3d": 0.8224
+          },
+          {
+            "length2d": 23977.9042,
+            "length3d": 24051.9319
+          },
+          {
+            "length2d": 17.7388,
+            "length3d": 18.9318
+          },
+          {
+            "length2d": 8457.3292,
+            "length3d": 8486.4376
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "gpx/2024 TopCamp\\Connected_20240529_091916_Harald_Bothners_Veg_36_7052_Trondheim.gpx",
+    "length2d": 251991.3724,
+    "length3d": 252099.373,
+    "tracks": [
+      {
+        "length2d": 251991.3724,
+        "length3d": 252099.373,
+        "segments": [
+          {
+            "length2d": 250063.3635,
+            "length3d": 250169.65
+          },
+          {
+            "length2d": 1928.0089,
+            "length3d": 1929.723
           }
         ]
       }
