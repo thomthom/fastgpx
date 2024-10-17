@@ -45,7 +45,7 @@ def compare(path):
         print(Fore.LIGHTBLACK_EX + f'  Actual: {actual}' + Fore.RESET)
 
         if math.isclose(expected, actual, abs_tol=1e-04):
-            print(Back.LIGHTGREEN_EX + Fore.WHITE + f'  PASS  ' + Back.RESET)
+            print(Back.GREEN + Fore.WHITE + f'  PASS  ' + Back.RESET)
         else:
             print(Back.LIGHTRED_EX + Fore.WHITE + f'  FAIL  ' + Back.RESET)
 
