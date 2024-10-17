@@ -106,7 +106,11 @@ namespace fastgpx
 
     return mod_math.sqrt(distance_2d ** 2 + (elevation_1 - elevation_2) ** 2)
   */
-  double distance(LatLong ll1, LatLong ll2, bool use_haversine = false, bool use_2d = true)
+  // NOTE: Flipping ll2 and ll1 order so the calculation matches gpxpy.
+  // If they are reversed there is a slight difference.
+  // TODO: Compare against always using haversine.
+  // TODO: Compare against libosmium.
+  double distance(LatLong ll2, LatLong ll1, bool use_haversine = false, bool use_2d = true)
   {
     // If points too distant -- compute haversine distance:
     if (use_haversine || (std::abs(ll1.latitude - ll2.latitude) > .2 || std::abs(ll1.longitude - ll2.longitude) > .2))

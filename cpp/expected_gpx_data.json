@@ -1,48 +1,48 @@
 [
   {
     "path": "gpx/2024 TopCamp/Connected_20240518_094959_.gpx",
-    "length2d": 383273.4039,
-    "length3d": 383685.9468,
+    "length2d": 383273.7475,
+    "length3d": 383686.2902,
     "tracks": [
       {
-        "length2d": 383273.4039,
-        "length3d": 383685.9468,
+        "length2d": 383273.7475,
+        "length3d": 383686.2902,
         "segments": [
           {
-            "length2d": 17824.1917,
-            "length3d": 17859.4825
+            "length2d": 17824.1916,
+            "length3d": 17859.4824
           },
           {
-            "length2d": 10061.1919,
-            "length3d": 10112.4229
+            "length2d": 10061.1976,
+            "length3d": 10112.4286
           },
           {
-            "length2d": 98386.7616,
-            "length3d": 98501.4374
+            "length2d": 98386.8289,
+            "length3d": 98501.5046
           },
           {
-            "length2d": 102427.5772,
-            "length3d": 102504.9218
+            "length2d": 102427.688,
+            "length3d": 102505.0325
           },
           {
-            "length2d": 1118.0131,
-            "length3d": 1148.0387
+            "length2d": 1118.0141,
+            "length3d": 1148.0397
           },
           {
-            "length2d": 6833.2476,
-            "length3d": 6835.7400
+            "length2d": 6833.2609,
+            "length3d": 6835.7533
           },
           {
-            "length2d": 44184.3370,
-            "length3d": 44217.5672
+            "length2d": 44184.3858,
+            "length3d": 44217.616
           },
           {
-            "length2d": 67033.8763,
-            "length3d": 67071.4244
+            "length2d": 67033.9478,
+            "length3d": 67071.4959
           },
           {
-            "length2d": 35404.2073,
-            "length3d": 35434.9116
+            "length2d": 35404.2329,
+            "length3d": 35434.9371
           }
         ]
       }
