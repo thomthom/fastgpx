@@ -41,7 +41,7 @@
       "args": [
         "${file}",
         "-k",
-        "test_debug_segment_length"
+        "test_simple_segment_length2d"
       ],
       "purpose": [
         "debug-test"
