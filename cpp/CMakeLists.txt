@@ -30,7 +30,15 @@ FetchContent_MakeAvailable(tinyxml2 pugixml Catch2 json)
 
 # fastgpx static library
 
-add_library(fastgpx-static fastgpx.hpp fastgpx.cpp geom.hpp geom.cpp)
+set(SOURCES
+  fastgpx.hpp
+  fastgpx.cpp
+  filesystem.hpp
+  filesystem.cpp
+  geom.hpp
+  geom.cpp
+)
+add_library(fastgpx-static ${SOURCES})
 set_property(TARGET fastgpx-static PROPERTY CXX_STANDARD 23)
 set_property(TARGET fastgpx-static PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET fastgpx-static PROPERTY CXX_EXTENSIONS OFF)
