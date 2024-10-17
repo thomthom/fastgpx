@@ -166,7 +166,7 @@ def read_tinyxml():
         fullpath = os.path.abspath(gpx_filepath)
         # print(f'fullpath: {fullpath}')
 
-        length = gpxcpp.tinyxml_gpx_length(fullpath)
+        length = gpxcpp.tinyxml_gpx_length2d(fullpath)
 
         # gpxdata = open(fullpath).read()
         # length = gpxcpp.tinyxml_gpx_length(gpxdata)
@@ -181,7 +181,7 @@ def read_pugixml():
     gpx_files = get_gpx_files(GPX_PATH)
     for gpx_filepath in gpx_files:
         fullpath = os.path.abspath(gpx_filepath)
-        length = gpxcpp.pugixml_gpx_length(fullpath)
+        length = gpxcpp.pugixml_gpx_length2d(fullpath)
         # length = gpxcpp.pugixml_gpx_length(gpx_filepath)
         total_length += length
     print('pugixml', total_length, 'meters')
@@ -193,7 +193,7 @@ def read_fastgpx():
     gpx_files = get_gpx_files(GPX_PATH)
     for gpx_filepath in gpx_files:
         fullpath = os.path.abspath(gpx_filepath)
-        length = gpxcpp.fastgpx_gpx_length(fullpath)
+        length = gpxcpp.fastgpx_gpx_length2d(fullpath)
         total_length += length
     print('fastgpx', total_length, 'meters')
     return total_length

@@ -15,7 +15,7 @@
 #include "filesystem.hpp"
 #include "geom.hpp"
 
-double tinyxml_gpx_length(const std::filesystem::path &path)
+double tinyxml_gpx_length2d(const std::filesystem::path &path)
 {
   FILE *xmlFile = fastgpx::open_file(path);
 
@@ -67,7 +67,7 @@ double tinyxml_gpx_length(const std::filesystem::path &path)
   return total_distance;
 }
 
-double pugixml_gpx_length(const std::filesystem::path &path)
+double pugixml_gpx_length2d(const std::filesystem::path &path)
 {
   pugi::xml_document doc;
 

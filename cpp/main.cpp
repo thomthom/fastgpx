@@ -33,7 +33,7 @@ int main()
       {
         continue;
       }
-      total_length += tinyxml_gpx_length(entry.path());
+      total_length += tinyxml_gpx_length2d(entry.path());
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;
@@ -53,7 +53,7 @@ int main()
       {
         continue;
       }
-      total_length += pugixml_gpx_length(entry.path());
+      total_length += pugixml_gpx_length2d(entry.path());
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;
