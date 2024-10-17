@@ -19,7 +19,7 @@ def expected_gpx(gpx_path):
 
 
 def test_simple_segment_length2d():
-    path = Path('gpx/test/debug-segment.gpx')
+    path = 'gpx/test/debug-segment.gpx'
     with open(path, 'r', encoding='utf-8') as gpx_file:
         expected_gpx = gpxpy.parse(gpx_file)
     expected = expected_gpx.tracks[0].segments[0].length_2d()

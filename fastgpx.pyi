@@ -1,5 +1,4 @@
 from __future__ import annotations
-import os
 import typing
 __all__ = ['Gpx', 'LatLong', 'Segment', 'Track', 'parse']
 class Gpx:
@@ -49,5 +48,5 @@ class Track:
         ...
     def length_3d(self) -> float:
         ...
-def parse(path: os.PathLike) -> Gpx:
+def parse(path: str) -> Gpx:
     ...

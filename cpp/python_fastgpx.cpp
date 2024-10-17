@@ -45,5 +45,6 @@ PYBIND11_MODULE(fastgpx, m)
       .def("length_2d", &fastgpx::Gpx::GetLength2D)
       .def("length_3d", &fastgpx::Gpx::GetLength3D);
 
-  m.def("parse", &fastgpx::ParseGpx, py::arg("path"));
+  m.def("parse", py::overload_cast<const std::string&>(&fastgpx::ParseGpx),
+      py::arg("path"));
 }

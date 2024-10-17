@@ -1,5 +1,7 @@
 #include "fastgpx.hpp"
 
+#include <pugixml.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -167,6 +169,10 @@ namespace fastgpx
     }
 
     return gpx;
+  }
+
+  Gpx ParseGpx(const std::string &path) {
+    return ParseGpx(std::filesystem::path(path));
   }
 
 } // namespace fastgpx

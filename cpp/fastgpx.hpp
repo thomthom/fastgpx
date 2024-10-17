@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-#include <pugixml.hpp>
-
 namespace fastgpx
 {
 
@@ -76,5 +74,8 @@ namespace fastgpx
   };
 
   Gpx ParseGpx(const std::filesystem::path &path);
+  // pybind11 appear to mangle the unicode string when binding directly to
+  // std::filesystem::path. But going via a std::string works.
+  Gpx ParseGpx(const std::string &path);
 
 } // namespace fastgpx
