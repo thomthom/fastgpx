@@ -75,7 +75,15 @@ target_link_libraries(fastgpxcli PRIVATE fastgpx-static)
 
 # fastgpx tests
 
-add_executable(fastgpx_test fastgpx_test.cpp test_data.hpp test_data.cpp)
+set(TEST_UTILS
+  test_data.hpp
+  test_data.cpp
+)
+set(TEST_SOURCES
+  fastgpx_test.cpp
+  geom_test.cpp
+)
+add_executable(fastgpx_test ${TEST_UTILS} ${TEST_SOURCES})
 set_property(TARGET fastgpx_test PROPERTY CXX_STANDARD 23)
 set_property(TARGET fastgpx_test PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET fastgpx_test PROPERTY CXX_EXTENSIONS OFF)

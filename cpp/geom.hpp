@@ -5,6 +5,15 @@ namespace fastgpx
   struct LatLong;
 
   /**
+   * @brief Haversine distance returned in meters.
+   *
+   * @param ll1
+   * @param ll2
+   * @return double Meters.
+   */
+  double haversine(LatLong ll1, LatLong ll2);
+
+  /**
    * @brief Computes the distance in 2d between two point using gpxpy logic.
    *
    * @note Haversine might still be used for larger distances.

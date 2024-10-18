@@ -15,24 +15,17 @@ namespace fastgpx
   // One degree in meters:
   constexpr double ONE_DEGREE = (2.0 * std::numbers::pi * EARTH_RADIUS) / 360.0; // == > 111.319 km
 
-  double radians(double degrees)
+  double to_radians(double degrees)
   {
     constexpr double TO_RADIANS = std::numbers::pi / 180.0;
     return degrees * TO_RADIANS;
   }
 
-  /**
-   * @brief Haversine distance returned in meters.
-   *
-   * @param ll1
-   * @param ll2
-   * @return double Meters.
-   */
   double haversine(LatLong ll1, LatLong ll2)
   {
-    const auto d_lon = radians(ll1.longitude - ll2.longitude);
-    const auto lat1 = radians(ll1.latitude);
-    const auto lat2 = radians(ll2.latitude);
+    const auto d_lon = to_radians(ll1.longitude - ll2.longitude);
+    const auto lat1 = to_radians(ll1.latitude);
+    const auto lat2 = to_radians(ll2.latitude);
     const auto d_lat = lat1 - lat2;
 
     const auto a = std::pow(std::sin(d_lat / 2), 2) +
@@ -71,7 +64,7 @@ namespace fastgpx
     if (use_haversine || (std::abs(ll1.latitude - ll2.latitude) > .2 || std::abs(ll1.longitude - ll2.longitude) > .2))
       return haversine(ll1, ll2);
 
-    const auto coef = std::cos(radians(ll1.latitude));
+    const auto coef = std::cos(to_radians(ll1.latitude));
     const auto x = ll1.latitude - ll2.latitude;
     const auto y = (ll1.longitude - ll2.longitude) * coef;
 
