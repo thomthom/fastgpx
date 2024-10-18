@@ -11,7 +11,7 @@ namespace fastgpx
    * @param ll2
    * @return double Meters.
    */
-  double haversine(LatLong ll1, LatLong ll2);
+  double haversine(LatLong ll1, LatLong ll2) noexcept;
 
   /**
    * @brief Computes the distance in 2d between two point using gpxpy logic.
@@ -23,7 +23,7 @@ namespace fastgpx
    * @param use_haversine Force haversine
    * @return double Meters
    */
-  double distance2d(LatLong ll1, LatLong ll2, bool use_haversine = false);
+  double distance2d(LatLong ll1, LatLong ll2, bool use_haversine = false) noexcept;
 
   /**
    * @brief Computes the distance in 3d between two point using gpxpy logic.
@@ -35,7 +35,7 @@ namespace fastgpx
    * @param use_haversine Force haversine
    * @return double Meters
    */
-  double distance3d(LatLong ll1, LatLong ll2, bool use_haversine = false);
+  double distance3d(LatLong ll1, LatLong ll2, bool use_haversine = false) noexcept;
 
   namespace v2
   {
@@ -50,22 +50,22 @@ namespace fastgpx
     double haversine(LatLong ll1, LatLong ll2) noexcept;
 
     /**
-   * @brief Computes the distance in 2d between two point using gpxpy logic.
-   *
-   * @param ll1
-   * @param ll2
-   * @return double Meters
-   */
-    double distance2d(LatLong ll1, LatLong ll2);
+     * @brief Computes the distance in 2d between two point using gpxpy logic.
+     *
+     * @param ll1
+     * @param ll2
+     * @return double Meters
+     */
+    double distance2d(LatLong ll1, LatLong ll2) noexcept;
 
     /**
-   * @brief Computes the distance in 3d between two point using gpxpy logic.
-   *
-   * @param ll1
-   * @param ll2
-   * @return double Meters
-   */
-    double distance3d(LatLong ll1, LatLong ll2);
+     * @brief Computes the distance in 3d between two point using gpxpy logic.
+     *
+     * @param ll1
+     * @param ll2
+     * @return double Meters
+     */
+    double distance3d(LatLong ll1, LatLong ll2) noexcept;
 
   } // namespace v2
 

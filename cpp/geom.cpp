@@ -15,13 +15,13 @@ namespace fastgpx
   // One degree in meters:
   constexpr double ONE_DEGREE = (2.0 * std::numbers::pi * EARTH_RADIUS) / 360.0; // == > 111.319 km
 
-  double to_radians(double degrees)
+  double to_radians(double degrees) noexcept
   {
     constexpr double TO_RADIANS = std::numbers::pi / 180.0;
     return degrees * TO_RADIANS;
   }
 
-  double haversine(LatLong ll1, LatLong ll2)
+  double haversine(LatLong ll1, LatLong ll2) noexcept
   {
     const auto d_lon = to_radians(ll1.longitude - ll2.longitude);
     const auto lat1 = to_radians(ll1.latitude);
@@ -35,8 +35,6 @@ namespace fastgpx
     return d;
   }
 
-  // TODO: Compare against always using haversine.
-  // TODO: Compare against libosmium.
   /**
    * @brief Computes the distance between two points using gpxpy logic.
    *
@@ -59,7 +57,7 @@ namespace fastgpx
    * @param use_2d
    * @return double Meters
    */
-  double distance(LatLong ll2, LatLong ll1, bool use_haversine = false, bool use_2d = true)
+  double distance(LatLong ll2, LatLong ll1, bool use_haversine = false, bool use_2d = true) noexcept
   {
     if (use_haversine || (std::abs(ll1.latitude - ll2.latitude) > .2 || std::abs(ll1.longitude - ll2.longitude) > .2))
       return haversine(ll1, ll2);
@@ -81,12 +79,12 @@ namespace fastgpx
     return std::sqrt((distance_2d * distance_2d) + (ele_diff * ele_diff));
   }
 
-  double distance2d(LatLong ll1, LatLong ll2, bool use_haversine)
+  double distance2d(LatLong ll1, LatLong ll2, bool use_haversine) noexcept
   {
     return distance(ll1, ll2, use_haversine, true);
   }
 
-  double distance3d(LatLong ll1, LatLong ll2, bool use_haversine)
+  double distance3d(LatLong ll1, LatLong ll2, bool use_haversine) noexcept
   {
     return distance(ll1, ll2, use_haversine, false);
   }
@@ -131,12 +129,12 @@ namespace fastgpx
       return 2.0 * EARTH_RADIUS_IN_METERS * std::asin(std::sqrt(lat + tmp * lon));
     }
 
-    double distance2d(LatLong ll1, LatLong ll2)
+    double distance2d(LatLong ll1, LatLong ll2) noexcept
     {
       return v2::haversine(ll1, ll2);
     }
 
-    double distance3d(LatLong ll1, LatLong ll2)
+    double distance3d(LatLong ll1, LatLong ll2) noexcept
     {
       const auto distance = v2::haversine(ll1, ll2);
 
