@@ -129,7 +129,10 @@
   "cSpell.words": [
     "fastgpx",
     "gpxpy",
-    "Roadtrip"
+    "pugi",
+    "Roadtrip",
+    "trkpt",
+    "trkseg"
   ]
   // "python.autoComplete.extraPaths": [
   //   "${workspaceFolder}/.venv/lib/site-packages"
