@@ -1,6 +1,7 @@
 from __future__ import annotations
 import typing
-__all__ = ['Gpx', 'LatLong', 'Segment', 'Track', 'parse']
+from . import polyline
+__all__ = ['Gpx', 'LatLong', 'Segment', 'Track', 'parse', 'polyline']
 class Gpx:
     tracks: list[Track]
     @staticmethod

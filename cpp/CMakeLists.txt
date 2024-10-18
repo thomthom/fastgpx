@@ -37,6 +37,8 @@ set(SOURCES
   filesystem.cpp
   geom.hpp
   geom.cpp
+  polyline.hpp
+  polyline.cpp
 )
 add_library(fastgpx-static ${SOURCES})
 set_property(TARGET fastgpx-static PROPERTY CXX_STANDARD 23)

@@ -1,5 +1,3 @@
-#include "fastgpx.hpp"
-
 #include <filesystem>
 
 #include <pybind11/pybind11.h>
@@ -7,6 +5,9 @@
 #include <pybind11/stl_bind.h>
 #include <pybind11/stl/filesystem.h>
 #include <pybind11/functional.h>
+
+#include "fastgpx.hpp"
+#include "polyline.hpp"
 
 namespace py = pybind11;
 
@@ -45,6 +46,18 @@ PYBIND11_MODULE(fastgpx, m)
       .def("length_2d", &fastgpx::Gpx::GetLength2D)
       .def("length_3d", &fastgpx::Gpx::GetLength3D);
 
-  m.def("parse", py::overload_cast<const std::string&>(&fastgpx::ParseGpx),
-      py::arg("path"));
+  m.def("parse", py::overload_cast<const std::string &>(&fastgpx::ParseGpx),
+        py::arg("path"));
+
+  py::module_ polyline_mod = m.def_submodule("polyline");
+  // polyline_mod.def("encode", &fastgpx::polyline::encode,
+  //   py::arg("locations"), py::arg("precision"));
+  polyline_mod.def("encode",
+                   // Wrapping in std::vector because std::span doesn't work out of the box.
+                   [](const std::vector<fastgpx::LatLong> &points)
+                   { return fastgpx::polyline::encode(points, fastgpx::polyline::Precision::Six); }, py::arg("locations"));
+  // polyline_mod.def("decode", &fastgpx::polyline::decode,
+  //   py::arg("encoded"), py::arg("precision"));
+  polyline_mod.def("decode", [](std::string_view encoded)
+                   { return fastgpx::polyline::decode(encoded, fastgpx::polyline::Precision::Six); }, py::arg("encoded"));
 }
