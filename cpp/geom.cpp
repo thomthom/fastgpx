@@ -76,7 +76,9 @@ namespace fastgpx
     if (use_2d || ll1.elevation == ll2.elevation)
       return distance_2d;
 
-    return std::sqrt(std::pow(distance_2d, 2.0) + std::pow((ll1.elevation - ll2.elevation), 2.0));
+    // return std::sqrt(std::pow(distance_2d, 2.0) + std::pow((ll1.elevation - ll2.elevation), 2.0));
+    const auto ele_diff = ll1.elevation - ll2.elevation;
+    return std::sqrt((distance_2d * distance_2d) + (ele_diff * ele_diff));
   }
 
   double distance2d(LatLong ll1, LatLong ll2, bool use_haversine)
@@ -87,6 +89,60 @@ namespace fastgpx
   double distance3d(LatLong ll1, LatLong ll2, bool use_haversine)
   {
     return distance(ll1, ll2, use_haversine, false);
+  }
+
+  namespace v2
+  {
+
+    namespace geom
+    {
+
+      // constexpr inline double std::numbers::pi = (3.141592653589793)
+      constexpr double PI = 3.14159265358979323846;
+
+      /// Convert angle from degrees to radians.
+      inline constexpr double deg_to_rad(double degree) noexcept
+      {
+        return degree * (PI / 180.0);
+      }
+
+      /// Convert angle from radians to degrees.
+      inline constexpr double rad_to_deg(double radians) noexcept
+      {
+        return radians * (180.0 / PI);
+      }
+
+    } // namespace geom
+
+    /// @brief Earth's quadratic mean radius for WGS84
+    constexpr const double EARTH_RADIUS_IN_METERS = 6372797.560856;
+
+    double haversine(LatLong ll1, LatLong ll2) noexcept
+    {
+      using namespace geom;
+      // https://github.com/osmcode/libosmium/blob/f88048769c13210ca81efca17668dc57ea64c632/include/osmium/geom/haversine.hpp#L48-L73
+      double lon = std::sin(deg_to_rad(ll1.longitude - ll2.longitude) * 0.5);
+      lon *= lon;
+
+      double lat = std::sin(deg_to_rad(ll1.latitude - ll2.latitude) * 0.5);
+      lat *= lat;
+
+      const double tmp = std::cos(deg_to_rad(ll1.latitude)) * std::cos(deg_to_rad(ll2.latitude));
+      return 2.0 * EARTH_RADIUS_IN_METERS * std::asin(std::sqrt(lat + tmp * lon));
+    }
+
+    double distance2d(LatLong ll1, LatLong ll2)
+    {
+      return v2::haversine(ll1, ll2);
+    }
+
+    double distance3d(LatLong ll1, LatLong ll2)
+    {
+      const auto distance = v2::haversine(ll1, ll2);
+
+      const auto elevation_diff = ll1.elevation - ll2.elevation;
+      return std::sqrt((distance * distance) + (elevation_diff * elevation_diff));
+    }
   }
 
 } // namespace fastgpx

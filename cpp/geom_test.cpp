@@ -14,43 +14,11 @@
 #include "test_data.hpp"
 
 using Catch::Matchers::WithinAbs;
-using Catch::Matchers::WithinRel;
 
 // Sufficient tolerance for comparing meters.
 constexpr double kMETERS_TOL = 1e-4;
 
 const auto project_path = std::filesystem::path(FASTGPX_PROJECT_DIR);
-
-TEST_CASE("Compute 2D distance", "[distance]")
-{
-  const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
-  const auto gpx = fastgpx::ParseGpx(path);
-  const auto expected_length2d = gpx.GetLength2D();
-  const auto expected_length3d = gpx.GetLength3D();
-
-  SECTION("gpxpy haversine")
-  {
-    double distance = 0.0;
-    for (const auto &track : gpx.tracks)
-    {
-      for (const auto &segment : track.segments)
-      {
-        const auto &points = segment.points;
-        auto distances = std::views::zip(points, points | std::views::drop(1)) |
-                         std::views::transform([](const auto &pair)
-                                               { return fastgpx::haversine(std::get<0>(pair), std::get<1>(pair)); });
-        distance += std::accumulate(distances.begin(), distances.end(), 0.0);
-      }
-    }
-    CHECK_THAT(distance, WithinAbs(expected_length2d, kMETERS_TOL));
-    CHECK_THAT(distance, WithinRel(expected_length2d, kMETERS_TOL));
-    CHECK_THAT(distance, WithinRel(expected_length2d));
-
-    CHECK_THAT(distance, WithinAbs(expected_length3d, kMETERS_TOL));
-    CHECK_THAT(distance, WithinRel(expected_length3d, kMETERS_TOL));
-    CHECK_THAT(distance, WithinRel(expected_length3d));
-  };
-}
 
 using GpxLengthFunc = const std::function<double(const fastgpx::LatLong &, const fastgpx::LatLong &)>;
 static double GpxLength(const fastgpx::Gpx &gpx, const GpxLengthFunc &func)
@@ -75,18 +43,75 @@ static double fastgpx_distance2d(const fastgpx::LatLong &ll1, const fastgpx::Lat
   return fastgpx::distance2d(ll1, ll2, false);
 }
 
-TEST_CASE("Benchmark distance", "[!benchmark][distance]")
+static double fastgpx_distance3d(const fastgpx::LatLong &ll1, const fastgpx::LatLong &ll2)
 {
+  return fastgpx::distance3d(ll1, ll2, false);
+}
+
+TEST_CASE("Compute 2D distance", "[distance]")
+{
+  // ~380km route
   const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
   const auto gpx = fastgpx::ParseGpx(path);
+  // Reference lengths are based on the gpxpy implementations:
+  const auto expected_haversine = GpxLength(gpx, fastgpx::haversine);
+  const auto expected_length2d = GpxLength(gpx, fastgpx_distance2d);
+  const auto expected_length3d = GpxLength(gpx, fastgpx_distance3d);
+
+  const auto kImplTolMeters = 400.0; // Accepted tolerance deviations between implementations.
+
+  SECTION("v2 haversine")
+  {
+    double distance = GpxLength(gpx, fastgpx::v2::haversine);
+    CHECK_THAT(distance, WithinAbs(expected_haversine, kImplTolMeters));
+  };
+
+  SECTION("v2 distance2d")
+  {
+    double distance = GpxLength(gpx, fastgpx::v2::distance2d);
+    CHECK_THAT(distance, WithinAbs(expected_length2d, kImplTolMeters));
+  };
+
+  SECTION("v2 distance3d")
+  {
+    double distance = GpxLength(gpx, fastgpx::v2::distance3d);
+    CHECK_THAT(distance, WithinAbs(expected_length3d, kImplTolMeters));
+  };
+}
+
+TEST_CASE("Benchmark distance", "[!benchmark][distance]")
+{
+  // ~380km route
+  const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
+  const auto gpx = fastgpx::ParseGpx(path);
+
+  BENCHMARK("gpxpy haversine")
+  {
+    return GpxLength(gpx, fastgpx::haversine);
+  };
 
   BENCHMARK("gpxpy distance2d")
   {
     return GpxLength(gpx, fastgpx_distance2d);
   };
 
-  BENCHMARK("gpxpy haversine")
+  BENCHMARK("gpxpy distance3d")
   {
-    return GpxLength(gpx, fastgpx::haversine);
+    return GpxLength(gpx, fastgpx_distance3d);
+  };
+
+  BENCHMARK("v2 haversine")
+  {
+    return GpxLength(gpx, fastgpx::v2::haversine);
+  };
+
+  BENCHMARK("v2 distance2d")
+  {
+    return GpxLength(gpx, fastgpx::v2::distance2d);
+  };
+
+  BENCHMARK("v2 distance3d")
+  {
+    return GpxLength(gpx, fastgpx::v2::distance3d);
   };
 }
