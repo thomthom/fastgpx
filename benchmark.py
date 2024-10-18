@@ -247,5 +247,7 @@ for benchmark in benchmarks:
     deviation = result - expected
     percent = (deviation / expected) * 100
     print(Fore.LIGHTMAGENTA_EX + f'Distance deviation: {deviation} meters ({percent:.4f}%)')
+    if deviation != 0.0:
+        print(Back.LIGHTRED_EX + Fore.WHITE + '  FAIL  ' + Back.RESET + Fore.RESET)
 
 print(Fore.RESET)
