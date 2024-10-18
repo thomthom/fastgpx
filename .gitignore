@@ -4,6 +4,9 @@ __pycache__
 /build/
 /output/
 
+/.vs/
+/out/
+
 .mypy_cache/
 .pytest_cache/
 
