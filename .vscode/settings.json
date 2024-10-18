@@ -127,7 +127,9 @@
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "cSpell.words": [
-    "fastgpx"
+    "fastgpx",
+    "gpxpy",
+    "Roadtrip"
   ]
   // "python.autoComplete.extraPaths": [
   //   "${workspaceFolder}/.venv/lib/site-packages"
