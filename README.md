@@ -152,3 +152,9 @@ pybind11-stubgen fastgpx -o .
 > ```
 >
 > This will install both the main dependencies and the development dependencies defined in the dev section of `pyproject.toml`.
+
+# Catch2 Tests
+
+```sh
+build\cpp\RelWithDebInfo\fastgpx_test.exe [!benchmark]
+```
