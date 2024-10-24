@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <stdexcept>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -14,6 +15,29 @@ namespace py = pybind11;
 // TODO: def_readwrite for functions returning a container
 // reference ends up returning a copy. Not ideal.
 // https://pybind11.readthedocs.io/en/stable/advanced/cast/stl.html
+
+namespace
+{
+
+  fastgpx::polyline::Precision IntToPrecision(const int value)
+  {
+    fastgpx::polyline::Precision precision;
+    if (value == 6)
+    {
+      precision = fastgpx::polyline::Precision::Six;
+    }
+    else if (value == 5)
+    {
+      precision = fastgpx::polyline::Precision::Five;
+    }
+    else
+    {
+      throw std::invalid_argument("Invalid precision value. Must be 5 or 6.");
+    }
+    return precision;
+  }
+
+} // namespace
 
 PYBIND11_MODULE(fastgpx, m)
 {
@@ -66,8 +90,26 @@ PYBIND11_MODULE(fastgpx, m)
       py::arg("precision") = fastgpx::polyline::Precision::Five);
 
   polyline_mod.def(
+      "encode",
+      [](const std::vector<fastgpx::LatLong> &points, int precision)
+      {
+        return fastgpx::polyline::encode(points, IntToPrecision(precision));
+      },
+      py::arg("locations"),
+      py::arg("precision") = 5);
+
+  polyline_mod.def(
       "decode",
       &fastgpx::polyline::decode,
       py::arg("encoded"),
       py::arg("precision") = fastgpx::polyline::Precision::Five);
+
+  polyline_mod.def(
+      "decode",
+      [](const std::string_view encoded, int precision)
+      {
+        return fastgpx::polyline::decode(encoded, IntToPrecision(precision));
+      },
+      py::arg("locations"),
+      py::arg("precision") = 5);
 }
