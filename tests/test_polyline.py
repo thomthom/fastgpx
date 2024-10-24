@@ -25,17 +25,20 @@ def test_encode_segment(gpx_path):
               for point in gpx.tracks[0].segments[0].points]
 
     expected = polyline.encode(points, precision=6)
-    actual = fastgpx.polyline.encode(gpx.tracks[0].segments[0].points)
+    actual = fastgpx.polyline.encode(
+        gpx.tracks[0].segments[0].points,
+        precision=fastgpx.polyline.Precision.Six)
     assert actual == expected
 
 
-def test_decode_segment(expected_gpx, gpx_path):
+def test_decode_segment(gpx_path):
     gpx = fastgpx.parse(gpx_path)
     points = [(point.latitude, point.longitude)
               for point in gpx.tracks[0].segments[0].points]
     polyline6 = polyline.encode(points, precision=6)
 
     expected = polyline.decode(polyline6, precision=6)
-    result = fastgpx.polyline.decode(polyline6)
+    result = fastgpx.polyline.decode(polyline6,
+                                     precision=fastgpx.polyline.Precision.Six)
     actual = [(point.latitude, point.longitude) for point in result]
     assert actual == expected

@@ -131,6 +131,8 @@ pybind11-stubgen gpxcpp -o .
 
 ```sh
 pybind11-stubgen fastgpx -o .
+
+pybind11-stubgen fastgpx --enum-class-locations "Precision:fastgpx.polyline" -o .
 ```
 
 # pyproject.toml

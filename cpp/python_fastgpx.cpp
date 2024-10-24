@@ -50,14 +50,24 @@ PYBIND11_MODULE(fastgpx, m)
         py::arg("path"));
 
   py::module_ polyline_mod = m.def_submodule("polyline");
-  // polyline_mod.def("encode", &fastgpx::polyline::encode,
-  //   py::arg("locations"), py::arg("precision"));
-  polyline_mod.def("encode",
-                   // Wrapping in std::vector because std::span doesn't work out of the box.
-                   [](const std::vector<fastgpx::LatLong> &points)
-                   { return fastgpx::polyline::encode(points, fastgpx::polyline::Precision::Six); }, py::arg("locations"));
-  // polyline_mod.def("decode", &fastgpx::polyline::decode,
-  //   py::arg("encoded"), py::arg("precision"));
-  polyline_mod.def("decode", [](std::string_view encoded)
-                   { return fastgpx::polyline::decode(encoded, fastgpx::polyline::Precision::Six); }, py::arg("encoded"));
+
+  py::enum_<fastgpx::polyline::Precision>(polyline_mod, "Precision")
+      .value("Five", fastgpx::polyline::Precision::Five)
+      .value("Six", fastgpx::polyline::Precision::Six);
+
+  polyline_mod.def(
+      "encode",
+      // Wrapping in std::vector because std::span doesn't work out of the box.
+      [](const std::vector<fastgpx::LatLong> &points, fastgpx::polyline::Precision precision)
+      {
+        return fastgpx::polyline::encode(points, precision);
+      },
+      py::arg("locations"),
+      py::arg("precision") = fastgpx::polyline::Precision::Five);
+
+  polyline_mod.def(
+      "decode",
+      &fastgpx::polyline::decode,
+      py::arg("encoded"),
+      py::arg("precision") = fastgpx::polyline::Precision::Five);
 }
