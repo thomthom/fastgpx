@@ -135,6 +135,18 @@ pybind11-stubgen fastgpx -o .
 pybind11-stubgen fastgpx --enum-class-locations "Precision:fastgpx.polyline" -o .
 ```
 
+# Python Profiling
+
+https://learn.microsoft.com/en-us/visualstudio/python/profiling-python-code-in-visual-studio?view=vs-2022
+
+```sh
+snakeviz profiling/fastgpx_polyline_encode.prof
+```
+
+```sh
+snakeviz profiling/polyline_encode.prof
+```
+
 # pyproject.toml
 
 > Installing Dependencies with pyproject.toml
