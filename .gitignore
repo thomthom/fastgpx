@@ -1,6 +1,7 @@
 __pycache__
 .venv
 .env
+env39/
 /build/
 /output/
 
