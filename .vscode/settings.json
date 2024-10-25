@@ -128,11 +128,14 @@
   "python.testing.pytestEnabled": true,
   "cSpell.words": [
     "fastgpx",
+    "gpxcpp",
     "gpxpy",
     "polyline",
     "polylines",
     "pugi",
+    "pugixml",
     "Roadtrip",
+    "tinyxml",
     "trkpt",
     "trkseg"
   ]

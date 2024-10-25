@@ -1,7 +1,8 @@
-import gpxcpp
-
 import gpxpy
+import gpxpy.gpx
 import pytest
+
+import gpxcpp
 
 
 @pytest.fixture
@@ -10,7 +11,7 @@ def gpx_path():
 
 
 @pytest.fixture
-def gpx(gpx_path):
+def gpx(gpx_path: str):
     with open(gpx_path, 'r', encoding='utf-8') as gpx_file:
         gpx = gpxpy.parse(gpx_file)
     return gpx
@@ -25,7 +26,7 @@ def test_process_string():
 
 
 @pytest.mark.gpxcompare
-def test_tinyxml_gpx_length2d(gpx, gpx_path):
+def test_tinyxml_gpx_length2d(gpx: gpxpy.gpx.GPX, gpx_path: str):
     distance = gpxcpp.tinyxml_gpx_length2d(gpx_path)
     expected = gpx.length_2d()
     assert distance == pytest.approx(expected)
@@ -34,7 +35,7 @@ def test_tinyxml_gpx_length2d(gpx, gpx_path):
 
 
 @pytest.mark.gpxcompare
-def test_pugixml_gpx_length2d(gpx, gpx_path):
+def test_pugixml_gpx_length2d(gpx: gpxpy.gpx.GPX, gpx_path: str):
     distance = gpxcpp.pugixml_gpx_length2d(gpx_path)
     expected = gpx.length_2d()
     assert distance == pytest.approx(expected)
@@ -43,21 +44,21 @@ def test_pugixml_gpx_length2d(gpx, gpx_path):
 
 
 @pytest.mark.gpxcompare
-def test_fastgpx_gpx_length2d(gpx, gpx_path):
+def test_fastgpx_gpx_length2d(gpx: gpxpy.gpx.GPX, gpx_path: str):
     distance = gpxcpp.fastgpx_gpx_length2d(gpx_path)
     expected = gpx.length_2d()
     assert distance == pytest.approx(expected)
 
 
 @pytest.mark.gpxcompare
-def test_fastgpx_track_length2d(gpx, gpx_path):
+def test_fastgpx_track_length2d(gpx: gpxpy.gpx.GPX, gpx_path: str):
     expected = gpx.tracks[0].length_2d()
     distance = gpxcpp.fastgpx_track_length2d(gpx_path, 0)
     assert distance == pytest.approx(expected)
 
 
 @pytest.mark.gpxcompare
-def test_fastgpx_segment_length2d(gpx, gpx_path):
+def test_fastgpx_segment_length2d(gpx: gpxpy.gpx.GPX, gpx_path: str):
     expected = gpx.tracks[0].segments[0].length_2d()
     distance = gpxcpp.fastgpx_segment_length2d(gpx_path, 0, 0)
     assert distance == pytest.approx(expected)

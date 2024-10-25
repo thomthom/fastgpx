@@ -11,7 +11,7 @@ def gpx_path():
 
 
 @pytest.fixture
-def expected_gpx(gpx_path):
+def expected_gpx(gpx_path: str):
     with open(gpx_path, 'r', encoding='utf-8') as gpx_file:
         gpx = gpxpy.parse(gpx_file)
     return gpx
@@ -19,7 +19,7 @@ def expected_gpx(gpx_path):
 # fastgpx.polyline.encode
 
 
-def test_encode_p5_segment(gpx_path):
+def test_encode_p5_segment(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     points = [(point.latitude, point.longitude)
               for point in gpx.tracks[0].segments[0].points]
@@ -31,7 +31,7 @@ def test_encode_p5_segment(gpx_path):
     assert actual == expected
 
 
-def test_encode_p6_segment(gpx_path):
+def test_encode_p6_segment(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     points = [(point.latitude, point.longitude)
               for point in gpx.tracks[0].segments[0].points]
@@ -43,7 +43,7 @@ def test_encode_p6_segment(gpx_path):
     assert actual == expected
 
 
-def test_encode_p5_segment_int_overload(gpx_path):
+def test_encode_p5_segment_int_overload(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     points = [(point.latitude, point.longitude)
               for point in gpx.tracks[0].segments[0].points]
@@ -54,7 +54,7 @@ def test_encode_p5_segment_int_overload(gpx_path):
     assert actual == expected
 
 
-def test_encode_p6_segment_int_overload(gpx_path):
+def test_encode_p6_segment_int_overload(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     points = [(point.latitude, point.longitude)
               for point in gpx.tracks[0].segments[0].points]
@@ -65,7 +65,7 @@ def test_encode_p6_segment_int_overload(gpx_path):
     assert actual == expected
 
 
-def test_encode_segment_int_overload_invalid_arguments(gpx_path):
+def test_encode_segment_int_overload_invalid_arguments(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     points = gpx.tracks[0].segments[0].points
 
@@ -78,7 +78,7 @@ def test_encode_segment_int_overload_invalid_arguments(gpx_path):
 # fastgpx.polyline.decode
 
 
-def test_decode_p5_segment(gpx_path):
+def test_decode_p5_segment(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     points = [(point.latitude, point.longitude)
               for point in gpx.tracks[0].segments[0].points]
@@ -91,7 +91,7 @@ def test_decode_p5_segment(gpx_path):
     assert actual == expected
 
 
-def test_decode_p6_segment(gpx_path):
+def test_decode_p6_segment(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     points = [(point.latitude, point.longitude)
               for point in gpx.tracks[0].segments[0].points]
@@ -104,7 +104,7 @@ def test_decode_p6_segment(gpx_path):
     assert actual == expected
 
 
-def test_decode_p5_segment_int_overload(gpx_path):
+def test_decode_p5_segment_int_overload(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     points = [(point.latitude, point.longitude)
               for point in gpx.tracks[0].segments[0].points]
@@ -116,7 +116,7 @@ def test_decode_p5_segment_int_overload(gpx_path):
     assert actual == expected
 
 
-def test_decode_p6_segment_int_overload(gpx_path):
+def test_decode_p6_segment_int_overload(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     points = [(point.latitude, point.longitude)
               for point in gpx.tracks[0].segments[0].points]
@@ -128,7 +128,7 @@ def test_decode_p6_segment_int_overload(gpx_path):
     assert actual == expected
 
 
-def test_decode_segment_int_overload_invalid_arguments(gpx_path):
+def test_decode_segment_int_overload_invalid_arguments(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     points = [(point.latitude, point.longitude)
               for point in gpx.tracks[0].segments[0].points]
