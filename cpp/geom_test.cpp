@@ -40,12 +40,12 @@ static double GpxLength(const fastgpx::Gpx &gpx, const GpxLengthFunc &func)
 
 static double fastgpx_distance2d(const fastgpx::LatLong &ll1, const fastgpx::LatLong &ll2)
 {
-  return fastgpx::distance2d(ll1, ll2, false);
+  return fastgpx::v1::distance2d(ll1, ll2, false);
 }
 
 static double fastgpx_distance3d(const fastgpx::LatLong &ll1, const fastgpx::LatLong &ll2)
 {
-  return fastgpx::distance3d(ll1, ll2, false);
+  return fastgpx::v1::distance3d(ll1, ll2, false);
 }
 
 TEST_CASE("Compute 2D distance", "[distance]")
@@ -54,7 +54,7 @@ TEST_CASE("Compute 2D distance", "[distance]")
   const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
   const auto gpx = fastgpx::ParseGpx(path);
   // Reference lengths are based on the gpxpy implementations:
-  const auto expected_haversine = GpxLength(gpx, fastgpx::haversine);
+  const auto expected_haversine = GpxLength(gpx, fastgpx::v1::haversine);
   const auto expected_length2d = GpxLength(gpx, fastgpx_distance2d);
   const auto expected_length3d = GpxLength(gpx, fastgpx_distance3d);
 
@@ -87,7 +87,7 @@ TEST_CASE("Benchmark distance", "[!benchmark][distance]")
 
   BENCHMARK("gpxpy haversine")
   {
-    return GpxLength(gpx, fastgpx::haversine);
+    return GpxLength(gpx, fastgpx::v1::haversine);
   };
 
   BENCHMARK("gpxpy distance2d")
