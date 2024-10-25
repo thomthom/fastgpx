@@ -1,10 +1,8 @@
-import fastgpx
-
-from pathlib import Path
-
 import gpxpy
 import polyline
 import pytest
+
+import fastgpx
 
 
 @pytest.fixture
