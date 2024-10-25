@@ -54,7 +54,7 @@ double tinyxml_gpx_length2d(const std::filesystem::path &path)
           double lon2 = std::stod(trkpt->Attribute("lon"));
 
           // Compute the distance between two track points
-          segment_distance += fastgpx::distance2d({lat1, lon1}, {lat2, lon2});
+          segment_distance += fastgpx::v1::distance2d({lat1, lon1}, {lat2, lon2});
         }
         prev_trkpt = trkpt;
       }
@@ -107,7 +107,7 @@ double pugixml_gpx_length2d(const std::filesystem::path &path)
           double lon2 = trkpt.attribute("lon").as_double();
 
           // Compute distance between two points
-          segment_distance += fastgpx::distance2d({lat1, lon1}, {lat2, lon2});
+          segment_distance += fastgpx::v1::distance2d({lat1, lon1}, {lat2, lon2});
         }
         prev_trkpt = trkpt;
       }

@@ -30,13 +30,13 @@ TEST_CASE("Parse two-point single segment track", "[parse][simple]")
   REQUIRE(gpx.tracks.size() == 1);
   REQUIRE(gpx.tracks[0].segments.size() == 1);
 
-  CHECK_THAT(gpx.tracks[0].segments[0].GetLength2D(), WithinAbs(1.3851, kMETERS_TOL));
-  CHECK_THAT(gpx.tracks[0].GetLength2D(), WithinAbs(1.3851, kMETERS_TOL));
-  CHECK_THAT(gpx.GetLength2D(), WithinAbs(1.3851, kMETERS_TOL));
+  CHECK_THAT(gpx.tracks[0].segments[0].GetLength2D(), WithinAbs(1.3839, kMETERS_TOL));
+  CHECK_THAT(gpx.tracks[0].GetLength2D(), WithinAbs(1.3839, kMETERS_TOL));
+  CHECK_THAT(gpx.GetLength2D(), WithinAbs(1.3839, kMETERS_TOL));
 
-  CHECK_THAT(gpx.tracks[0].segments[0].GetLength3D(), WithinAbs(1.7084, kMETERS_TOL));
-  CHECK_THAT(gpx.tracks[0].GetLength3D(), WithinAbs(1.7084, kMETERS_TOL));
-  CHECK_THAT(gpx.GetLength3D(), WithinAbs(1.7084, kMETERS_TOL));
+  CHECK_THAT(gpx.tracks[0].segments[0].GetLength3D(), WithinAbs(1.7074, kMETERS_TOL));
+  CHECK_THAT(gpx.tracks[0].GetLength3D(), WithinAbs(1.7074, kMETERS_TOL));
+  CHECK_THAT(gpx.GetLength3D(), WithinAbs(1.7074, kMETERS_TOL));
 }
 
 TEST_CASE("Parse real world GPX files", "[parse][real_world]")

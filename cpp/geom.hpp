@@ -82,8 +82,8 @@ namespace fastgpx
 
   } // namespace v2
 
-  using v1::distance2d;
-  using v1::distance3d;
-  using v1::haversine;
+  using v2::distance2d;
+  using v2::distance3d;
+  using v2::haversine;
 
 } // namespace fastgpx

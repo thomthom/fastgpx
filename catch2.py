@@ -1,7 +1,7 @@
 import json
 import os
 
-import gpxpy
+import fastgpx
 
 
 def get_gpx_files(path: str):
@@ -32,8 +32,7 @@ def main():
         fullpath = os.path.abspath(gpx_filepath)
         assert os.path.exists(fullpath)
 
-        with open(fullpath, 'r', encoding='utf-8') as gpx_file:
-            gpx = gpxpy.parse(gpx_file)
+        gpx = fastgpx.parse(fullpath)
 
         gpx_data = {
             "path": gpx_filepath,

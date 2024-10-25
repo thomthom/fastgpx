@@ -62,7 +62,7 @@ namespace fastgpx
     double distance(const LatLong &ll2, const LatLong &ll1, bool use_haversine = false, bool use_2d = true) noexcept
     {
       if (use_haversine || (std::abs(ll1.latitude - ll2.latitude) > .2 || std::abs(ll1.longitude - ll2.longitude) > .2))
-        return haversine(ll1, ll2);
+        return v1::haversine(ll1, ll2);
 
       const auto coef = std::cos(to_radians(ll1.latitude));
       const auto x = ll1.latitude - ll2.latitude;
@@ -83,12 +83,12 @@ namespace fastgpx
 
     double distance2d(const LatLong &ll1, const LatLong &ll2, bool use_haversine) noexcept
     {
-      return distance(ll1, ll2, use_haversine, true);
+      return v1::distance(ll1, ll2, use_haversine, true);
     }
 
     double distance3d(const LatLong &ll1, const LatLong &ll2, bool use_haversine) noexcept
     {
-      return distance(ll1, ll2, use_haversine, false);
+      return v1::distance(ll1, ll2, use_haversine, false);
     }
 
   }

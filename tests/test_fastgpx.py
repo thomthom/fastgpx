@@ -22,11 +22,6 @@ METERS_TOL = 1e-4
 
 def test_simple_segment_length2d():
     path = 'gpx/test/debug-segment.gpx'
-    with open(path, 'r', encoding='utf-8') as gpx_file:
-        expected_gpx = gpxpy.parse(gpx_file)
-    expected = expected_gpx.tracks[0].segments[0].length_2d()
-    assert expected is not None
-
     gpx = fastgpx.parse(path)
     # Assigning intermediate values for easier debug inspection.
     tracks = gpx.tracks
@@ -34,26 +29,22 @@ def test_simple_segment_length2d():
     segments = track.segments
     segment = segments[0]
     distance = segment.length_2d()
-    assert distance == pytest.approx(expected, abs=METERS_TOL)
+    assert distance == pytest.approx(1.3839, abs=METERS_TOL)
 
 
-def test_gpx_length2d(expected_gpx: gpxpy.gpx.GPX, gpx_path: str):
-    expected = expected_gpx.length_2d()
+def test_gpx_length2d(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     distance = gpx.length_2d()
-    assert distance == pytest.approx(expected, abs=METERS_TOL)
+    assert distance == pytest.approx(382952.7193, abs=METERS_TOL)
 
 
-def test_track_length2d(expected_gpx: gpxpy.gpx.GPX, gpx_path: str):
-    expected = expected_gpx.tracks[0].length_2d()
+def test_track_length2d(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     distance = gpx.tracks[0].length_2d()
-    assert distance == pytest.approx(expected, abs=METERS_TOL)
+    assert distance == pytest.approx(382952.7193, abs=METERS_TOL)
 
 
-def test_segment_length2d(expected_gpx: gpxpy.gpx.GPX, gpx_path: str):
-    expected = expected_gpx.tracks[0].segments[0].length_2d()
-    assert expected is not None
+def test_segment_length2d(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     distance = gpx.tracks[0].segments[0].length_2d()
-    assert distance == pytest.approx(expected, abs=METERS_TOL)
+    assert distance == pytest.approx(17809.2701, abs=METERS_TOL)
