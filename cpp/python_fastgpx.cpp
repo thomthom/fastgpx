@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <limits>
 #include <stdexcept>
 
 #include <pybind11/pybind11.h>
@@ -42,14 +43,133 @@ namespace
 PYBIND11_MODULE(fastgpx, m)
 {
   py::class_<fastgpx::LatLong>(m, "LatLong")
-      .def(py::init<>()) // Default constructor
+      .def(py::init<>())
+      .def(py::init<double, double, double>(),
+           py::arg("latitude"), py::arg("longitude"), py::arg("elevation") = 0.0)
       .def_readwrite("latitude", &fastgpx::LatLong::latitude)
       .def_readwrite("longitude", &fastgpx::LatLong::longitude)
       .def_readwrite("elevation", &fastgpx::LatLong::elevation);
 
+  py::class_<fastgpx::Bounds>(m, "Bounds")
+      .def(py::init<>())
+      .def(py::init<const fastgpx::LatLong &, const fastgpx::LatLong &>(),
+           py::arg("min"), py::arg("max"))
+      // Allow tuples instead of explicit LatLong objects.
+      .def(py::init([](std::tuple<double, double> min_tuple, std::tuple<double, double> max_tuple)
+                    {
+            fastgpx::LatLong min{std::get<0>(min_tuple), std::get<1>(min_tuple)};
+            fastgpx::LatLong max{std::get<0>(max_tuple), std::get<1>(max_tuple)};
+            return fastgpx::Bounds(min, max); }),
+           py::arg("min"), py::arg("max"))
+      .def_readwrite("min", &fastgpx::Bounds::min)
+      .def_readwrite("max", &fastgpx::Bounds::max)
+      .def("is_empty", &fastgpx::Bounds::IsEmpty)
+      .def("is_valid", &fastgpx::Bounds::IsValid)
+      .def("add", py::overload_cast<const fastgpx::LatLong &>(&fastgpx::Bounds::Add),
+           py::arg("location"))
+      .def("add", py::overload_cast<const fastgpx::Bounds &>(&fastgpx::Bounds::Add),
+           py::arg("bounds"))
+      .def("max_bounds", &fastgpx::Bounds::MaxBounds,
+           py::arg("bounds"))
+      // gpxpy compatibility:
+      .def_property(
+          "min_latitude",
+          [](const fastgpx::Bounds &self) -> std::optional<double>
+          {
+            if (self.min.has_value())
+            {
+              return self.min->latitude;
+            }
+            else
+            {
+              return std::nullopt;
+            }
+          },
+          [](fastgpx::Bounds &self, double value)
+          {
+            if (!self.min.has_value())
+            {
+              // Kludge: Setting only one member is not ideal.
+              self.min = {.latitude = std::numeric_limits<double>::max(),
+                          .longitude = std::numeric_limits<double>::max()};
+            }
+            self.min->latitude = value;
+          })
+      .def_property(
+          "min_longitude",
+          [](const fastgpx::Bounds &self) -> std::optional<double>
+          {
+            if (self.min.has_value())
+            {
+              return self.min->longitude;
+            }
+            else
+            {
+              return std::nullopt;
+            }
+          },
+          [](fastgpx::Bounds &self, double value)
+          {
+            if (!self.min.has_value())
+            {
+              // Kludge: Setting only one member is not ideal.
+              self.min = {.latitude = std::numeric_limits<double>::max(),
+                          .longitude = std::numeric_limits<double>::max()};
+            }
+            self.min->longitude = value;
+          })
+      .def_property(
+          "max_latitude",
+          [](const fastgpx::Bounds &self) -> std::optional<double>
+          {
+            if (self.max.has_value())
+            {
+              return self.max->latitude;
+            }
+            else
+            {
+              return std::nullopt;
+            }
+          },
+          [](fastgpx::Bounds &self, double value)
+          {
+            if (!self.max.has_value())
+            {
+              // Kludge: Setting only one member is not ideal.
+              self.max = {.latitude = std::numeric_limits<double>::min(),
+                          .longitude = std::numeric_limits<double>::min()};
+            }
+            self.max->latitude = value;
+          })
+
+      .def_property(
+          "max_longitude",
+          [](const fastgpx::Bounds &self) -> std::optional<double>
+          {
+            if (self.max.has_value())
+            {
+              return self.max->longitude;
+            }
+            else
+            {
+              return std::nullopt;
+            }
+          },
+          [](fastgpx::Bounds &self, double value)
+          {
+            if (!self.max.has_value())
+            {
+              // Kludge: Setting only one member is not ideal.
+              self.max = {.latitude = std::numeric_limits<double>::min(),
+                          .longitude = std::numeric_limits<double>::min()};
+            }
+            self.max->longitude = value;
+          });
+
   py::class_<fastgpx::Segment>(m, "Segment")
       .def(py::init<>()) // Default constructor
       .def_readwrite("points", &fastgpx::Segment::points)
+      .def("bounds", &fastgpx::Segment::GetBounds)
       .def("length_2d", &fastgpx::Segment::GetLength2D)
       .def("length_3d", &fastgpx::Segment::GetLength3D);
 
@@ -61,12 +181,14 @@ PYBIND11_MODULE(fastgpx, m)
       .def_readwrite("number", &fastgpx::Track::number)
       .def_readwrite("type", &fastgpx::Track::type)
       .def_readwrite("segments", &fastgpx::Track::segments)
+      .def("bounds", &fastgpx::Track::GetBounds)
       .def("length_2d", &fastgpx::Track::GetLength2D)
       .def("length_3d", &fastgpx::Track::GetLength3D);
 
   py::class_<fastgpx::Gpx>(m, "Gpx")
       .def(py::init<>()) // Default constructor
       .def_readwrite("tracks", &fastgpx::Gpx::tracks)
+      .def("bounds", &fastgpx::Gpx::GetBounds)
       .def("length_2d", &fastgpx::Gpx::GetLength2D)
       .def("length_3d", &fastgpx::Gpx::GetLength3D);
 

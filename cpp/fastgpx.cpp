@@ -22,12 +22,39 @@ namespace fastgpx
 {
   // Bounds
 
+  bool Bounds::IsEmpty() const
+  {
+    return !IsValid();
+  }
+
+  bool Bounds::IsValid() const
+  {
+    assert(min.has_value() == max.has_value());
+    return min.has_value() && max.has_value();
+  }
+
   void Bounds::Add(const LatLong &location)
   {
-    min.latitude = std::min(min.latitude, location.latitude);
-    min.longitude = std::min(min.longitude, location.longitude);
-    max.latitude = std::max(max.latitude, location.latitude);
-    max.longitude = std::max(max.longitude, location.longitude);
+    // TODO: compare all values? In case min/max is not initialized correctly.
+    if (min.has_value())
+    {
+      min->latitude = std::min(min->latitude, location.latitude);
+      min->longitude = std::min(min->longitude, location.longitude);
+    }
+    else
+    {
+      min = location;
+    }
+
+    if (max.has_value())
+    {
+      max->latitude = std::max(max->latitude, location.latitude);
+      max->longitude = std::max(max->longitude, location.longitude);
+    }
+    else
+    {
+      max = location;
+    }
   }
 
   void Bounds::Add(std::span<const LatLong> locations)
@@ -40,11 +67,15 @@ namespace fastgpx
 
   void Bounds::Add(const Bounds &bounds)
   {
-    // TODO: compare all values? In case min/max is not initialized correctly.
-    min.latitude = std::min(min.latitude, bounds.min.latitude);
-    min.longitude = std::min(min.longitude, bounds.min.longitude);
-    max.latitude = std::max(max.latitude, bounds.max.latitude);
-    max.longitude = std::max(max.longitude, bounds.max.longitude);
+    if (bounds.min.has_value())
+    {
+      Add(*bounds.min);
+    }
+    if (bounds.max.has_value())
+    {
+
+      Add(*bounds.max);
+    }
   }
 
   Bounds Bounds::MaxBounds(const Bounds &bounds) const

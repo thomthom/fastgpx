@@ -104,42 +104,45 @@ TEST_CASE("Benchmark GPX Parsing", "[!benchmark][parse]")
 TEST_CASE("Add to Bounds", "[bounds]")
 {
   Bounds bounds;
-  CHECK_THAT(bounds.min.latitude, WithinAbs(0.0, 1e-8));
-  CHECK_THAT(bounds.min.longitude, WithinAbs(0.0, 1e-8));
-  CHECK_THAT(bounds.max.latitude, WithinAbs(0.0, 1e-8));
-  CHECK_THAT(bounds.max.longitude, WithinAbs(0.0, 1e-8));
+  REQUIRE_FALSE(bounds.IsValid());
+  REQUIRE_FALSE(bounds.min.has_value());
+  REQUIRE_FALSE(bounds.max.has_value());
 
   SECTION("Single LatLong")
   {
     LatLong ll1{-10.0, 20.0};
     bounds.Add(ll1);
-    CHECK_THAT(bounds.min.latitude, WithinAbs(-10.0, 1e-8));
-    CHECK_THAT(bounds.min.longitude, WithinAbs(0.0, 1e-8));
-    CHECK_THAT(bounds.max.latitude, WithinAbs(0.0, 1e-8));
-    CHECK_THAT(bounds.max.longitude, WithinAbs(20.0, 1e-8));
+    CHECK(bounds.IsValid());
+    CHECK_THAT(bounds.min->latitude, WithinAbs(-10.0, 1e-8));
+    CHECK_THAT(bounds.min->longitude, WithinAbs(20.0, 1e-8));
+    CHECK_THAT(bounds.max->latitude, WithinAbs(-10.0, 1e-8));
+    CHECK_THAT(bounds.max->longitude, WithinAbs(20.0, 1e-8));
 
     LatLong ll2{15.0, -5.0};
     bounds.Add(ll2);
-    CHECK_THAT(bounds.min.latitude, WithinAbs(-10.0, 1e-8));
-    CHECK_THAT(bounds.min.longitude, WithinAbs(-5.0, 1e-8));
-    CHECK_THAT(bounds.max.latitude, WithinAbs(15.0, 1e-8));
-    CHECK_THAT(bounds.max.longitude, WithinAbs(20.0, 1e-8));
+    CHECK(bounds.IsValid());
+    CHECK_THAT(bounds.min->latitude, WithinAbs(-10.0, 1e-8));
+    CHECK_THAT(bounds.min->longitude, WithinAbs(-5.0, 1e-8));
+    CHECK_THAT(bounds.max->latitude, WithinAbs(15.0, 1e-8));
+    CHECK_THAT(bounds.max->longitude, WithinAbs(20.0, 1e-8));
   }
 
   SECTION("Another Bounds")
   {
-    Bounds other1{{-10.0, -5.0}, {15.0, 20.0}};
+    Bounds other1{LatLong{-10.0, -5.0}, LatLong{15.0, 20.0}};
     bounds.Add(other1);
-    CHECK_THAT(bounds.min.latitude, WithinAbs(-10.0, 1e-8));
-    CHECK_THAT(bounds.min.longitude, WithinAbs(-5.0, 1e-8));
-    CHECK_THAT(bounds.max.latitude, WithinAbs(15.0, 1e-8));
-    CHECK_THAT(bounds.max.longitude, WithinAbs(20.0, 1e-8));
+    CHECK(bounds.IsValid());
+    CHECK_THAT(bounds.min->latitude, WithinAbs(-10.0, 1e-8));
+    CHECK_THAT(bounds.min->longitude, WithinAbs(-5.0, 1e-8));
+    CHECK_THAT(bounds.max->latitude, WithinAbs(15.0, 1e-8));
+    CHECK_THAT(bounds.max->longitude, WithinAbs(20.0, 1e-8));
 
-    Bounds other2{{-15.0, 5.0}, {10.0, 30.0}};
+    Bounds other2{LatLong{-15.0, 5.0}, LatLong{10.0, 30.0}};
     bounds.Add(other2);
-    CHECK_THAT(bounds.min.latitude, WithinAbs(-15.0, 1e-8));
-    CHECK_THAT(bounds.min.longitude, WithinAbs(-5.0, 1e-8));
-    CHECK_THAT(bounds.max.latitude, WithinAbs(15.0, 1e-8));
-    CHECK_THAT(bounds.max.longitude, WithinAbs(30.0, 1e-8));
+    CHECK(bounds.IsValid());
+    CHECK_THAT(bounds.min->latitude, WithinAbs(-15.0, 1e-8));
+    CHECK_THAT(bounds.min->longitude, WithinAbs(-5.0, 1e-8));
+    CHECK_THAT(bounds.max->latitude, WithinAbs(15.0, 1e-8));
+    CHECK_THAT(bounds.max->longitude, WithinAbs(30.0, 1e-8));
   }
 }

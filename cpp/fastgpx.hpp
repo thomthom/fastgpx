@@ -18,8 +18,11 @@ namespace fastgpx
 
   struct Bounds
   {
-    LatLong min;
-    LatLong max;
+    std::optional<LatLong> min;
+    std::optional<LatLong> max;
+
+    bool IsEmpty() const;
+    bool IsValid() const;
 
     void Add(const LatLong &location);
     void Add(std::span<const LatLong> locations);

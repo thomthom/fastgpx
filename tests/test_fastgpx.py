@@ -31,6 +31,8 @@ def test_simple_segment_length2d():
     distance = segment.length_2d()
     assert distance == pytest.approx(1.3839, abs=METERS_TOL)
 
+# fastgpx.Gpx.length_2d
+
 
 def test_gpx_length2d(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
@@ -48,3 +50,62 @@ def test_segment_length2d(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     distance = gpx.tracks[0].segments[0].length_2d()
     assert distance == pytest.approx(17809.2701, abs=METERS_TOL)
+
+# fastgpx.Gpx.bounds
+
+
+def test_gpx_bounds(gpx_path: str):
+    gpx = fastgpx.parse(gpx_path)
+    bounds = gpx.bounds()
+    assert bounds.is_valid()
+    assert not bounds.is_empty()
+    assert bounds.min is not None
+    assert bounds.min.latitude == pytest.approx(61.410713)
+    assert bounds.min.longitude == pytest.approx(10.427408)
+    assert bounds.max is not None
+    assert bounds.max.latitude == pytest.approx(63.441189)
+    assert bounds.max.longitude == pytest.approx(13.142774)
+
+# fastgpx.Bounds
+
+
+def test_bounds_defaults():
+    bounds = fastgpx.Bounds()
+    assert not bounds.is_valid()
+    assert bounds.is_empty()
+    assert bounds.min is None
+    assert bounds.min is None
+    assert bounds.max is None
+    assert bounds.max is None
+
+
+def test_bounds_with_latlongs():
+    ll1 = fastgpx.LatLong(-10, -5)
+    ll2 = fastgpx.LatLong(30, 25)
+    bounds = fastgpx.Bounds(ll1, ll2)
+    assert bounds.is_valid()
+    assert not bounds.is_empty()
+    assert bounds.min is not None
+    assert bounds.max is not None
+
+    assert bounds.min.latitude == -10.0
+    assert bounds.min.longitude == -5.0
+    assert bounds.max.latitude == 30.0
+    assert bounds.max.longitude == 25.0
+
+    assert bounds.min.latitude == bounds.min_latitude
+    assert bounds.min.longitude == bounds.min_longitude
+    assert bounds.max.latitude == bounds.max_latitude
+    assert bounds.max.longitude == bounds.max_longitude
+
+
+def test_bounds_with_tuples():
+    bounds = fastgpx.Bounds((-10, -5), (30, 25))
+    assert bounds.is_valid()
+    assert not bounds.is_empty()
+    assert bounds.min is not None
+    assert bounds.min.latitude == -10.0
+    assert bounds.min.longitude == -5.0
+    assert bounds.max is not None
+    assert bounds.max.latitude == 30.0
+    assert bounds.max.longitude == 25.0
