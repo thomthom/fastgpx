@@ -20,7 +20,50 @@
 
 namespace fastgpx
 {
+  // Bounds
+
+  void Bounds::Add(const LatLong &location)
+  {
+    min.latitude = std::min(min.latitude, location.latitude);
+    min.longitude = std::min(min.longitude, location.longitude);
+    max.latitude = std::max(max.latitude, location.latitude);
+    max.longitude = std::max(max.longitude, location.longitude);
+  }
+
+  void Bounds::Add(std::span<const LatLong> locations)
+  {
+    for (const auto &location : locations)
+    {
+      Add(location);
+    }
+  }
+
+  void Bounds::Add(const Bounds &bounds)
+  {
+    // TODO: compare all values? In case min/max is not initialized correctly.
+    min.latitude = std::min(min.latitude, bounds.min.latitude);
+    min.longitude = std::min(min.longitude, bounds.min.longitude);
+    max.latitude = std::max(max.latitude, bounds.max.latitude);
+    max.longitude = std::max(max.longitude, bounds.max.longitude);
+  }
+
+  Bounds Bounds::MaxBounds(const Bounds &bounds) const
+  {
+    Bounds max = *this;
+    max.Add(bounds);
+    return max;
+  }
+
   // Segment
+
+  const Bounds &Segment::GetBounds() const
+  {
+    if (!bounds.has_value())
+    {
+      bounds = ComputeBounds();
+    }
+    return bounds.value();
+  }
 
   double Segment::GetLength2D() const
   {
@@ -38,6 +81,13 @@ namespace fastgpx
       length3D = ComputeLength3D();
     }
     return length3D.value();
+  }
+
+  Bounds Segment::ComputeBounds() const
+  {
+    Bounds bounds;
+    bounds.Add(points);
+    return bounds;
   }
 
   double Segment::ComputeLength2D() const
@@ -58,6 +108,15 @@ namespace fastgpx
 
   // Track
 
+  const Bounds &Track::GetBounds() const
+  {
+    if (!bounds.has_value())
+    {
+      bounds = ComputeBounds();
+    }
+    return bounds.value();
+  }
+
   double Track::GetLength2D() const
   {
     if (!length2D.has_value())
@@ -76,6 +135,16 @@ namespace fastgpx
     return length3D.value();
   }
 
+  Bounds Track::ComputeBounds() const
+  {
+    Bounds bounds;
+    for (const auto &segment : segments)
+    {
+      bounds.Add(segment.GetBounds());
+    }
+    return bounds;
+  }
+
   double Track::ComputeLength2D() const
   {
     return std::accumulate(segments.cbegin(), segments.cend(), 0.0, [](double acc, const Segment &segment)
@@ -89,6 +158,15 @@ namespace fastgpx
   }
 
   // Gpx
+
+  const Bounds &Gpx::GetBounds() const
+  {
+    if (!bounds.has_value())
+    {
+      bounds = ComputeBounds();
+    }
+    return bounds.value();
+  }
 
   double Gpx::GetLength2D() const
   {
@@ -106,6 +184,16 @@ namespace fastgpx
       length3D = ComputeLength3D();
     }
     return length3D.value();
+  }
+
+  Bounds Gpx::ComputeBounds() const
+  {
+    Bounds bounds;
+    for (const auto &track : tracks)
+    {
+      bounds.Add(track.GetBounds());
+    }
+    return bounds;
   }
 
   double Gpx::ComputeLength2D() const
@@ -171,7 +259,8 @@ namespace fastgpx
     return gpx;
   }
 
-  Gpx ParseGpx(const std::string &path) {
+  Gpx ParseGpx(const std::string &path)
+  {
     return ParseGpx(std::filesystem::path(path));
   }
 

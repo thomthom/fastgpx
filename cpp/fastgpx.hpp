@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -15,19 +16,34 @@ namespace fastgpx
     double elevation = 0.0;
   };
 
+  struct Bounds
+  {
+    LatLong min;
+    LatLong max;
+
+    void Add(const LatLong &location);
+    void Add(std::span<const LatLong> locations);
+    void Add(const Bounds &bounds);
+
+    Bounds MaxBounds(const Bounds &bounds) const;
+  };
+
   // Represent <trkseg> data in GPX files.
   struct Segment
   {
     std::vector<LatLong> points;
     // <extensions>
 
+    const Bounds &GetBounds() const;
     double GetLength2D() const;
     double GetLength3D() const;
 
   private:
+    Bounds ComputeBounds() const;
     double ComputeLength2D() const;
     double ComputeLength3D() const;
 
+    mutable std::optional<Bounds> bounds;
     mutable std::optional<double> length2D;
     mutable std::optional<double> length3D;
   };
@@ -44,13 +60,16 @@ namespace fastgpx
     // <extensions>
     std::vector<Segment> segments; // <trkseg>
 
+    const Bounds &GetBounds() const;
     double GetLength2D() const;
     double GetLength3D() const;
 
   private:
+    Bounds ComputeBounds() const;
     double ComputeLength2D() const;
     double ComputeLength3D() const;
 
+    mutable std::optional<Bounds> bounds;
     mutable std::optional<double> length2D;
     mutable std::optional<double> length3D;
   };
@@ -62,13 +81,16 @@ namespace fastgpx
     // <tre>
     std::vector<Track> tracks; // <trk>
 
+    const Bounds &GetBounds() const;
     double GetLength2D() const;
     double GetLength3D() const;
 
   private:
+    Bounds ComputeBounds() const;
     double ComputeLength2D() const;
     double ComputeLength3D() const;
 
+    mutable std::optional<Bounds> bounds;
     mutable std::optional<double> length2D;
     mutable std::optional<double> length3D;
   };

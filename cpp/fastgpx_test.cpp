@@ -22,6 +22,8 @@ constexpr double kMETERS_TOL = 1e-4;
 
 const auto project_path = std::filesystem::path(FASTGPX_PROJECT_DIR);
 
+// Gpx
+
 TEST_CASE("Parse two-point single segment track", "[parse][simple]")
 {
   const auto path = project_path / "gpx/test/debug-segment.gpx";
@@ -95,4 +97,49 @@ TEST_CASE("Benchmark GPX Parsing", "[!benchmark][parse]")
   {
     return fastgpx::ParseGpx(path2);
   };
+}
+
+// Bounds
+
+TEST_CASE("Add to Bounds", "[bounds]")
+{
+  Bounds bounds;
+  CHECK_THAT(bounds.min.latitude, WithinAbs(0.0, 1e-8));
+  CHECK_THAT(bounds.min.longitude, WithinAbs(0.0, 1e-8));
+  CHECK_THAT(bounds.max.latitude, WithinAbs(0.0, 1e-8));
+  CHECK_THAT(bounds.max.longitude, WithinAbs(0.0, 1e-8));
+
+  SECTION("Single LatLong")
+  {
+    LatLong ll1{-10.0, 20.0};
+    bounds.Add(ll1);
+    CHECK_THAT(bounds.min.latitude, WithinAbs(-10.0, 1e-8));
+    CHECK_THAT(bounds.min.longitude, WithinAbs(0.0, 1e-8));
+    CHECK_THAT(bounds.max.latitude, WithinAbs(0.0, 1e-8));
+    CHECK_THAT(bounds.max.longitude, WithinAbs(20.0, 1e-8));
+
+    LatLong ll2{15.0, -5.0};
+    bounds.Add(ll2);
+    CHECK_THAT(bounds.min.latitude, WithinAbs(-10.0, 1e-8));
+    CHECK_THAT(bounds.min.longitude, WithinAbs(-5.0, 1e-8));
+    CHECK_THAT(bounds.max.latitude, WithinAbs(15.0, 1e-8));
+    CHECK_THAT(bounds.max.longitude, WithinAbs(20.0, 1e-8));
+  }
+
+  SECTION("Another Bounds")
+  {
+    Bounds other1{{-10.0, -5.0}, {15.0, 20.0}};
+    bounds.Add(other1);
+    CHECK_THAT(bounds.min.latitude, WithinAbs(-10.0, 1e-8));
+    CHECK_THAT(bounds.min.longitude, WithinAbs(-5.0, 1e-8));
+    CHECK_THAT(bounds.max.latitude, WithinAbs(15.0, 1e-8));
+    CHECK_THAT(bounds.max.longitude, WithinAbs(20.0, 1e-8));
+
+    Bounds other2{{-15.0, 5.0}, {10.0, 30.0}};
+    bounds.Add(other2);
+    CHECK_THAT(bounds.min.latitude, WithinAbs(-15.0, 1e-8));
+    CHECK_THAT(bounds.min.longitude, WithinAbs(-5.0, 1e-8));
+    CHECK_THAT(bounds.max.latitude, WithinAbs(15.0, 1e-8));
+    CHECK_THAT(bounds.max.longitude, WithinAbs(30.0, 1e-8));
+  }
 }
