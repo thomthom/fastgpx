@@ -109,3 +109,17 @@ def test_bounds_with_tuples():
     assert bounds.max is not None
     assert bounds.max.latitude == 30.0
     assert bounds.max.longitude == 25.0
+
+
+def test_bounds_max_bounds():
+    bounds1 = fastgpx.Bounds((-10, -5), (30, 25))
+    bounds2 = fastgpx.Bounds((5, 30), (40, 20))
+    bounds = bounds1.max_bounds(bounds2)
+    assert bounds.is_valid()
+    assert not bounds.is_empty()
+    assert bounds.min is not None
+    assert bounds.min.latitude == -10.0
+    assert bounds.min.longitude == -5.0
+    assert bounds.max is not None
+    assert bounds.max.latitude == 40.0
+    assert bounds.max.longitude == 30.0
