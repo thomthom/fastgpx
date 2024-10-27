@@ -104,7 +104,7 @@ TEST_CASE("Benchmark GPX Parsing", "[!benchmark][parse]")
 TEST_CASE("Add to Bounds", "[bounds]")
 {
   Bounds bounds;
-  REQUIRE_FALSE(bounds.IsValid());
+  REQUIRE(bounds.IsEmpty());
   REQUIRE_FALSE(bounds.min.has_value());
   REQUIRE_FALSE(bounds.max.has_value());
 
@@ -112,7 +112,7 @@ TEST_CASE("Add to Bounds", "[bounds]")
   {
     LatLong ll1{-10.0, 20.0};
     bounds.Add(ll1);
-    CHECK(bounds.IsValid());
+    CHECK(!bounds.IsEmpty());
     CHECK_THAT(bounds.min->latitude, WithinAbs(-10.0, 1e-8));
     CHECK_THAT(bounds.min->longitude, WithinAbs(20.0, 1e-8));
     CHECK_THAT(bounds.max->latitude, WithinAbs(-10.0, 1e-8));
@@ -120,7 +120,7 @@ TEST_CASE("Add to Bounds", "[bounds]")
 
     LatLong ll2{15.0, -5.0};
     bounds.Add(ll2);
-    CHECK(bounds.IsValid());
+    CHECK(!bounds.IsEmpty());
     CHECK_THAT(bounds.min->latitude, WithinAbs(-10.0, 1e-8));
     CHECK_THAT(bounds.min->longitude, WithinAbs(-5.0, 1e-8));
     CHECK_THAT(bounds.max->latitude, WithinAbs(15.0, 1e-8));
@@ -131,7 +131,7 @@ TEST_CASE("Add to Bounds", "[bounds]")
   {
     Bounds other1{LatLong{-10.0, -5.0}, LatLong{15.0, 20.0}};
     bounds.Add(other1);
-    CHECK(bounds.IsValid());
+    CHECK(!bounds.IsEmpty());
     CHECK_THAT(bounds.min->latitude, WithinAbs(-10.0, 1e-8));
     CHECK_THAT(bounds.min->longitude, WithinAbs(-5.0, 1e-8));
     CHECK_THAT(bounds.max->latitude, WithinAbs(15.0, 1e-8));
@@ -139,7 +139,7 @@ TEST_CASE("Add to Bounds", "[bounds]")
 
     Bounds other2{LatLong{-15.0, 5.0}, LatLong{10.0, 30.0}};
     bounds.Add(other2);
-    CHECK(bounds.IsValid());
+    CHECK(!bounds.IsEmpty());
     CHECK_THAT(bounds.min->latitude, WithinAbs(-15.0, 1e-8));
     CHECK_THAT(bounds.min->longitude, WithinAbs(-5.0, 1e-8));
     CHECK_THAT(bounds.max->latitude, WithinAbs(15.0, 1e-8));

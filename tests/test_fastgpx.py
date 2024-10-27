@@ -57,7 +57,6 @@ def test_segment_length2d(gpx_path: str):
 def test_gpx_bounds(gpx_path: str):
     gpx = fastgpx.parse(gpx_path)
     bounds = gpx.bounds()
-    assert bounds.is_valid()
     assert not bounds.is_empty()
     assert bounds.min is not None
     assert bounds.min.latitude == pytest.approx(61.410713)

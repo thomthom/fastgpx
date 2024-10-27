@@ -57,24 +57,20 @@ PYBIND11_MODULE(fastgpx, m)
       // Allow tuples instead of explicit LatLong objects.
       .def(py::init([](std::tuple<double, double> min_tuple, std::tuple<double, double> max_tuple)
                     {
-            fastgpx::LatLong min{std::get<0>(min_tuple), std::get<1>(min_tuple)};
-            fastgpx::LatLong max{std::get<0>(max_tuple), std::get<1>(max_tuple)};
-            return fastgpx::Bounds(min, max); }),
+                      fastgpx::LatLong min{std::get<0>(min_tuple), std::get<1>(min_tuple)};
+                      fastgpx::LatLong max{std::get<0>(max_tuple), std::get<1>(max_tuple)};
+                      return fastgpx::Bounds(min, max);
+                    }),
            py::arg("min"), py::arg("max"))
       .def_readwrite("min", &fastgpx::Bounds::min)
       .def_readwrite("max", &fastgpx::Bounds::max)
       .def("is_empty", &fastgpx::Bounds::IsEmpty)
-      .def("is_valid", &fastgpx::Bounds::IsValid)
-      .def("add", py::overload_cast<const fastgpx::LatLong &>(&fastgpx::Bounds::Add),
-           py::arg("location"))
-      .def("add", py::overload_cast<const fastgpx::Bounds &>(&fastgpx::Bounds::Add),
-           py::arg("bounds"))
-      .def("max_bounds", &fastgpx::Bounds::MaxBounds,
-           py::arg("bounds"))
+      .def("add", py::overload_cast<const fastgpx::LatLong &>(&fastgpx::Bounds::Add), py::arg("location"))
+      .def("add", py::overload_cast<const fastgpx::Bounds &>(&fastgpx::Bounds::Add), py::arg("bounds"))
+      .def("max_bounds", &fastgpx::Bounds::MaxBounds, py::arg("bounds"))
       // gpxpy compatibility:
       .def_property(
-          "min_latitude",
-          [](const fastgpx::Bounds &self) -> std::optional<double>
+          "min_latitude", [](const fastgpx::Bounds &self) -> std::optional<double>
           {
             if (self.min.has_value())
             {
@@ -96,8 +92,7 @@ PYBIND11_MODULE(fastgpx, m)
             self.min->latitude = value;
           })
       .def_property(
-          "min_longitude",
-          [](const fastgpx::Bounds &self) -> std::optional<double>
+          "min_longitude", [](const fastgpx::Bounds &self) -> std::optional<double>
           {
             if (self.min.has_value())
             {
@@ -119,8 +114,7 @@ PYBIND11_MODULE(fastgpx, m)
             self.min->longitude = value;
           })
       .def_property(
-          "max_latitude",
-          [](const fastgpx::Bounds &self) -> std::optional<double>
+          "max_latitude", [](const fastgpx::Bounds &self) -> std::optional<double>
           {
             if (self.max.has_value())
             {
@@ -143,8 +137,7 @@ PYBIND11_MODULE(fastgpx, m)
           })
 
       .def_property(
-          "max_longitude",
-          [](const fastgpx::Bounds &self) -> std::optional<double>
+          "max_longitude", [](const fastgpx::Bounds &self) -> std::optional<double>
           {
             if (self.max.has_value())
             {

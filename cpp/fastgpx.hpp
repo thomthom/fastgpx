@@ -22,7 +22,6 @@ namespace fastgpx
     std::optional<LatLong> max;
 
     bool IsEmpty() const;
-    bool IsValid() const;
 
     void Add(const LatLong &location);
     void Add(std::span<const LatLong> locations);

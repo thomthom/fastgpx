@@ -5,7 +5,6 @@ import fastgpx
 
 def test_bounds_init_defaults():
     bounds = fastgpx.Bounds()
-    assert not bounds.is_valid()
     assert bounds.is_empty()
     assert bounds.min is None
     assert bounds.min is None
@@ -17,7 +16,6 @@ def test_bounds_init_with_latlongs():
     ll1 = fastgpx.LatLong(-10, -5)
     ll2 = fastgpx.LatLong(30, 25)
     bounds = fastgpx.Bounds(ll1, ll2)
-    assert bounds.is_valid()
     assert not bounds.is_empty()
     assert bounds.min is not None
     assert bounds.max is not None
@@ -35,7 +33,6 @@ def test_bounds_init_with_latlongs():
 
 def test_bounds_init_with_tuples():
     bounds = fastgpx.Bounds((-10, -5), (30, 25))
-    assert bounds.is_valid()
     assert not bounds.is_empty()
     assert bounds.min is not None
     assert bounds.min.latitude == -10.0
@@ -51,7 +48,6 @@ def test_bounds_max_bounds():
     bounds1 = fastgpx.Bounds((-10, -5), (30, 25))
     bounds2 = fastgpx.Bounds((5, 30), (40, 20))
     bounds = bounds1.max_bounds(bounds2)
-    assert bounds.is_valid()
     assert not bounds.is_empty()
     assert bounds.min is not None
     assert bounds.min.latitude == -10.0

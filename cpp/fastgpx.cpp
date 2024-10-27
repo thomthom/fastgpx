@@ -24,13 +24,8 @@ namespace fastgpx
 
   bool Bounds::IsEmpty() const
   {
-    return !IsValid();
-  }
-
-  bool Bounds::IsValid() const
-  {
     assert(min.has_value() == max.has_value());
-    return min.has_value() && max.has_value();
+    return !min.has_value() && !max.has_value();
   }
 
   void Bounds::Add(const LatLong &location)
