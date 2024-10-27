@@ -1,7 +1,10 @@
 #pragma once
 
 #include <filesystem>
+#include <optional>
 #include <vector>
+
+#include "fastgpx.hpp"
 
 namespace fastgpx {
 
@@ -9,6 +12,7 @@ struct ExpectedSegment
 {
   double length2d; // Meters
   double length3d; // Meters
+  TimeBounds time_bounds;
 };
 
 struct ExpectedTrack
@@ -16,6 +20,7 @@ struct ExpectedTrack
   std::vector<ExpectedSegment> segments;
   double length2d; // Meters
   double length3d; // Meters
+  TimeBounds time_bounds;
 };
 
 struct ExpectedGpx
@@ -24,6 +29,7 @@ struct ExpectedGpx
   std::vector<ExpectedTrack> tracks;
   double length2d; // Meters
   double length3d; // Meters
+  TimeBounds time_bounds;
 };
 
 std::vector<ExpectedGpx> LoadExpectedGpxData(const std::filesystem::path json_path);

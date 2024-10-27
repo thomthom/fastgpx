@@ -72,18 +72,18 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
 
   SECTION("Matches expected values")
   {
-    const auto expected = GENERATE_REF(from_range(expected_data));
+    const auto expected_gpx = GENERATE_REF(from_range(expected_data));
 
-    CAPTURE(expected.path);
+    CAPTURE(expected_gpx.path);
 
-    const auto path = project_path / expected.path;
+    const auto path = project_path / expected_gpx.path;
     const auto gpx = fastgpx::ParseGpx(path);
 
-    REQUIRE(gpx.tracks.size() == expected.tracks.size());
+    REQUIRE(gpx.tracks.size() == expected_gpx.tracks.size());
     for (size_t track_index = 0; track_index < gpx.tracks.size(); track_index++)
     {
       const auto &track = gpx.tracks[track_index];
-      const auto &expected_track = expected.tracks[track_index];
+      const auto &expected_track = expected_gpx.tracks[track_index];
 
       CAPTURE(track_index);
 
@@ -97,14 +97,38 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
 
         CHECK_THAT(segment.GetLength2D(), WithinAbs(expected_segment.length2d, kMETERS_TOL));
         CHECK_THAT(segment.GetLength3D(), WithinAbs(expected_segment.length3d, kMETERS_TOL));
+
+        const auto segment_time = segment.GetTimeBounds();
+        REQUIRE(segment_time.IsEmpty() == expected_segment.time_bounds.IsEmpty());
+        if (!segment_time.IsEmpty())
+        {
+          CHECK(segment_time.start_time == expected_segment.time_bounds.start_time);
+          CHECK(segment_time.end_time == expected_segment.time_bounds.end_time);
+        }
       }
 
       CHECK_THAT(track.GetLength2D(), WithinAbs(expected_track.length2d, kMETERS_TOL));
       CHECK_THAT(track.GetLength3D(), WithinAbs(expected_track.length3d, kMETERS_TOL));
+
+      const auto track_time = track.GetTimeBounds();
+      REQUIRE(track_time.IsEmpty() == expected_track.time_bounds.IsEmpty());
+      if (!track_time.IsEmpty())
+      {
+        CHECK(track_time.start_time == expected_track.time_bounds.start_time);
+        CHECK(track_time.end_time == expected_track.time_bounds.end_time);
+      }
     }
 
-    CHECK_THAT(gpx.GetLength2D(), WithinAbs(expected.length2d, kMETERS_TOL));
-    CHECK_THAT(gpx.GetLength3D(), WithinAbs(expected.length3d, kMETERS_TOL));
+    CHECK_THAT(gpx.GetLength2D(), WithinAbs(expected_gpx.length2d, kMETERS_TOL));
+    CHECK_THAT(gpx.GetLength3D(), WithinAbs(expected_gpx.length3d, kMETERS_TOL));
+
+    const auto gpx_time = gpx.GetTimeBounds();
+    REQUIRE(gpx_time.IsEmpty() == expected_gpx.time_bounds.IsEmpty());
+    if (!gpx_time.IsEmpty())
+    {
+      CHECK(gpx_time.start_time == expected_gpx.time_bounds.start_time);
+      CHECK(gpx_time.end_time == expected_gpx.time_bounds.end_time);
+    }
   }
 }
 
