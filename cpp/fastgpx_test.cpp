@@ -6,10 +6,10 @@
 #include <vector>
 
 #include <catch2/benchmark/catch_benchmark.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/generators/catch_generators_range.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
-#include <catch2/catch_test_macros.hpp>
 
 using Catch::Generators::from_range;
 using Catch::Generators::table;
@@ -87,12 +87,11 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
 TEST_CASE("Benchmark GPX Parsing", "[!benchmark][parse]")
 {
   const auto path1 = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
-  BENCHMARK("Connected_20240518_094959_.gpx")
-  {
-    return fastgpx::ParseGpx(path1);
-  };
+  BENCHMARK("Connected_20240518_094959_.gpx") { return fastgpx::ParseGpx(path1); };
 
-  const auto path2 = project_path / "gpx/2024 TopCamp/Connected_20240520_103549_Lagerbergsgatan_35_45131_Uddevalla_Sweden.gpx";
+  const auto path2 =
+      project_path /
+      "gpx/2024 TopCamp/Connected_20240520_103549_Lagerbergsgatan_35_45131_Uddevalla_Sweden.gpx";
   BENCHMARK("Connected_20240520_103549_Lagerbergsgatan_35_45131_Uddevalla_Sweden.gpx")
   {
     return fastgpx::ParseGpx(path2);

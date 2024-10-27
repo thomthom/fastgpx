@@ -1,0 +1,33 @@
+﻿---
+AccessModifierOffset: -2
+# AlignConsecutiveAssignments: Consecutive
+AllowShortBlocksOnASingleLine: false
+# AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline # InlineOnly # Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: All # Inline
+BasedOnStyle: Google
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: Always
+  AfterEnum: true
+  AfterExternBlock: true
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: false
+  BeforeWhile: true
+  SplitEmptyFunction: false
+ColumnLimit: 100
+IncludeBlocks: Preserve
+IndentCaseLabels: false
+IndentExternBlock: NoIndent
+IndentPPDirectives: BeforeHash
+SpaceAfterTemplateKeyword: false
+SpacesBeforeTrailingComments: 1

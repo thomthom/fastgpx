@@ -6,11 +6,11 @@
 #include <vector>
 
 #include <catch2/benchmark/catch_benchmark.hpp>
-#include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include "geom.hpp"
 #include "fastgpx.hpp"
+#include "geom.hpp"
 #include "test_data.hpp"
 
 using Catch::Matchers::WithinAbs;
@@ -20,7 +20,8 @@ constexpr double kMETERS_TOL = 1e-4;
 
 const auto project_path = std::filesystem::path(FASTGPX_PROJECT_DIR);
 
-using GpxLengthFunc = const std::function<double(const fastgpx::LatLong &, const fastgpx::LatLong &)>;
+using GpxLengthFunc =
+    const std::function<double(const fastgpx::LatLong &, const fastgpx::LatLong &)>;
 static double GpxLength(const fastgpx::Gpx &gpx, const GpxLengthFunc &func)
 {
   double distance = 0.0;
@@ -30,8 +31,9 @@ static double GpxLength(const fastgpx::Gpx &gpx, const GpxLengthFunc &func)
     {
       const auto &points = segment.points;
       auto distances = std::views::zip(points, points | std::views::drop(1)) |
-                       std::views::transform([&func](const auto &pair)
-                                             { return func(std::get<0>(pair), std::get<1>(pair)); });
+                       std::views::transform([&func](const auto &pair) {
+                         return func(std::get<0>(pair), std::get<1>(pair));
+                       });
       distance += std::accumulate(distances.begin(), distances.end(), 0.0);
     }
   }
@@ -85,33 +87,15 @@ TEST_CASE("Benchmark distance", "[!benchmark][distance]")
   const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
   const auto gpx = fastgpx::ParseGpx(path);
 
-  BENCHMARK("gpxpy haversine")
-  {
-    return GpxLength(gpx, fastgpx::v1::haversine);
-  };
+  BENCHMARK("gpxpy haversine") { return GpxLength(gpx, fastgpx::v1::haversine); };
 
-  BENCHMARK("gpxpy distance2d")
-  {
-    return GpxLength(gpx, fastgpx_distance2d);
-  };
+  BENCHMARK("gpxpy distance2d") { return GpxLength(gpx, fastgpx_distance2d); };
 
-  BENCHMARK("gpxpy distance3d")
-  {
-    return GpxLength(gpx, fastgpx_distance3d);
-  };
+  BENCHMARK("gpxpy distance3d") { return GpxLength(gpx, fastgpx_distance3d); };
 
-  BENCHMARK("v2 haversine")
-  {
-    return GpxLength(gpx, fastgpx::v2::haversine);
-  };
+  BENCHMARK("v2 haversine") { return GpxLength(gpx, fastgpx::v2::haversine); };
 
-  BENCHMARK("v2 distance2d")
-  {
-    return GpxLength(gpx, fastgpx::v2::distance2d);
-  };
+  BENCHMARK("v2 distance2d") { return GpxLength(gpx, fastgpx::v2::distance2d); };
 
-  BENCHMARK("v2 distance3d")
-  {
-    return GpxLength(gpx, fastgpx::v2::distance3d);
-  };
+  BENCHMARK("v2 distance3d") { return GpxLength(gpx, fastgpx::v2::distance3d); };
 }

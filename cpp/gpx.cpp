@@ -1,7 +1,7 @@
 #include "gpx.hpp"
 
-#include <cmath>
 #include <chrono>
+#include <cmath>
 #include <filesystem>
 #include <format>
 #include <numbers>
@@ -36,14 +36,16 @@ double tinyxml_gpx_length2d(const std::filesystem::path &path)
   for (auto track = root->FirstChildElement("trk"); track; track = track->NextSiblingElement("trk"))
   {
     // std::println("Iterate trkseg...");
-    for (auto segment = track->FirstChildElement("trkseg"); segment; segment = segment->NextSiblingElement("trkseg"))
+    for (auto segment = track->FirstChildElement("trkseg"); segment;
+         segment = segment->NextSiblingElement("trkseg"))
     {
       double segment_distance = 0.0;
 
       // std::println("Iterate trkpt...");
       tinyxml2::XMLElement *prev_trkpt = nullptr;
       // Iterate over each <trkpt> in the segment
-      for (auto trkpt = segment->FirstChildElement("trkpt"); trkpt; trkpt = trkpt->NextSiblingElement("trkpt"))
+      for (auto trkpt = segment->FirstChildElement("trkpt"); trkpt;
+           trkpt = trkpt->NextSiblingElement("trkpt"))
       {
         if (prev_trkpt)
         {
@@ -90,13 +92,15 @@ double pugixml_gpx_length2d(const std::filesystem::path &path)
   for (pugi::xml_node track = root.child("trk"); track; track = track.next_sibling("trk"))
   {
     // Iterate over each <trkseg> element
-    for (pugi::xml_node segment = track.child("trkseg"); segment; segment = segment.next_sibling("trkseg"))
+    for (pugi::xml_node segment = track.child("trkseg"); segment;
+         segment = segment.next_sibling("trkseg"))
     {
       double segment_distance = 0.0;
 
       pugi::xml_node prev_trkpt;
       // Iterate over each <trkpt> in the segment
-      for (pugi::xml_node trkpt = segment.child("trkpt"); trkpt; trkpt = trkpt.next_sibling("trkpt"))
+      for (pugi::xml_node trkpt = segment.child("trkpt"); trkpt;
+           trkpt = trkpt.next_sibling("trkpt"))
       {
         if (prev_trkpt)
         {

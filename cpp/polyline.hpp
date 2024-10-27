@@ -5,25 +5,21 @@
 #include <string_view>
 #include <vector>
 
-namespace fastgpx
+namespace fastgpx {
+struct LatLong;
+
+namespace polyline {
+
+enum class Precision
 {
-  struct LatLong;
+  Five = 5,
+  Six = 6
+};
 
-  namespace polyline
-  {
+std::string encode(std::span<const LatLong> locations, Precision precision = Precision::Five);
 
-    enum class Precision
-    {
-      Five = 5,
-      Six = 6
-    };
+std::vector<LatLong> decode(std::string_view encoded, Precision precision = Precision::Five);
 
-    std::string encode(std::span<const LatLong> locations,
-                       Precision precision = Precision::Five);
-
-    std::vector<LatLong> decode(std::string_view encoded,
-                                Precision precision = Precision::Five);
-
-  } // namespace polyline
+} // namespace polyline
 
 } // namespace fastgpx
