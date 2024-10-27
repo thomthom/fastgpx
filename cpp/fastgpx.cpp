@@ -6,12 +6,16 @@
 #include <cassert>
 #include <chrono>
 #include <cmath>
+#include <ctime>
 #include <filesystem>
 #include <format>
+#include <iomanip>
+#include <iostream>
 #include <numbers>
 #include <numeric>
 #include <print>
 #include <ranges>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -19,6 +23,73 @@
 #include "geom.hpp"
 
 namespace fastgpx {
+namespace {
+
+std::chrono::system_clock::time_point parse_iso8601_to_time_point(const std::string &time_str)
+{
+  std::tm tm = {};
+  std::istringstream ss(time_str);
+
+  // Parse ISO 8601 string without fractional seconds.
+  ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+
+  // Handle optional fractional seconds if present.
+  if (ss.peek() == '.')
+  {
+    char dot;
+    double fractional_seconds;
+    ss >> dot >> fractional_seconds;
+  }
+
+  // Time in UTC
+  tm.tm_isdst = 0; // Ensure that the parsed time is in UTC (not considering daylight savings)
+
+  const auto time = std::mktime(&tm);
+  return std::chrono::system_clock::from_time_t(time);
+}
+
+} // namespace
+
+// TimeBounds
+
+bool TimeBounds::IsEmpty() const
+{
+  assert(start_time.has_value() == end_time.has_value());
+  return !start_time.has_value() && !end_time.has_value();
+}
+
+void TimeBounds::Add(const std::chrono::system_clock::time_point time_point)
+{
+  if (start_time.has_value())
+  {
+    start_time = std::min(*start_time, time_point);
+  }
+  else
+  {
+    start_time = time_point;
+  }
+
+  if (end_time.has_value())
+  {
+    end_time = std::max(*end_time, time_point);
+  }
+  else
+  {
+    end_time = time_point;
+  }
+}
+
+void TimeBounds::Add(const TimeBounds &bounds)
+{
+  if (bounds.start_time.has_value())
+  {
+    Add(*bounds.start_time);
+  }
+  if (bounds.end_time.has_value())
+  {
+    Add(*bounds.end_time);
+  }
+}
 
 // Bounds
 
@@ -108,6 +179,15 @@ double Segment::GetLength3D() const
   return length3D.value();
 }
 
+const TimeBounds &Segment::GetTimeBounds() const
+{
+  if (!time_bounds.has_value())
+  {
+    time_bounds = ComputeTimeBounds();
+  }
+  return time_bounds.value();
+}
+
 Bounds Segment::ComputeBounds() const
 {
   Bounds bounds;
@@ -131,6 +211,19 @@ double Segment::ComputeLength3D() const
                      return distance3d(std::get<0>(pair), std::get<1>(pair));
                    });
   return std::accumulate(distances.begin(), distances.end(), 0.0);
+}
+
+TimeBounds Segment::ComputeTimeBounds() const
+{
+  TimeBounds bounds;
+  for (const auto &point : points)
+  {
+    if (point.time.has_value())
+    {
+      bounds.Add(*point.time);
+    }
+  }
+  return bounds;
 }
 
 // Track
@@ -162,6 +255,15 @@ double Track::GetLength3D() const
   return length3D.value();
 }
 
+const TimeBounds &Track::GetTimeBounds() const
+{
+  if (!time_bounds.has_value())
+  {
+    time_bounds = ComputeTimeBounds();
+  }
+  return time_bounds.value();
+}
+
 Bounds Track::ComputeBounds() const
 {
   Bounds bounds;
@@ -184,6 +286,16 @@ double Track::ComputeLength3D() const
   return std::accumulate(
       segments.cbegin(), segments.cend(), 0.0,
       [](double acc, const Segment &segment) { return acc + segment.GetLength3D(); });
+}
+
+TimeBounds Track::ComputeTimeBounds() const
+{
+  TimeBounds bounds;
+  for (const auto &segment : segments)
+  {
+    bounds.Add(segment.GetTimeBounds());
+  }
+  return bounds;
 }
 
 // Gpx
@@ -215,6 +327,15 @@ double Gpx::GetLength3D() const
   return length3D.value();
 }
 
+const TimeBounds &Gpx::GetTimeBounds() const
+{
+  if (!time_bounds.has_value())
+  {
+    time_bounds = ComputeTimeBounds();
+  }
+  return time_bounds.value();
+}
+
 Bounds Gpx::ComputeBounds() const
 {
   Bounds bounds;
@@ -235,6 +356,16 @@ double Gpx::ComputeLength3D() const
 {
   return std::accumulate(tracks.cbegin(), tracks.cend(), 0.0,
                          [](double acc, const Track &track) { return acc + track.GetLength3D(); });
+}
+
+TimeBounds Gpx::ComputeTimeBounds() const
+{
+  TimeBounds bounds;
+  for (const auto &track : tracks)
+  {
+    bounds.Add(track.GetTimeBounds());
+  }
+  return bounds;
 }
 
 Gpx ParseGpx(const std::filesystem::path &path)
@@ -275,6 +406,9 @@ Gpx ParseGpx(const std::filesystem::path &path)
         const double lon = trkpt.attribute("lon").as_double();
 
         // <ele>
+        /*
+        Elevation (in meters) of the point.
+        */
         double elevation = 0.0;
         const auto ele = trkpt.child("ele");
         if (ele)
@@ -282,7 +416,21 @@ Gpx ParseGpx(const std::filesystem::path &path)
           elevation = ele.text().as_double();
         }
 
-        gpx_segment.points.emplace_back(lat, lon, elevation);
+        auto &point = gpx_segment.points.emplace_back(lat, lon, elevation);
+
+        // TODO: Add parse options, selectively choose what to parse.
+        // <time>
+        /*
+        Creation/modification timestamp for element. Date and time in are in Univeral Coordinated
+        Time (UTC), not local time! Conforms to ISO 8601 specification for date/time representation.
+        Fractional seconds are allowed for millisecond timing in tracklogs.
+        */
+        const auto time = trkpt.child("time");
+        if (time)
+        {
+          const auto time_string = time.text().as_string();
+          point.time = parse_iso8601_to_time_point(time_string);
+        }
       }
     }
   }

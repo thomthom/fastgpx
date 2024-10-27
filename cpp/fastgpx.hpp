@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <filesystem>
 #include <optional>
 #include <span>
@@ -8,11 +9,24 @@
 
 namespace fastgpx {
 
+struct TimeBounds
+{
+  std::optional<std::chrono::system_clock::time_point> start_time;
+  std::optional<std::chrono::system_clock::time_point> end_time;
+
+  bool IsEmpty() const;
+
+  void Add(std::chrono::system_clock::time_point time_point);
+  void Add(const TimeBounds &time_bounds);
+};
+
+// Represent <trkpt> data in GPX files.
 struct LatLong
 {
   double latitude = 0.0;
   double longitude = 0.0;
   double elevation = 0.0;
+  std::optional<std::chrono::system_clock::time_point> time;
 };
 
 struct Bounds
@@ -38,15 +52,18 @@ struct Segment
   const Bounds &GetBounds() const;
   double GetLength2D() const;
   double GetLength3D() const;
+  const TimeBounds &GetTimeBounds() const;
 
 private:
   Bounds ComputeBounds() const;
   double ComputeLength2D() const;
   double ComputeLength3D() const;
+  TimeBounds ComputeTimeBounds() const;
 
   mutable std::optional<Bounds> bounds;
   mutable std::optional<double> length2D;
   mutable std::optional<double> length3D;
+  mutable std::optional<TimeBounds> time_bounds;
 };
 
 // Represent <trk> data in GPX files.
@@ -64,15 +81,18 @@ struct Track
   const Bounds &GetBounds() const;
   double GetLength2D() const;
   double GetLength3D() const;
+  const TimeBounds &GetTimeBounds() const;
 
 private:
   Bounds ComputeBounds() const;
   double ComputeLength2D() const;
   double ComputeLength3D() const;
+  TimeBounds ComputeTimeBounds() const;
 
   mutable std::optional<Bounds> bounds;
   mutable std::optional<double> length2D;
   mutable std::optional<double> length3D;
+  mutable std::optional<TimeBounds> time_bounds;
 };
 
 struct Gpx
@@ -85,15 +105,18 @@ struct Gpx
   const Bounds &GetBounds() const;
   double GetLength2D() const;
   double GetLength3D() const;
+  const TimeBounds &GetTimeBounds() const;
 
 private:
   Bounds ComputeBounds() const;
   double ComputeLength2D() const;
   double ComputeLength3D() const;
+  TimeBounds ComputeTimeBounds() const;
 
   mutable std::optional<Bounds> bounds;
   mutable std::optional<double> length2D;
   mutable std::optional<double> length3D;
+  mutable std::optional<TimeBounds> time_bounds;
 };
 
 Gpx ParseGpx(const std::filesystem::path &path);

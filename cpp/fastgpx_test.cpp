@@ -39,6 +39,30 @@ TEST_CASE("Parse two-point single segment track", "[parse][simple]")
   CHECK_THAT(gpx.tracks[0].segments[0].GetLength3D(), WithinAbs(1.7074, kMETERS_TOL));
   CHECK_THAT(gpx.tracks[0].GetLength3D(), WithinAbs(1.7074, kMETERS_TOL));
   CHECK_THAT(gpx.GetLength3D(), WithinAbs(1.7074, kMETERS_TOL));
+
+  // TimeBounds
+  // UNIX timestamp for 2024-05-18T06:50:00Z
+  const auto expected_start = std::chrono::system_clock::from_time_t(1716015000);
+  // UNIX timestamp for 2024-05-18T06:50:01Z
+  const auto expected_end = std::chrono::system_clock::from_time_t(1716015001);
+
+  const auto segment_time_bounds = gpx.tracks[0].segments[0].GetTimeBounds();
+  REQUIRE(segment_time_bounds.start_time.has_value());
+  REQUIRE(segment_time_bounds.end_time.has_value());
+  CHECK(*segment_time_bounds.start_time == expected_start);
+  CHECK(*segment_time_bounds.end_time == expected_end);
+
+  const auto track_time_bounds = gpx.tracks[0].GetTimeBounds();
+  REQUIRE(track_time_bounds.start_time.has_value());
+  REQUIRE(track_time_bounds.end_time.has_value());
+  CHECK(*track_time_bounds.start_time == expected_start);
+  CHECK(*track_time_bounds.end_time == expected_end);
+
+  const auto gpx_time_bounds = gpx.GetTimeBounds();
+  REQUIRE(gpx_time_bounds.start_time.has_value());
+  REQUIRE(gpx_time_bounds.end_time.has_value());
+  CHECK(*gpx_time_bounds.start_time == expected_start);
+  CHECK(*gpx_time_bounds.end_time == expected_end);
 }
 
 TEST_CASE("Parse real world GPX files", "[parse][real_world]")

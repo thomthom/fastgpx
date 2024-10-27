@@ -41,6 +41,11 @@ fastgpx::polyline::Precision IntToPrecision(const int value)
 
 PYBIND11_MODULE(fastgpx, m)
 {
+  py::class_<fastgpx::TimeBounds>(m, "TimeBounds")
+      .def(py::init<>())
+      .def_readwrite("start_time", &fastgpx::TimeBounds::start_time)
+      .def_readwrite("end_time", &fastgpx::TimeBounds::end_time);
+
   py::class_<fastgpx::LatLong>(m, "LatLong")
       .def(py::init<>())
       .def(py::init<double, double, double>(), py::arg("latitude"), py::arg("longitude"),
