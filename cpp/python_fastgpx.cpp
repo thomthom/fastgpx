@@ -2,6 +2,7 @@
 #include <limits>
 #include <stdexcept>
 
+#include <pybind11/chrono.h>
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -164,6 +165,9 @@ PYBIND11_MODULE(fastgpx, m)
       .def(py::init<>()) // Default constructor
       .def_readwrite("points", &fastgpx::Segment::points)
       .def("bounds", &fastgpx::Segment::GetBounds)
+      .def("get_bounds", &fastgpx::Segment::GetBounds) // gpxpy compatiblity
+      .def("time_bounds", &fastgpx::Segment::GetTimeBounds)
+      .def("get_time_bounds", &fastgpx::Segment::GetTimeBounds) // gpxpy compatiblity
       .def("length_2d", &fastgpx::Segment::GetLength2D)
       .def("length_3d", &fastgpx::Segment::GetLength3D);
 
@@ -176,6 +180,9 @@ PYBIND11_MODULE(fastgpx, m)
       .def_readwrite("type", &fastgpx::Track::type)
       .def_readwrite("segments", &fastgpx::Track::segments)
       .def("bounds", &fastgpx::Track::GetBounds)
+      .def("get_bounds", &fastgpx::Track::GetBounds) // gpxpy compatiblity
+      .def("time_bounds", &fastgpx::Track::GetTimeBounds)
+      .def("get_time_bounds", &fastgpx::Track::GetTimeBounds) // gpxpy compatiblity
       .def("length_2d", &fastgpx::Track::GetLength2D)
       .def("length_3d", &fastgpx::Track::GetLength3D);
 
@@ -183,6 +190,9 @@ PYBIND11_MODULE(fastgpx, m)
       .def(py::init<>()) // Default constructor
       .def_readwrite("tracks", &fastgpx::Gpx::tracks)
       .def("bounds", &fastgpx::Gpx::GetBounds)
+      .def("get_bounds", &fastgpx::Gpx::GetBounds) // gpxpy compatiblity
+      .def("time_bounds", &fastgpx::Gpx::GetTimeBounds)
+      .def("get_time_bounds", &fastgpx::Gpx::GetTimeBounds) // gpxpy compatiblity
       .def("length_2d", &fastgpx::Gpx::GetLength2D)
       .def("length_3d", &fastgpx::Gpx::GetLength3D);
 
