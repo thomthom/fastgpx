@@ -50,6 +50,19 @@ std::chrono::system_clock::time_point parse_iso8601_to_time_point(const std::str
 
 } // namespace
 
+// TimePoint
+
+std::chrono::system_clock::time_point TimePoint::value() const
+{
+  if (std::holds_alternative<std::string>(data_))
+  {
+    const auto &time_string = std::get<std::string>(data_);
+    data_ = parse_iso8601_to_time_point(time_string);
+  }
+  assert(std::holds_alternative<std::chrono::system_clock::time_point>(data_));
+  return std::get<std::chrono::system_clock::time_point>(data_);
+}
+
 // TimeBounds
 
 bool TimeBounds::IsEmpty() const
@@ -220,7 +233,7 @@ TimeBounds Segment::ComputeTimeBounds() const
   {
     if (point.time.has_value())
     {
-      bounds.Add(*point.time);
+      bounds.Add(point.time->value());
     }
   }
   return bounds;
@@ -428,8 +441,9 @@ Gpx ParseGpx(const std::filesystem::path &path)
         const auto time = trkpt.child("time");
         if (time)
         {
-          const auto time_string = time.text().as_string();
-          point.time = parse_iso8601_to_time_point(time_string);
+          // Read only the raw string, but don't parse it. This is done on demand
+          // when the value is read.
+          point.time = std::string(time.text().as_string());
         }
       }
     }

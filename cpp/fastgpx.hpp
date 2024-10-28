@@ -5,9 +5,22 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace fastgpx {
+
+class TimePoint
+{
+public:
+  TimePoint(const std::string &time_string) : data_(time_string) {}
+  TimePoint(const std::chrono::system_clock::time_point time_point) : data_(time_point) {}
+
+  std::chrono::system_clock::time_point value() const;
+
+private:
+  mutable std::variant<std::string, std::chrono::system_clock::time_point> data_;
+};
 
 struct TimeBounds
 {
@@ -26,7 +39,7 @@ struct LatLong
   double latitude = 0.0;
   double longitude = 0.0;
   double elevation = 0.0;
-  std::optional<std::chrono::system_clock::time_point> time;
+  std::optional<TimePoint> time;
 };
 
 struct Bounds
