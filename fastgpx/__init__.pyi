@@ -109,7 +109,11 @@ class TimeBounds:
     @staticmethod
     def _pybind11_conduit_v1_(*args, **kwargs):
         ...
+    @typing.overload
     def __init__(self) -> None:
+        ...
+    @typing.overload
+    def __init__(self, start_time: datetime.datetime | None, end_time: datetime.datetime | None) -> None:
         ...
 class Track:
     comment: str | None

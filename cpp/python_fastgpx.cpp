@@ -38,12 +38,16 @@ fastgpx::polyline::Precision IntToPrecision(const int value)
   return precision;
 }
 
+using OptionalTimePoint = std::optional<std::chrono::system_clock::time_point>;
+
 } // namespace
 
 PYBIND11_MODULE(fastgpx, m)
 {
   py::class_<fastgpx::TimeBounds>(m, "TimeBounds")
       .def(py::init<>())
+      .def(py::init<OptionalTimePoint, OptionalTimePoint>(), py::arg("start_time"),
+           py::arg("end_time"))
       .def_readwrite("start_time", &fastgpx::TimeBounds::start_time)
       .def_readwrite("end_time", &fastgpx::TimeBounds::end_time);
 
