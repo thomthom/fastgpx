@@ -1,4 +1,4 @@
-#include "fastgpx.hpp"
+#include "fastgpx/fastgpx.hpp"
 
 #include <pugixml.hpp>
 
@@ -19,8 +19,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "filesystem.hpp"
-#include "geom.hpp"
+#include "fastgpx/filesystem.hpp"
+#include "fastgpx/geom.hpp"
 
 namespace fastgpx {
 namespace {

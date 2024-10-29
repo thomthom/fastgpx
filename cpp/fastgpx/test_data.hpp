@@ -4,7 +4,7 @@
 #include <optional>
 #include <vector>
 
-#include "fastgpx.hpp"
+#include "fastgpx/fastgpx.hpp"
 
 namespace fastgpx {
 

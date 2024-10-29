@@ -1,6 +1,6 @@
-#include "test_data.hpp"
+#include "fastgpx/test_data.hpp"
 
-#include "fastgpx.hpp"
+#include "fastgpx/fastgpx.hpp"
 
 #include <algorithm>
 #include <chrono>

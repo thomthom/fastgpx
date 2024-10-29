@@ -9,9 +9,9 @@
 #include <pybind11/stl/filesystem.h>
 #include <pybind11/stl_bind.h>
 
-#include "fastgpx.hpp"
-#include "geom.hpp"
-#include "polyline.hpp"
+#include "fastgpx/fastgpx.hpp"
+#include "fastgpx/geom.hpp"
+#include "fastgpx/polyline.hpp"
 
 namespace py = pybind11;
 

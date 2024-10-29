@@ -31,20 +31,21 @@ FetchContent_MakeAvailable(tinyxml2 pugixml Catch2 json)
 # fastgpx static library
 
 set(SOURCES
-  fastgpx.hpp
-  fastgpx.cpp
-  filesystem.hpp
-  filesystem.cpp
-  geom.hpp
-  geom.cpp
-  polyline.hpp
-  polyline.cpp
+  fastgpx/fastgpx.hpp
+  fastgpx/fastgpx.cpp
+  fastgpx/filesystem.hpp
+  fastgpx/filesystem.cpp
+  fastgpx/geom.hpp
+  fastgpx/geom.cpp
+  fastgpx/polyline.hpp
+  fastgpx/polyline.cpp
 )
 add_library(fastgpx-static ${SOURCES})
 set_property(TARGET fastgpx-static PROPERTY CXX_STANDARD 23)
 set_property(TARGET fastgpx-static PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET fastgpx-static PROPERTY CXX_EXTENSIONS OFF)
 target_link_libraries(fastgpx-static PUBLIC tinyxml2 pugixml)
+target_include_directories(fastgpx-static PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # fastgpx python module
 
@@ -78,12 +79,12 @@ target_link_libraries(fastgpxcli PRIVATE fastgpx-static)
 # fastgpx tests
 
 set(TEST_UTILS
-  test_data.hpp
-  test_data.cpp
+  fastgpx/test_data.hpp
+  fastgpx/test_data.cpp
 )
 set(TEST_SOURCES
-  fastgpx_test.cpp
-  geom_test.cpp
+  fastgpx/fastgpx_test.cpp
+  fastgpx/geom_test.cpp
 )
 add_executable(fastgpx_test ${TEST_UTILS} ${TEST_SOURCES})
 set_property(TARGET fastgpx_test PROPERTY CXX_STANDARD 23)

@@ -1,6 +1,6 @@
-#include "polyline.hpp"
+#include "fastgpx/polyline.hpp"
 
-#include "fastgpx.hpp"
+#include "fastgpx/fastgpx.hpp"
 
 namespace fastgpx {
 

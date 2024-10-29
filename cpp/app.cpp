@@ -5,7 +5,7 @@
 #include <numbers>
 #include <print>
 
-#include "fastgpx.hpp"
+#include "fastgpx/fastgpx.hpp"
 
 int main()
 {

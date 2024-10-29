@@ -1,4 +1,4 @@
-#include "filesystem.hpp"
+#include "fastgpx/filesystem.hpp"
 
 #ifdef _WIN32
   #include <windows.h> // for _wfopen

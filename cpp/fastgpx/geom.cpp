@@ -3,7 +3,7 @@
 #include <cmath>
 #include <numbers>
 
-#include "fastgpx.hpp"
+#include "fastgpx/fastgpx.hpp"
 
 namespace fastgpx {
 namespace v1 {

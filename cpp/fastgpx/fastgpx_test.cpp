@@ -1,5 +1,5 @@
-#include "fastgpx.hpp"
-#include "test_data.hpp"
+#include "fastgpx/fastgpx.hpp"
+#include "fastgpx/test_data.hpp"
 
 #include <filesystem>
 #include <string>

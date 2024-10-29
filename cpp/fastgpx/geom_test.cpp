@@ -9,9 +9,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include "fastgpx.hpp"
-#include "geom.hpp"
-#include "test_data.hpp"
+#include "fastgpx/fastgpx.hpp"
+#include "fastgpx/geom.hpp"
+#include "fastgpx/test_data.hpp"
 
 using Catch::Matchers::WithinAbs;
 

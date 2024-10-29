@@ -3,7 +3,7 @@
 
 #include <pybind11/pybind11.h>
 
-#include "fastgpx.hpp"
+#include "fastgpx/fastgpx.hpp"
 #include "gpx.hpp"
 
 std::string process_string(const std::string &input)

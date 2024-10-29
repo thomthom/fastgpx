@@ -11,9 +11,9 @@
 
 #include <pugixml.hpp>
 
-#include "fastgpx.hpp"
-#include "filesystem.hpp"
-#include "geom.hpp"
+#include "fastgpx/fastgpx.hpp"
+#include "fastgpx/filesystem.hpp"
+#include "fastgpx/geom.hpp"
 
 double tinyxml_gpx_length2d(const std::filesystem::path &path)
 {
