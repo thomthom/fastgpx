@@ -19,36 +19,11 @@
 #include <stdexcept>
 #include <string>
 
+#include "fastgpx/datetime.hpp"
 #include "fastgpx/filesystem.hpp"
 #include "fastgpx/geom.hpp"
 
 namespace fastgpx {
-namespace {
-
-std::chrono::system_clock::time_point parse_iso8601_to_time_point(const std::string &time_str)
-{
-  std::tm tm = {};
-  std::istringstream ss(time_str);
-
-  // Parse ISO 8601 string without fractional seconds.
-  ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
-
-  // Handle optional fractional seconds if present.
-  if (ss.peek() == '.')
-  {
-    char dot;
-    double fractional_seconds;
-    ss >> dot >> fractional_seconds;
-  }
-
-  // Time in UTC
-  tm.tm_isdst = 0; // Ensure that the parsed time is in UTC (not considering daylight savings)
-
-  const auto time = std::mktime(&tm);
-  return std::chrono::system_clock::from_time_t(time);
-}
-
-} // namespace
 
 // TimePoint
 
@@ -57,7 +32,7 @@ std::chrono::system_clock::time_point TimePoint::value() const
   if (std::holds_alternative<std::string>(data_))
   {
     const auto &time_string = std::get<std::string>(data_);
-    data_ = parse_iso8601_to_time_point(time_string);
+    data_ = parse_iso8601(time_string);
   }
   assert(std::holds_alternative<std::chrono::system_clock::time_point>(data_));
   return std::get<std::chrono::system_clock::time_point>(data_);

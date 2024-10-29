@@ -31,6 +31,8 @@ FetchContent_MakeAvailable(tinyxml2 pugixml Catch2 json)
 # fastgpx static library
 
 set(SOURCES
+  fastgpx/datetime.hpp
+  fastgpx/datetime.cpp
   fastgpx/fastgpx.hpp
   fastgpx/fastgpx.cpp
   fastgpx/filesystem.hpp
@@ -83,6 +85,7 @@ set(TEST_UTILS
   fastgpx/test_data.cpp
 )
 set(TEST_SOURCES
+  fastgpx/datetime_test.cpp
   fastgpx/fastgpx_test.cpp
   fastgpx/geom_test.cpp
 )

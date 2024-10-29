@@ -41,9 +41,9 @@ TEST_CASE("Parse two-point single segment track", "[parse][simple]")
   CHECK_THAT(gpx.GetLength3D(), WithinAbs(1.7074, kMETERS_TOL));
 
   // TimeBounds
-  // UNIX timestamp for 2024-05-18T06:50:00Z
+  // UNIX timestamp for 2024-05-18T07:50:00Z
   const auto expected_start = std::chrono::system_clock::from_time_t(1716015000);
-  // UNIX timestamp for 2024-05-18T06:50:01Z
+  // UNIX timestamp for 2024-05-18T07:50:01Z
   const auto expected_end = std::chrono::system_clock::from_time_t(1716015001);
 
   const auto segment_time_bounds = gpx.tracks[0].segments[0].GetTimeBounds();
