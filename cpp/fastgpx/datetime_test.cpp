@@ -42,10 +42,36 @@ TEST_CASE("Parse iso8601 date string", "[datetime]")
 
   SECTION("v2 std::chrono::parse")
   {
+    // "2024-05-18T07:50:01Z"
+    // https://www.timestamp-converter.com/
+    //
+    // Timestamp                   1716018601
+    // Timestamp in milliseconds   1716018601000
+    // ISO 8601                    2024-05-18T07:50:01.000Z
+    // Date Time (UTC)             18 May 2024, 07:50:01
+    // Date Time (your time zone)  18 May 2024, 09:50:01
+    std::int64_t unix_timestamp = 1716018601;
+    // const auto et = std::chrono::utc_seconds{1716015001};
+    // const auto et = std::chrono::utc_seconds{unix_timestamp};
+    std::chrono::utc_seconds utc_time_point{std::chrono::seconds{unix_timestamp}};
+    // std::chrono::utc_seconds utc_time_point2{unix_timestamp};
+    std::chrono::utc_clock::time_point expected_utc_time = utc_time_point;
+
+    // Timestamp	1716018628
+    // Timestamp in milliseconds	1716018628000
+    // ISO 8601	2024-05-18T07:50:28.000Z
+    // Date Time (UTC)	18 May 2024, 07:50:28
+    // Date Time (your time zone)	18 May 2024, 09:50:28
+
     const auto actual_time = fastgpx::v2::parse_iso8601(time_string);
-    const auto expected_utc_time = std::chrono::utc_clock::from_sys(expected_time);
-    CHECK(actual_time == expected_utc_time);
+    // const auto expected_utc_time = std::chrono::utc_clock::from_sys(expected_time);
+    // CHECK(actual_time == expected_utc_time);
+    // CHECK(actual_time == expected_utc_time);
     CHECK(format_iso8601(actual_time) == time_string);
+
+    auto actual_unix_timestamp =
+        std::chrono::duration_cast<std::chrono::seconds>(actual_time.time_since_epoch()).count();
+    CHECK(actual_unix_timestamp == unix_timestamp);
   }
 
   SECTION("v3 std::from_chars")
