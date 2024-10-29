@@ -1,6 +1,3 @@
-#include "fastgpx/fastgpx.hpp"
-#include "fastgpx/test_data.hpp"
-
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -10,6 +7,9 @@
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/generators/catch_generators_range.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+
+#include "fastgpx/fastgpx.hpp"
+#include "fastgpx/test_data.hpp"
 
 using Catch::Generators::from_range;
 using Catch::Generators::table;

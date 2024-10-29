@@ -1,7 +1,5 @@
 #include "fastgpx/test_data.hpp"
 
-#include "fastgpx/fastgpx.hpp"
-
 #include <algorithm>
 #include <chrono>
 #include <filesystem>
@@ -10,6 +8,8 @@
 #include <vector>
 
 #include <nlohmann/json.hpp>
+
+#include "fastgpx/fastgpx.hpp"
 
 using json = nlohmann::json;
 

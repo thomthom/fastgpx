@@ -8,7 +8,6 @@
 #include <print>
 
 #include <tinyxml2.h>
-
 #include <pugixml.hpp>
 
 #include "fastgpx/fastgpx.hpp"
