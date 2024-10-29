@@ -1,8 +1,9 @@
 from __future__ import annotations
 import datetime
 import typing
+from . import geo
 from . import polyline
-__all__ = ['Bounds', 'Gpx', 'LatLong', 'Segment', 'TimeBounds', 'Track', 'parse', 'polyline']
+__all__ = ['Bounds', 'Gpx', 'LatLong', 'Segment', 'TimeBounds', 'Track', 'geo', 'parse', 'polyline']
 class Bounds:
     max: LatLong | None
     min: LatLong | None

@@ -10,6 +10,7 @@
 #include <pybind11/stl_bind.h>
 
 #include "fastgpx.hpp"
+#include "geom.hpp"
 #include "polyline.hpp"
 
 namespace py = pybind11;
@@ -201,6 +202,25 @@ PYBIND11_MODULE(fastgpx, m)
       .def("length_3d", &fastgpx::Gpx::GetLength3D);
 
   m.def("parse", py::overload_cast<const std::string &>(&fastgpx::ParseGpx), py::arg("path"));
+
+  // fastgpx geo
+
+  py::module_ geo_mod = m.def_submodule("geo");
+
+  geo_mod.def("haversine", &fastgpx::haversine, py::arg("latlong1"), py::arg("latlong2"));
+
+  // Compatibility with gpxpy.geo.haversine_distance
+  geo_mod.def(
+      "haversine_distance",
+      [](double latitude1, double longitude1, double latitude2, double longitude2) {
+        const fastgpx::LatLong ll1(latitude1, longitude1);
+        const fastgpx::LatLong ll2(latitude2, longitude2);
+        return fastgpx::haversine(ll1, ll2);
+      },
+      py::arg("latitude_1"), py::arg("longitude_1"), py::arg("latitude_2"), py::arg("longitude_2"),
+      py::doc("Compatibility with `gpxpy.geo.haversine_distance`"));
+
+  // fastgpx.polyline
 
   py::module_ polyline_mod = m.def_submodule("polyline");
 
