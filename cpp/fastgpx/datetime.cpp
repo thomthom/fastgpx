@@ -29,4 +29,77 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
 
 } // namespace v1
 
+namespace v2 {
+
+std::chrono::utc_clock::time_point parse_iso8601(const std::string &time_str)
+{
+  std::istringstream ss(time_str);
+
+  // Define a system_clock::time_point to hold the parsed value
+  // std::chrono::sys_time<std::chrono::seconds> tp;
+  std::chrono::utc_clock::time_point tp;
+
+  // Parse the ISO 8601 string into a system_clock::time_point
+  // ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", tp);
+  ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%SZ", tp);
+
+  // TODO: This is off by one hour.
+
+  // std::chrono::system_clock::time_point time_point = tp;
+  // return tp;
+  // std::chrono::utc_clock::time_point time_point = tp;
+  // return std::chrono::utc_clock::from_sys(tp);
+  return tp;
+}
+
+} // namespace v2
+
+namespace v3 {
+
+std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_str)
+{
+  std::tm tm = {};
+
+  // Assuming string: 2024-05-18T07:50:01Z
+
+  // 2024-05-18T07:50:01Z
+  // ^^^^
+  const auto year_str = time_str.substr(0, 4);
+  std::from_chars(year_str.data(), year_str.data() + year_str.size(), tm.tm_year);
+  tm.tm_year -= 1900; // Adjust year to be relative to 1900
+
+  // 2024-05-18T07:50:01Z
+  //      ^^
+  const auto month_str = time_str.substr(5, 2);
+  std::from_chars(month_str.data(), month_str.data() + month_str.size(), tm.tm_mon);
+  tm.tm_mon -= 1; // Adjust month to be zero-based
+
+  // 2024-05-18T07:50:01Z
+  //         ^^
+  const auto day_str = time_str.substr(8, 2);
+  std::from_chars(day_str.data(), day_str.data() + day_str.size(), tm.tm_mday);
+
+  // 2024-05-18T07:50:01Z
+  //            ^^
+  const auto hour_str = time_str.substr(11, 2);
+  std::from_chars(hour_str.data(), hour_str.data() + hour_str.size(), tm.tm_hour);
+
+  // 2024-05-18T07:50:01Z
+  //               ^^
+  const auto minute_str = time_str.substr(14, 2);
+  std::from_chars(minute_str.data(), minute_str.data() + minute_str.size(), tm.tm_min);
+
+  // 2024-05-18T07:50:01Z
+  //                  ^^
+  const auto second_str = time_str.substr(17, 2);
+  std::from_chars(second_str.data(), second_str.data() + second_str.size(), tm.tm_sec);
+
+  tm.tm_isdst = 0; // Not using DST.
+
+  const auto time = std::mktime(&tm);
+  return std::chrono::system_clock::from_time_t(time);
+}
+
+} // namespace v3
+
 } // namespace fastgpx
