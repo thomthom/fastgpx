@@ -1,15 +1,19 @@
 from datetime import datetime, timedelta
+from typing import Tuple
 import os
 import time
 
 import gpxpy
 import gpxpy.geo
-import gpxpy.parser
-from gpxpy.gpx import GPX, GPXBounds, TimeBounds
 
 import requests
 from flask import Flask, abort, jsonify, render_template
 from dotenv import load_dotenv
+
+import fastgpx
+from fastgpx import TimeBounds
+from fastgpx import Bounds as GPXBounds
+from fastgpx import Gpx as GPX
 
 load_dotenv()
 
@@ -59,18 +63,20 @@ def points_feature(coordinates: list):
     }
 
 
-def calculate_distance(point1, point2):
+# Tuples are: Longitude, Latitude
+def calculate_distance(point1: Tuple[float, float], point2: Tuple[float, float]):
     """Calculate the distance between two points in meters."""
-    return gpxpy.geo.haversine_distance(
+    return fastgpx.geo.haversine_distance(
         point1[1], point1[0],
         point2[1], point2[0]
     )
 
 
 def get_sources(gpx: GPX):
+    # Longitude, Latitude
     segments = [
         [
-            [[point.longitude, point.latitude] for point in segment.points]
+            [(point.longitude, point.latitude) for point in segment.points]
             for segment in track.segments
         ]
         for track in gpx.tracks
@@ -127,8 +133,7 @@ def all():
         if os.path.exists(filepath):
 
             print(f'Processing {filepath} ...')
-            with open(filepath, 'r', encoding='utf-8') as gpx_file:
-                gpx = gpxpy.parse(gpx_file)
+            gpx = fastgpx.parse(filepath)
 
             print(f'> length_3d()')
             distance_meters = gpx.length_3d()
@@ -211,8 +216,7 @@ def map(gpx=None):
         filepath = os.path.join(GPX_PATH, gpx_filename)
 
         print(f'{filepath} ...')
-        with open(filepath, 'r', encoding='utf-8') as gpx_file:
-            gpx = gpxpy.parse(gpx_file)
+        gpx = fastgpx.parse(filepath)
 
         bounds = gpx.get_bounds()
         assert bounds is not None
