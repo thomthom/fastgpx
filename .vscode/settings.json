@@ -102,7 +102,7 @@
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
   "editor.formatOnSave": true,
-  "editor.formatOnPaste": true,
+  "editor.formatOnPaste": false,
   "editor.wordWrapColumn": 100,
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.autoImportCompletions": true,
