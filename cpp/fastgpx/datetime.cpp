@@ -105,34 +105,49 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
   // Basic format with milliseconds in extended format (e.g., 2024-05-18T07:50:01.123Z)
   if (ss.fail())
   {
-    ss.clear();  // Clear the error state of the stream
-    ss.seekg(0); // Reset to the beginning of the stream
-    // TODO: What format is this?
+    ss.clear();
+    ss.seekg(0);
+    ss >> std::chrono::parse("%FT%T%EfZ", tp);
+  }
+
+  // Including microseconds (YYYY-MM-DDTHH:MM:SS.ssssssZ)
+  if (ss.fail())
+  {
+    ss.clear();
+    ss.seekg(0);
     ss >> std::chrono::parse("%FT%T%Ez", tp);
   }
 
   // Basic format without separators (YYYYMMDDTHHMMSSZ)
   if (ss.fail())
   {
-    ss.clear();  // Clear the error state of the stream
-    ss.seekg(0); // Reset to the beginning of the stream
-    ss >> std::chrono::parse("%Y%m%dT%H%M%S", tp);
+    ss.clear();
+    ss.seekg(0);
+    ss >> std::chrono::parse("%Y%m%dT%H%M%SZ", tp);
   }
 
   // Compact format with fractional seconds (YYYYMMDDTHHMMSS.FFFZ)
   if (ss.fail())
   {
-    ss.clear();  // Clear the error state of the stream
-    ss.seekg(0); // Reset to the beginning of the stream
+    ss.clear();
+    ss.seekg(0);
     ss >> std::chrono::parse("%Y%m%dT%H%M%S%EfZ", tp);
   }
 
   // Ordinal dates (YYYY-DDDTHH:MM:SSZ)
   if (ss.fail())
   {
-    ss.clear();  // Clear the error state of the stream
-    ss.seekg(0); // Reset to the beginning of the stream
-    ss >> std::chrono::parse("%Y-%jT%H:%M:%S", tp);
+    ss.clear();
+    ss.seekg(0);
+    ss >> std::chrono::parse("%Y-%jT%T%Z", tp);
+  }
+
+  // Week dates (YYYY-Www-DTHH:MM:SSZ)
+  if (ss.fail())
+  {
+    ss.clear();
+    ss.seekg(0);
+    ss >> std::chrono::parse("%G-W%V-%uT%T%Z", tp);
   }
 
   if (ss.fail())
