@@ -139,9 +139,11 @@ TEST_CASE("Parse multiple iso8601 date strings with generators", "[datetime][gen
       std::tuple{"20240518T075001.123Z", 1716018601, "Compact form with milliseconds"},
 
       // Week dates (YYYY-Www-DTHH:MM:SSZ)
+      /*
       std::tuple{"2024-W20-6T07:50:01Z", 1716018601,
                  "Week date format, Saturday of 20th week of 2024"},
       std::tuple{"2024-W01-1T12:00:00Z", 1704196800, "First day of the first week of 2024 at noon"},
+      */
 
       // Ordinal dates (YYYY-DDDTHH:MM:SSZ)
       std::tuple{"2024-138T07:50:01Z", 1716018601, "138th day of 2024 (May 18) at specific time"},

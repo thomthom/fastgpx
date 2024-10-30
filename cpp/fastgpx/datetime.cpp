@@ -26,8 +26,25 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
   std::tm tm = {};
   std::istringstream ss(time_str);
 
-  // Parse ISO 8601 string without fractional seconds.
+  // Basic date-time format (YYYY-MM-DDTHH:MM:SSZ)
   ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+
+  // Basic format without separators (YYYYMMDDTHHMMSSZ)
+  if (ss.fail())
+  {
+    ss.clear();  // Clear the error state of the stream
+    ss.seekg(0); // Reset to the beginning of the stream
+    ss >> std::get_time(&tm, "%Y%m%dT%H%M%S");
+  }
+
+  // Ordinal dates (YYYY-DDDTHH:MM:SSZ)
+  if (ss.fail())
+  {
+    ss.clear();  // Clear the error state of the stream
+    ss.seekg(0); // Reset to the beginning of the stream
+    ss >> std::get_time(&tm, "%Y-%jT%H:%M:%S");
+  }
+
   if (ss.fail())
   {
     throw std::runtime_error("Failed to parse date-time components.");
