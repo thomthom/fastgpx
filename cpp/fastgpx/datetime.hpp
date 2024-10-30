@@ -30,6 +30,6 @@ std::chrono::system_clock::time_point parse_iso8601(std::string_view time_str);
 
 } // namespace v4
 
-using v1::parse_iso8601;
+using v3::parse_iso8601;
 
 } // namespace fastgpx

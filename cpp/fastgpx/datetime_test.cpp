@@ -134,12 +134,14 @@ TEST_CASE("Parse Last millisecond of May 18, 2024", "[datetime]")
 TEST_CASE("138th day of 2024 (May 17) at specific time", "[datetime]")
 {
   // https://dencode.com/en/date/iso8601
-
+  //
   // ISO8601 Date               20240517T095001+0200
   // ISO8601 Date (Extend)      2024-05-17T09:50:01+02:00
   // ISO8601 Date (Week)        2024-W20-5T09:50:01+02:00
   // ISO8601 Date (Ordinal)     2024-138T09:50:01+02:00
 
+  // https://www.timestamp-converter.com/
+  //
   // Timestamp                  1715932201
   // Timestamp in milliseconds  1715932201000
   // ISO 8601                   2024-05-17T07:50:01.000Z
@@ -157,6 +159,47 @@ TEST_CASE("138th day of 2024 (May 17) at specific time", "[datetime]")
 
   SECTION("v3 std::chrono::parse system_clock")
   {
+    const auto actual_time = fastgpx::v3::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == expected_formatted);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
+}
+
+TEST_CASE("9 decimal places", "[datetime]")
+{
+  // https://www.timestamp-converter.com/
+  //
+  // Timestamp                  1716018601
+  // Timestamp in milliseconds  1716018601123
+  // ISO 8601                   2024-05-18T07:50:01.123Z
+  // Date Time (UTC)            May 18, 2024, 7:50:01 AM
+
+  const std::string time_string = "2024-05-18T07:50:01.123456789Z";
+  const std::time_t expected_timestamp = 1716018601;
+  const std::time_t expected_timestamp_ms = 1716018601123;
+  const std::chrono::milliseconds millis_duration(expected_timestamp_ms);
+  const auto expected_time = std::chrono::system_clock::time_point(millis_duration);
+  const auto expected_formatted = format_iso8601(expected_time);
+
+  CAPTURE(time_string, expected_formatted, expected_timestamp, expected_timestamp_ms,
+          expected_time);
+
+  SECTION("v3 std::chrono::parse system_clock")
+  {
+    // 2024-05-18T07:50:01.123456789Z
+    //
+    //    actual_time: 17158566011230000
+    //      actual_ts: 1715856601
+    // expected_ts_ms: 1716018601123
+    //    expected_ts: 1716018601
+    //
+    //   actual: 2024-05-16T10:50:01Z
+    // expected: 2024-05-18T07:50:01Z
+
     const auto actual_time = fastgpx::v3::parse_iso8601(time_string);
     CHECK(actual_time == expected_time);
 
@@ -308,8 +351,20 @@ TEST_CASE("Benchmark parse iso8601 date string", "[!benchmark][datetime]")
 {
   const std::string time_string = "2024-05-18T06:50:01Z";
 
-  BENCHMARK("v1 std::get_time") { return fastgpx::v1::parse_iso8601(time_string); };
-  BENCHMARK("v2 std::chrono::parse") { return fastgpx::v2::parse_iso8601(time_string); };
-  BENCHMARK("v3 std::chrono::parse") { return fastgpx::v3::parse_iso8601(time_string); };
-  BENCHMARK("v4 std::from_chars") { return fastgpx::v4::parse_iso8601(time_string); };
+  BENCHMARK("v1 std::get_time")
+  {
+    return fastgpx::v1::parse_iso8601(time_string);
+  };
+  BENCHMARK("v2 std::chrono::parse")
+  {
+    return fastgpx::v2::parse_iso8601(time_string);
+  };
+  BENCHMARK("v3 std::chrono::parse")
+  {
+    return fastgpx::v3::parse_iso8601(time_string);
+  };
+  BENCHMARK("v4 std::from_chars")
+  {
+    return fastgpx::v4::parse_iso8601(time_string);
+  };
 }

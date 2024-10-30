@@ -115,6 +115,21 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
   {
     ss.clear();
     ss.seekg(0);
+    // Year/Month/Day:
+    // %F:  Equivalent to "%Y-%m-%d". If the width is specified, it is only
+    //      applied to the %Y.
+    //
+    // Hour/Minute/Second:
+    // %T:  Equivalent to "%H:%M:%S".
+    //
+    // Timezone:
+    // %z:  Parses the offset from UTC in the format [+|-]hh[mm].
+    //      For example -0430 refers to 4 hours 30 minutes behind UTC and 04
+    //      refers to 4 hours ahead of UTC.
+    //
+    // %Ez: The modified commands %Ez and %Oz parses the format [+|-]h[h][:mm]
+    //      (i.e., requiring a : between the hours and minutes and making the
+    //      leading zero for hour optional).
     ss >> std::chrono::parse("%FT%T%Ez", tp);
   }
 
