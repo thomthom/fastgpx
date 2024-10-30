@@ -1,6 +1,20 @@
 #include "fastgpx/datetime.hpp"
 
+#include <ctime>
+
 namespace fastgpx {
+namespace {
+
+time_t make_utc_time(std::tm *tm)
+{
+#ifdef _WIN32
+  return _mkgmtime(tm);
+#else
+  return timegm(tm);
+#endif
+}
+
+} // namespace
 
 namespace v1 {
 
@@ -23,7 +37,8 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
   // Time in UTC
   tm.tm_isdst = 0; // Ensure that the parsed time is in UTC (not considering daylight savings)
 
-  const auto time = std::mktime(&tm);
+  // const auto time = std::mktime(&tm);
+  const auto time = make_utc_time(&tm);
   return std::chrono::system_clock::from_time_t(time);
 }
 
@@ -123,9 +138,10 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
   const auto second_str = time_str.substr(17, 2);
   std::from_chars(second_str.data(), second_str.data() + second_str.size(), tm.tm_sec);
 
-  tm.tm_isdst = 0; // Not using DST.
+  // tm.tm_isdst = 0; // Not using DST.
 
-  const auto time = std::mktime(&tm);
+  // const auto time = std::mktime(&tm);
+  const auto time = make_utc_time(&tm);
   return std::chrono::system_clock::from_time_t(time);
 }
 
