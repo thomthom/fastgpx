@@ -133,60 +133,72 @@ TEST_CASE("Parse Last millisecond of May 18, 2024", "[datetime]")
 
 TEST_CASE("Parse multiple iso8601 date strings with generators", "[datetime][generated]")
 {
-  auto [time_string, expected_timestamp_int, description] = GENERATE(
+  auto [time_string, expected_timestamp_ms, description] = GENERATE(
       // Basic date-time format (YYYY-MM-DDTHH:MM:SSZ)
-      std::tuple{"2024-05-18T07:50:01Z", 1716018601, "Standard date-time in UTC"},
-      std::tuple{"2023-12-25T00:00:00Z", 1708819200, "Midnight on Christmas in UTC"},
-      std::tuple{"2022-02-28T23:59:59Z", 1646092799,
+      std::tuple{"2024-05-18T07:50:01Z", 1716018601000LL, "Standard date-time in UTC"},
+      std::tuple{"2023-12-25T00:00:00Z", 1708819200000LL, "Midnight on Christmas in UTC"},
+      std::tuple{"2022-02-28T23:59:59Z", 1646092799000LL,
                  "Last second of February 28th in non-leap year"},
 
       // Including milliseconds (YYYY-MM-DDTHH:MM:SS.sssZ)
-      std::tuple{"2024-05-18T07:50:01.123Z", 1716018601, "Milliseconds ignored"},
-      std::tuple{"2024-05-18T07:50:01.000Z", 1716018601, "Exact time with zero milliseconds"},
-      std::tuple{"2024-05-18T23:59:59.999Z", 1716076799, "Last millisecond before midnight UTC"},
+      std::tuple{"2024-05-18T07:50:01.123Z", 1716018601123LL, "Milliseconds included"},
+      std::tuple{"2024-05-18T07:50:01.000Z", 1716018601000LL, "Exact time with zero milliseconds"},
+      std::tuple{"2024-05-18T23:59:59.999Z", 1716076799999LL,
+                 "Last millisecond before midnight UTC"},
 
       // Including microseconds (YYYY-MM-DDTHH:MM:SS.ssssssZ)
-      std::tuple{"2024-05-18T07:50:01.123456Z", 1716018601, "Microseconds ignored"},
-      std::tuple{"2024-05-18T07:50:01.987654Z", 1716018601,
-                 "Different microseconds, same timestamp"},
+      std::tuple{"2024-05-18T07:50:01.123456Z", 1716018601123LL,
+                 "Microseconds truncated to milliseconds"},
+      std::tuple{"2024-05-18T07:50:01.987654Z", 1716018601987LL,
+                 "Different microseconds, rounded to milliseconds"},
 
       // Leap year and month boundaries
-      std::tuple{"2024-02-29T12:30:45Z", 1709206245, "Leap day in 2024 at specific time"},
-      std::tuple{"2023-03-01T00:00:01Z", 1677628801,
+      std::tuple{"2024-02-29T12:30:45Z", 1709206245000LL, "Leap day in 2024 at specific time"},
+      std::tuple{"2023-03-01T00:00:01Z", 1677628801000LL,
                  "Just after midnight, March 1 (non-leap year)"},
-      std::tuple{"2024-12-31T23:59:59Z", 1735689599, "Last second of the year 2024"},
-      std::tuple{"2024-01-01T00:00:00Z", 1704067200, "Midnight of New Year's Day, 2024"},
+      std::tuple{"2024-12-31T23:59:59Z", 1735689599000LL, "Last second of the year 2024"},
+      std::tuple{"2024-01-01T00:00:00Z", 1704067200000LL, "Midnight of New Year's Day, 2024"},
 
       // Variable fractional seconds precision (fractions should be ignored)
-      std::tuple{"2024-05-18T07:50:01.1Z", 1716018601, "1 decimal place"},
-      std::tuple{"2024-05-18T07:50:01.12Z", 1716018601, "2 decimal places"},
-      std::tuple{"2024-05-18T07:50:01.1234Z", 1716018601, "4 decimal places"},
-      std::tuple{"2024-05-18T07:50:01.123456789Z", 1716018601, "9 decimal places, truncated"},
+      std::tuple{"2024-05-18T07:50:01.1Z", 1716018601000LL,
+                 "1 decimal place, truncated to milliseconds"},
+      std::tuple{"2024-05-18T07:50:01.12Z", 1716018601000LL,
+                 "2 decimal places, truncated to milliseconds"},
+      std::tuple{"2024-05-18T07:50:01.1234Z", 1716018601123LL,
+                 "4 decimal places, truncated to milliseconds"},
+      std::tuple{"2024-05-18T07:50:01.123456789Z", 1716018601123LL,
+                 "9 decimal places, truncated to milliseconds"},
 
       // Basic format without separators (YYYYMMDDTHHMMSSZ)
-      std::tuple{"20240518T075001Z", 1716018601, "Date-time in compact form"},
-      std::tuple{"20240518T075001.123Z", 1716018601, "Compact form with milliseconds"},
+      std::tuple{"20240518T075001Z", 1716018601000LL, "Date-time in compact form"},
+      std::tuple{"20240518T075001.123Z", 1716018601123LL, "Compact form with milliseconds"},
 
       // Week dates (YYYY-Www-DTHH:MM:SSZ)
       /*
-      std::tuple{"2024-W20-6T07:50:01Z", 1716018601,
+      std::tuple{"2024-W20-6T07:50:01Z", 1716018601000LL,
                  "Week date format, Saturday of 20th week of 2024"},
-      std::tuple{"2024-W01-1T12:00:00Z", 1704196800, "First day of the first week of 2024 at noon"},
+      std::tuple{"2024-W01-1T12:00:00Z", 1704196800000LL, "First day of the first week of 2024 at
+      noon"},
       */
 
       // Ordinal dates (YYYY-DDDTHH:MM:SSZ)
-      std::tuple{"2024-138T07:50:01Z", 1716018601, "138th day of 2024 (May 18) at specific time"},
-      std::tuple{"2024-001T00:00:00Z", 1704067200, "First day of 2024 at midnight"},
+      std::tuple{"2024-138T07:50:01Z", 1716018601000LL,
+                 "138th day of 2024 (May 18) at specific time"},
+      std::tuple{"2024-001T00:00:00Z", 1704067200000LL, "First day of 2024 at midnight"},
 
       // Midnight times
-      std::tuple{"2024-05-18T00:00:00Z", 1715990400, "Midnight of May 18, 2024"},
-      std::tuple{"2024-05-18T23:59:59.999Z", 1716076799, "Last millisecond of May 18, 2024"});
+      std::tuple{"2024-05-18T00:00:00Z", 1715990400000LL, "Midnight of May 18, 2024"},
+      std::tuple{"2024-05-18T23:59:59.999Z", 1716076799999LL, "Last millisecond of May 18, 2024"});
 
-  const time_t expected_timestamp = expected_timestamp_int;
-  const auto expected_time = std::chrono::system_clock::from_time_t(expected_timestamp);
+  const auto expected_timestamp = static_cast<time_t>(expected_timestamp_ms / 1000);
+
+  const std::chrono::milliseconds millis_duration(expected_timestamp_ms);
+  const auto expected_time = std::chrono::system_clock::time_point(millis_duration);
+
   const auto expected_formatted = format_iso8601(expected_time);
 
-  CAPTURE(description, time_string, expected_formatted, expected_timestamp, expected_time);
+  CAPTURE(description, time_string, expected_formatted, expected_timestamp_ms, expected_timestamp,
+          expected_time);
   /*
   SECTION("v1 std::get_time")
   {
