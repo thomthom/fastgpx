@@ -20,9 +20,15 @@ std::chrono::utc_clock::time_point parse_iso8601(const std::string &time_str);
 
 namespace v3 {
 
-std::chrono::system_clock::time_point parse_iso8601(std::string_view time_str);
+std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str);
 
 } // namespace v3
+
+namespace v4 {
+
+std::chrono::system_clock::time_point parse_iso8601(std::string_view time_str);
+
+} // namespace v4
 
 using v1::parse_iso8601;
 

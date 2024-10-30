@@ -33,6 +33,8 @@ namespace v2 {
 
 std::chrono::utc_clock::time_point parse_iso8601(const std::string &time_str)
 {
+  // https://github.com/pybind/pybind11/discussions/3451
+
   std::istringstream ss(time_str);
 
   // Define a system_clock::time_point to hold the parsed value
@@ -55,6 +57,33 @@ std::chrono::utc_clock::time_point parse_iso8601(const std::string &time_str)
 } // namespace v2
 
 namespace v3 {
+
+std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
+{
+  // https://github.com/pybind/pybind11/discussions/3451
+
+  std::istringstream ss(time_str);
+
+  // Define a system_clock::time_point to hold the parsed value
+  // std::chrono::sys_time<std::chrono::seconds> tp;
+  std::chrono::system_clock::time_point tp;
+
+  // Parse the ISO 8601 string into a system_clock::time_point
+  // ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", tp);
+  ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%SZ", tp);
+
+  // TODO: This is off by one hour.
+
+  // std::chrono::system_clock::time_point time_point = tp;
+  // return tp;
+  // std::chrono::utc_clock::time_point time_point = tp;
+  // return std::chrono::utc_clock::from_sys(tp);
+  return tp;
+}
+
+} // namespace v3
+
+namespace v4 {
 
 std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_str)
 {
@@ -100,6 +129,6 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
   return std::chrono::system_clock::from_time_t(time);
 }
 
-} // namespace v3
+} // namespace v4
 
 } // namespace fastgpx
