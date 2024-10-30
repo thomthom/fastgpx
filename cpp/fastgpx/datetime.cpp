@@ -28,23 +28,33 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
 
   // Parse ISO 8601 string without fractional seconds.
   ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+  if (ss.fail())
+  {
+    throw std::runtime_error("Failed to parse date-time components.");
+  }
+
+  // Initialize the time_point with seconds since epoch.
+  const time_t time = make_utc_time(&tm);
+  auto time_point = std::chrono::system_clock::from_time_t(time);
 
   // Handle optional fractional seconds if present.
   if (ss.peek() == '.')
   {
     char dot;
-    double fractional_seconds;
+    double fractional_seconds = 0.0;
+
+    // Extract the '.' and the fractional seconds value.
     ss >> dot >> fractional_seconds;
-    // TODO: Can this be handled? Is this data needed?
+
+    // Convert fractional seconds to nanoseconds.
+    auto nanos = std::chrono::duration_cast<std::chrono::system_clock::duration>(
+        std::chrono::duration<double>(fractional_seconds));
+
+    // Add the fractional seconds as nanoseconds to the time_point.
+    time_point += nanos;
   }
 
-  // Time in UTC
-  // TODO: Is this correct?
-  tm.tm_isdst = 0; // Ensure that the parsed time is in UTC (not considering daylight savings)
-
-  // const auto time = std::mktime(&tm);
-  const auto time = make_utc_time(&tm);
-  return std::chrono::system_clock::from_time_t(time);
+  return time_point;
 }
 
 } // namespace v1
