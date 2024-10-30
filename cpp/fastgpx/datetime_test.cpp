@@ -52,7 +52,11 @@ TEST_CASE("Parse iso8601 date string", "[datetime]")
   {
     const auto actual_time = fastgpx::v1::parse_iso8601(time_string);
     CHECK(actual_time == expected_time);
+
     CHECK(format_iso8601(actual_time) == time_string);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
   }
 
   SECTION("v2 std::chrono::parse utc_clock")
