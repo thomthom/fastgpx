@@ -102,6 +102,35 @@ TEST_CASE("Parse iso8601 date string", "[datetime]")
   }
 }
 
+TEST_CASE("Parse Last millisecond of May 18, 2024", "[datetime]")
+{
+  // Timestamp                  1716076799
+  // Timestamp in milliseconds  1716076799999
+  // ISO 8601                   2024-05-18T23:59:59.999Z
+  // Date Time (UTC)            18 May 2024, 23:59:59
+
+  const std::string time_string = "2024-05-18T23:59:59.999Z";
+  const std::time_t expected_timestamp = 1716076799;
+  const std::time_t expected_timestamp_ms = 1716076799999;
+  const std::chrono::milliseconds millis_duration(expected_timestamp_ms);
+  const auto expected_time = std::chrono::system_clock::time_point(millis_duration);
+  const auto expected_formatted = format_iso8601(expected_time);
+
+  CAPTURE(time_string, expected_formatted, expected_timestamp, expected_timestamp_ms,
+          expected_time);
+
+  SECTION("v3 std::chrono::parse system_clock")
+  {
+    const auto actual_time = fastgpx::v3::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == expected_formatted);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
+}
+
 TEST_CASE("Parse multiple iso8601 date strings with generators", "[datetime][generated]")
 {
   auto [time_string, expected_timestamp_int, description] = GENERATE(
