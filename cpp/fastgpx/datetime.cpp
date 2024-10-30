@@ -1,6 +1,9 @@
 #include "fastgpx/datetime.hpp"
 
+#include <charconv>
 #include <ctime>
+#include <iomanip>
+#include <sstream>
 
 namespace fastgpx {
 namespace {
