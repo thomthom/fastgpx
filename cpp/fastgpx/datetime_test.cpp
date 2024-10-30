@@ -167,6 +167,37 @@ TEST_CASE("138th day of 2024 (May 17) at specific time", "[datetime]")
   }
 }
 
+TEST_CASE("Parse time bounds of Connected_20240518_094959_.gpx", "[datetime]")
+{
+  // https://www.timestamp-converter.com/
+
+  // Timestamp                  1716050778
+  // Timestamp in milliseconds  1716050778000
+  // ISO 8601                   2024-05-18T16:46:18.000Z
+  // Date Time (UTC)            May 18, 2024, 4:46:18 PM
+
+  const std::string time_string = "2024-05-18T16:46:18Z";
+  const std::time_t expected_timestamp = 1716050778;
+  const std::time_t expected_timestamp_ms = 1716050778000;
+  const std::chrono::milliseconds millis_duration(expected_timestamp_ms);
+  const auto expected_time = std::chrono::system_clock::time_point(millis_duration);
+  const auto expected_formatted = format_iso8601(expected_time);
+
+  CAPTURE(time_string, expected_formatted, expected_timestamp, expected_timestamp_ms,
+          expected_time);
+
+  SECTION("v3 std::chrono::parse system_clock")
+  {
+    const auto actual_time = fastgpx::v3::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == expected_formatted);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
+}
+
 TEST_CASE("Parse multiple iso8601 date strings with generators", "[datetime][generated]")
 {
   auto [time_string, expected_timestamp_ms, description] = GENERATE(
