@@ -116,6 +116,8 @@ class TimeBounds:
     @typing.overload
     def __init__(self, start_time: datetime.datetime | None, end_time: datetime.datetime | None) -> None:
         ...
+    def is_empty(self) -> bool:
+        ...
 class Track:
     comment: str | None
     description: str | None

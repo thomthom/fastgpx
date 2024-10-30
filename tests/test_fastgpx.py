@@ -1,3 +1,5 @@
+import datetime
+
 import gpxpy
 import gpxpy.gpx
 import pytest
@@ -64,3 +66,21 @@ def test_gpx_bounds(gpx_path: str):
     assert bounds.max is not None
     assert bounds.max.latitude == pytest.approx(63.441189)
     assert bounds.max.longitude == pytest.approx(13.142774)
+
+# fastgpx.Gpx.time_bounds
+
+
+def test_gpx_time_bounds(gpx_path: str):
+    gpx = fastgpx.parse(gpx_path)
+    time_bounds = gpx.time_bounds()
+    assert not time_bounds.is_empty()
+
+    assert time_bounds.start_time is not None
+    assert time_bounds.start_time == datetime.datetime(
+        year=2024, month=5, day=18, hour=8, minute=50, second=0)
+    assert time_bounds.start_time.tzinfo is None  # TODO: Expect datetime.timezone.utc
+
+    assert time_bounds.end_time is not None
+    assert time_bounds.end_time == datetime.datetime(
+        year=2024, month=5, day=18, hour=17, minute=46, second=18)
+    assert time_bounds.start_time.tzinfo is None  # TODO: Expect datetime.timezone.utc

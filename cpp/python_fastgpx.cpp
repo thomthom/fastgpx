@@ -50,7 +50,8 @@ PYBIND11_MODULE(fastgpx, m)
       .def(py::init<OptionalTimePoint, OptionalTimePoint>(), py::arg("start_time"),
            py::arg("end_time"))
       .def_readwrite("start_time", &fastgpx::TimeBounds::start_time)
-      .def_readwrite("end_time", &fastgpx::TimeBounds::end_time);
+      .def_readwrite("end_time", &fastgpx::TimeBounds::end_time)
+      .def("is_empty", &fastgpx::TimeBounds::IsEmpty);
 
   py::class_<fastgpx::LatLong>(m, "LatLong")
       .def(py::init<>())
