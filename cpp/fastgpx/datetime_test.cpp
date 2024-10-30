@@ -131,6 +131,42 @@ TEST_CASE("Parse Last millisecond of May 18, 2024", "[datetime]")
   }
 }
 
+TEST_CASE("138th day of 2024 (May 17) at specific time", "[datetime]")
+{
+  // https://dencode.com/en/date/iso8601
+
+  // ISO8601 Date               20240517T095001+0200
+  // ISO8601 Date (Extend)      2024-05-17T09:50:01+02:00
+  // ISO8601 Date (Week)        2024-W20-5T09:50:01+02:00
+  // ISO8601 Date (Ordinal)     2024-138T09:50:01+02:00
+
+  // Timestamp                  1715932201
+  // Timestamp in milliseconds  1715932201000
+  // ISO 8601                   2024-05-17T07:50:01.000Z
+  // Date Time (UTC)            17 May 2024, 07:50:01
+
+  const std::string time_string = "2024-138T07:50:01Z";
+  const std::time_t expected_timestamp = 1715932201;
+  const std::time_t expected_timestamp_ms = 1715932201000;
+  const std::chrono::milliseconds millis_duration(expected_timestamp_ms);
+  const auto expected_time = std::chrono::system_clock::time_point(millis_duration);
+  const auto expected_formatted = format_iso8601(expected_time);
+
+  CAPTURE(time_string, expected_formatted, expected_timestamp, expected_timestamp_ms,
+          expected_time);
+
+  SECTION("v3 std::chrono::parse system_clock")
+  {
+    const auto actual_time = fastgpx::v3::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == expected_formatted);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
+}
+
 TEST_CASE("Parse multiple iso8601 date strings with generators", "[datetime][generated]")
 {
   auto [time_string, expected_timestamp_ms, description] = GENERATE(
@@ -182,8 +218,8 @@ TEST_CASE("Parse multiple iso8601 date strings with generators", "[datetime][gen
       */
 
       // Ordinal dates (YYYY-DDDTHH:MM:SSZ)
-      std::tuple{"2024-138T07:50:01Z", 1716018601000LL,
-                 "138th day of 2024 (May 18) at specific time"},
+      std::tuple{"2024-138T07:50:01Z", 1715932201000LL,
+                 "138th day of 2024 (May 17) at specific time"},
       std::tuple{"2024-001T00:00:00Z", 1704067200000LL, "First day of 2024 at midnight"},
 
       // Midnight times
