@@ -46,12 +46,10 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
     // Extract the '.' and the fractional seconds value.
     ss >> dot >> fractional_seconds;
 
-    // Convert fractional seconds to nanoseconds.
-    auto nanos = std::chrono::duration_cast<std::chrono::system_clock::duration>(
-        std::chrono::duration<double>(fractional_seconds));
+    const auto duration = std::chrono::duration<double, std::milli>(fractional_seconds);
+    const auto millis = std::chrono::duration_cast<std::chrono::system_clock::duration>(duration);
 
-    // Add the fractional seconds as nanoseconds to the time_point.
-    time_point += nanos;
+    time_point += millis;
   }
 
   return time_point;
@@ -78,6 +76,27 @@ namespace v3 {
 std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
 {
   // https://github.com/pybind/pybind11/discussions/3451
+
+  // https://stackoverflow.com/questions/26895428/how-do-i-parse-an-iso-8601-date-with-optional-milliseconds-to-a-struct-tm-in-c
+  /*
+  date::sys_time<std::chrono::milliseconds>
+  parse8601(std::istream&& is)
+  {
+    std::string save;
+    is >> save;
+    std::istringstream in{save};
+    date::sys_time<std::chrono::milliseconds> tp;
+    in >> date::parse("%FT%TZ", tp);
+    if (in.fail())
+    {
+      in.clear();
+      in.exceptions(std::ios::failbit);
+      in.str(save);
+      in >> date::parse("%FT%T%Ez", tp);
+    }
+    return tp;
+  }
+  */
 
   std::istringstream ss(time_str);
   std::chrono::system_clock::time_point tp;
