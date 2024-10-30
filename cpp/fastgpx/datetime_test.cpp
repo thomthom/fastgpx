@@ -158,7 +158,7 @@ TEST_CASE("Parse multiple iso8601 date strings with generators", "[datetime][gen
   const auto expected_formatted = format_iso8601(expected_time);
 
   CAPTURE(description, time_string, expected_formatted, expected_timestamp, expected_time);
-
+  /*
   SECTION("v1 std::get_time")
   {
     const auto actual_time = fastgpx::v1::parse_iso8601(time_string);
@@ -169,18 +169,19 @@ TEST_CASE("Parse multiple iso8601 date strings with generators", "[datetime][gen
     const auto actual_timestamp = time_point_to_epoch(actual_time);
     CHECK(actual_timestamp == expected_timestamp);
   }
-  /*
-    SECTION("v3 std::chrono::parse system_clock")
-    {
-      const auto actual_time = fastgpx::v3::parse_iso8601(time_string);
-      CHECK(actual_time == expected_time);
+  */
 
-      CHECK(format_iso8601(actual_time) == expected_formatted);
+  SECTION("v3 std::chrono::parse system_clock")
+  {
+    const auto actual_time = fastgpx::v3::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
 
-      const auto actual_timestamp = time_point_to_epoch(actual_time);
-      CHECK(actual_timestamp == expected_timestamp);
-    }
-   */
+    CHECK(format_iso8601(actual_time) == expected_formatted);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
+
   /*
     SECTION("v4 std::from_chars")
     {

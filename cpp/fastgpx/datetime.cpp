@@ -95,30 +95,57 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
   // https://github.com/pybind/pybind11/discussions/3451
 
   // https://stackoverflow.com/questions/26895428/how-do-i-parse-an-iso-8601-date-with-optional-milliseconds-to-a-struct-tm-in-c
-  /*
-  date::sys_time<std::chrono::milliseconds>
-  parse8601(std::istream&& is)
-  {
-    std::string save;
-    is >> save;
-    std::istringstream in{save};
-    date::sys_time<std::chrono::milliseconds> tp;
-    in >> date::parse("%FT%TZ", tp);
-    if (in.fail())
-    {
-      in.clear();
-      in.exceptions(std::ios::failbit);
-      in.str(save);
-      in >> date::parse("%FT%T%Ez", tp);
-    }
-    return tp;
-  }
-  */
 
   std::istringstream ss(time_str);
-  std::chrono::system_clock::time_point tp;
-  ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%SZ", tp);
+  std::chrono::sys_time<std::chrono::milliseconds> tp;
+
+  // Basic date-time format (YYYY-MM-DDTHH:MM:SSZ)
+  ss >> std::chrono::parse("%FT%TZ", tp);
+
+  // Basic format with milliseconds in extended format (e.g., 2024-05-18T07:50:01.123Z)
+  if (ss.fail())
+  {
+    ss.clear();  // Clear the error state of the stream
+    ss.seekg(0); // Reset to the beginning of the stream
+    // TODO: What format is this?
+    ss >> std::chrono::parse("%FT%T%Ez", tp);
+  }
+
+  // Basic format without separators (YYYYMMDDTHHMMSSZ)
+  if (ss.fail())
+  {
+    ss.clear();  // Clear the error state of the stream
+    ss.seekg(0); // Reset to the beginning of the stream
+    ss >> std::chrono::parse("%Y%m%dT%H%M%S", tp);
+  }
+
+  // Compact format with fractional seconds (YYYYMMDDTHHMMSS.FFFZ)
+  if (ss.fail())
+  {
+    ss.clear();  // Clear the error state of the stream
+    ss.seekg(0); // Reset to the beginning of the stream
+    ss >> std::chrono::parse("%Y%m%dT%H%M%S%EfZ", tp);
+  }
+
+  // Ordinal dates (YYYY-DDDTHH:MM:SSZ)
+  if (ss.fail())
+  {
+    ss.clear();  // Clear the error state of the stream
+    ss.seekg(0); // Reset to the beginning of the stream
+    ss >> std::chrono::parse("%Y-%jT%H:%M:%S", tp);
+  }
+
+  if (ss.fail())
+  {
+    throw std::runtime_error("Failed to parse date-time components.");
+  }
+
   return tp;
+
+  // std::istringstream ss(time_str);
+  // std::chrono::system_clock::time_point tp;
+  // ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%SZ", tp);
+  // return tp;
 }
 
 } // namespace v3
