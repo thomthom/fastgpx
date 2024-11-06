@@ -2,7 +2,7 @@
 #include <limits>
 #include <stdexcept>
 
-#include <pybind11/chrono.h>
+// #include <pybind11/chrono.h>
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -12,6 +12,8 @@
 #include "fastgpx/fastgpx.hpp"
 #include "fastgpx/geom.hpp"
 #include "fastgpx/polyline.hpp"
+
+#include "python_utc_chrono.hpp"
 
 namespace py = pybind11;
 

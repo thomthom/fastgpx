@@ -56,7 +56,7 @@ find_package(Python3 3.11 EXACT REQUIRED COMPONENTS Interpreter Development)
 set(PYBIND11_NEWPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 
-pybind11_add_module(fastgpx python_fastgpx.cpp)
+pybind11_add_module(fastgpx python_fastgpx.cpp python_utc_chrono.hpp)
 set_property(TARGET fastgpx PROPERTY CXX_STANDARD 23)
 set_property(TARGET fastgpx PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET fastgpx PROPERTY CXX_EXTENSIONS OFF)
