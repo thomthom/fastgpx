@@ -66,6 +66,40 @@ TEST_CASE("Parse two-point single segment track", "[parse][simple]")
   CHECK(*gpx_time_bounds.end_time == expected_end);
 }
 
+TEST_CASE("Parse time bounds of real world GPX file", "[parse][simple]")
+{
+  const auto path = project_path / "gpx/test/debug-segment.gpx";
+  const auto gpx = fastgpx::ParseGpx(path);
+
+  REQUIRE(gpx.tracks.size() == 1);
+  REQUIRE(gpx.tracks[0].segments.size() == 1);
+
+  // TimeBounds
+  // https://www.timestamp-converter.com/
+  // UNIX timestamp for 2024-05-29T07:19:16Z
+  const auto expected_start = std::chrono::system_clock::from_time_t(1716967156);
+  // UNIX timestamp for 2024-05-29T10:43:32Z
+  const auto expected_end = std::chrono::system_clock::from_time_t(1716979412);
+
+  const auto segment_time_bounds = gpx.tracks[0].segments[0].GetTimeBounds();
+  REQUIRE(segment_time_bounds.start_time.has_value());
+  REQUIRE(segment_time_bounds.end_time.has_value());
+  CHECK(*segment_time_bounds.start_time == expected_start);
+  CHECK(*segment_time_bounds.end_time == expected_end);
+
+  const auto track_time_bounds = gpx.tracks[0].GetTimeBounds();
+  REQUIRE(track_time_bounds.start_time.has_value());
+  REQUIRE(track_time_bounds.end_time.has_value());
+  CHECK(*track_time_bounds.start_time == expected_start);
+  CHECK(*track_time_bounds.end_time == expected_end);
+
+  const auto gpx_time_bounds = gpx.GetTimeBounds();
+  REQUIRE(gpx_time_bounds.start_time.has_value());
+  REQUIRE(gpx_time_bounds.end_time.has_value());
+  CHECK(*gpx_time_bounds.start_time == expected_start);
+  CHECK(*gpx_time_bounds.end_time == expected_end);
+}
+
 TEST_CASE("Parse real world GPX files", "[parse][real_world]")
 {
   const auto json_path = project_path / "cpp/expected_gpx_data.json";
