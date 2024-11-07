@@ -227,4 +227,104 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
 
 } // namespace v4
 
+namespace v5 {
+
+std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_str)
+{
+  // https://en.wikipedia.org/wiki/ISO_8601
+  // ISO 8601-1:2019/Amd 1:2022
+
+  // Year
+  //
+  // YYYY
+  // ±YYYYY
+  //
+  // It therefore represents years from 0000 to 9999, year 0000 being equal to
+  // 1 BC and all others AD,
+  //
+  // To represent years before 0000 or after 9999, the standard also permits the
+  // expansion of the year representation but only by prior agreement between the
+  // sender and the receiver. An expanded year representation [±YYYYY] must
+  // have an agreed-upon number of extra year digits beyond the four-digit minimum,
+  // and it must be prefixed with a + or − sign instead of the more common
+  // AD/BC (or CE/BCE) notation; by convention 1 BC is labelled +0000, 2 BC is
+  // labeled −0001, and so on.
+
+  // Calendar dates
+  //
+  // Basic format:
+  // * YYYYMMDD
+  //
+  // Extended format:
+  // * YYYY-MM-DD
+  // * YYYY-MM
+
+  // Week dates
+  //
+  // Basic format:
+  // * YYYYWww
+  // * YYYYWwwD
+  //
+  // Extended format:
+  // * YYYY-Www
+  // * YYYY-Www-D
+
+  // Ordinal dates
+  //
+  // Basic format:
+  // * YYYYDDD
+  //
+  // Extended format:
+  // * YYYY-DDD
+
+  // Time
+  //
+  // Basic format:
+  // * Thhmmss.sss
+  // * Thhmmss
+  // * Thhmm.mmm
+  // * Thhmm
+  //
+  // Extended format:
+  // * Thh:mm:ss.sss
+  // * Thh:mm:ss
+  // * Thh:mm.mmm
+  // * Thh:mm
+  // * Thh.hhh
+  // * Thh
+
+  // Time zone designators
+  //
+  // <time>Z
+  // <time>±hh:mm
+  // <time>±hhmm
+  // <time>±hh
+
+  // Decimals
+  //
+  // A decimal fraction may be added to the lowest order time element present in
+  // any of these representations. A decimal mark, either a comma or a dot on the
+  // baseline, is used as a separator between the time element and its fraction.
+  // (Following ISO 80000-1 according to ISO 8601:1-2019, it does not
+  // stipulate a preference except within International Standards, but with a
+  // preference for a comma according to ISO 8601:2004.) For example, to
+  // denote "14 hours, 30 and one half minutes", do not include a seconds figure;
+  // represent it as "14:30,5", "T1430,5", "14:30.5", or "T1430.5".
+  //
+  // There is no limit on the number of decimal places for the decimal fraction.
+  // However, the number of decimal places needs to be agreed to by the communicating
+  // parties. For example, in Microsoft SQL Server, the precision of a decimal
+  // fraction is 3 for a DATETIME, i.e., "yyyy-mm-ddThh:mm:ss[.mmm]".
+
+  // Durations / Time intervals
+  //
+  // Not relevant for GPX parsing.
+
+  std::tm tm = {};
+  const auto time = make_utc_time(&tm);
+  return std::chrono::system_clock::from_time_t(time);
+}
+
+} // namespace v5
+
 } // namespace fastgpx
