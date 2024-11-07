@@ -80,9 +80,11 @@ def test_gpx_time_bounds(gpx_path: str):
     assert time_bounds.start_time == datetime.datetime(
         year=2024, month=5, day=18, hour=7, minute=50, second=0)
     assert time_bounds.start_time.tzinfo is None  # pybind11 won't return datetime.timezone.utc
+    assert time_bounds.start_time.isoformat() == '2024-05-18T07:50:00'
 
     # 2024-05-18T16:46:18Z
     assert time_bounds.end_time is not None
     assert time_bounds.end_time == datetime.datetime(
         year=2024, month=5, day=18, hour=16, minute=46, second=18)
-    assert time_bounds.start_time.tzinfo is None
+    assert time_bounds.end_time.tzinfo is None
+    assert time_bounds.end_time.isoformat() == '2024-05-18T16:46:18'
