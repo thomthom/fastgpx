@@ -103,8 +103,8 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
         REQUIRE(segment_time.IsEmpty() == expected_segment.time_bounds.IsEmpty());
         if (!segment_time.IsEmpty())
         {
-          CHECK(segment_time.start_time == expected_segment.time_bounds.start_time);
-          CHECK(segment_time.end_time == expected_segment.time_bounds.end_time);
+          CHECK(*segment_time.start_time == *expected_segment.time_bounds.start_time);
+          CHECK(*segment_time.end_time == *expected_segment.time_bounds.end_time);
         }
       }
 
@@ -115,8 +115,8 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
       REQUIRE(track_time.IsEmpty() == expected_track.time_bounds.IsEmpty());
       if (!track_time.IsEmpty())
       {
-        CHECK(track_time.start_time == expected_track.time_bounds.start_time);
-        CHECK(track_time.end_time == expected_track.time_bounds.end_time);
+        CHECK(*track_time.start_time == *expected_track.time_bounds.start_time);
+        CHECK(*track_time.end_time == *expected_track.time_bounds.end_time);
       }
     }
 
@@ -127,8 +127,8 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
     REQUIRE(gpx_time.IsEmpty() == expected_gpx.time_bounds.IsEmpty());
     if (!gpx_time.IsEmpty())
     {
-      CHECK(gpx_time.start_time == expected_gpx.time_bounds.start_time);
-      CHECK(gpx_time.end_time == expected_gpx.time_bounds.end_time);
+      CHECK(*gpx_time.start_time == *expected_gpx.time_bounds.start_time);
+      CHECK(*gpx_time.end_time == *expected_gpx.time_bounds.end_time);
     }
   }
 }
