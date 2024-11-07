@@ -223,8 +223,9 @@ public:
     std::time_t tt = system_clock::to_time_t(time_point_cast<system_clock::duration>(src - us));
     std::tm gmtm = *std::gmtime(&tt);
 
-    return PyDateTime_FromDateAndTime(gmtm.tm_year + 1900, gmtm.tm_mon + 1, gmtm.tm_mday,
-                                      gmtm.tm_hour, gmtm.tm_min, gmtm.tm_sec, us.count());
+    return PyDateTimeAPI->DateTime_FromDateAndTime(
+        gmtm.tm_year + 1900, gmtm.tm_mon + 1, gmtm.tm_mday, gmtm.tm_hour, gmtm.tm_min, gmtm.tm_sec,
+        us.count(), PyDateTime_TimeZone_UTC, PyDateTimeAPI->DateTimeType);
 
     /*
     // Subtract microseconds BEFORE `system_clock::to_time_t`, because:
