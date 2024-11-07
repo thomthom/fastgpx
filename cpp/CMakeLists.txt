@@ -88,6 +88,7 @@ set(TEST_SOURCES
   fastgpx/datetime_test.cpp
   fastgpx/fastgpx_test.cpp
   fastgpx/geom_test.cpp
+  fastgpx/test_data_test.cpp
 )
 add_executable(fastgpx_test ${TEST_UTILS} ${TEST_SOURCES})
 set_property(TARGET fastgpx_test PROPERTY CXX_STANDARD 23)

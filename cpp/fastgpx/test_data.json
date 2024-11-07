@@ -1,0 +1,39 @@
+[
+  {
+    "path": "gpx/2024 TopCamp\\Connected_20240529_091916_Harald_Bothners_Veg_36_7052_Trondheim.gpx",
+    "length2d": 251780.5732,
+    "length3d": 251888.6613,
+    "tracks": [
+      {
+        "length2d": 251780.5732,
+        "length3d": 251888.6613,
+        "segments": [
+          {
+            "length2d": 249854.1781,
+            "length3d": 249960.5511,
+            "time_bounds": {
+              "start_time": 1716967156,
+              "end_time": 1716978990
+            }
+          },
+          {
+            "length2d": 1926.3951,
+            "length3d": 1928.1101,
+            "time_bounds": {
+              "start_time": 1716979150,
+              "end_time": 1716979412
+            }
+          }
+        ],
+        "time_bounds": {
+          "start_time": 1716967156,
+          "end_time": 1716979412
+        }
+      }
+    ],
+    "time_bounds": {
+      "start_time": 1716967156,
+      "end_time": 1716979412
+    }
+  }
+]
