@@ -239,6 +239,17 @@ TEST_CASE("Parse time bounds of Connected_20240518_094959_.gpx", "[datetime]")
     const auto actual_timestamp = time_point_to_epoch(actual_time);
     CHECK(actual_timestamp == expected_timestamp);
   }
+
+  SECTION("v5 std::chrono::parse system_clock")
+  {
+    const auto actual_time = fastgpx::v5::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == expected_formatted);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
 }
 
 TEST_CASE("Parse multiple iso8601 date strings with generators", "[datetime][generated][!mayfail]")
