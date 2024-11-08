@@ -64,9 +64,13 @@ int main() {
     const auto msecs = std::chrono::milliseconds(440);
     auto sys_time_ms = sys_time2 + msecs;
     auto utc_time_ms = std::chrono::clock_cast<std::chrono::utc_clock>(sys_time_ms);
-    std::println("UTC Time: {}", utc_time_ms);
+    std::println(" UTC Time: {}", utc_time_ms);
 
-    std::println(" ISO8601: {}", time_tr);
+    std::println("  ISO8601: {}", time_tr);
+
+    std::println("     UNIX: {}", unix_timestamp);
+    std::println("(ms) UNIX: {}", 1731079942440);
+    std::println("utc_clock: {}", utc_time_ms.time_since_epoch().count());
 }
 ```
 
@@ -78,6 +82,11 @@ Program returned: 0
 Hello 123
 UTC Time: 2024-11-08 15:32:22
 UTC Time: 2024-11-08 15:32:22
-UTC Time: 2024-11-08 15:32:22.440
- ISO8601: 2024-11-08T15:32:22.440Z
+ UTC Time: 2024-11-08 15:32:22.440
+  ISO8601: 2024-11-08T15:32:22.440Z
+     UNIX: 1731079942
+(ms) UNIX: 1731079942440
+utc_clock: 1731079969440
 ```
+
+TODO: Modify `python_utc_chrono.hpp` to cast `std::chrono::utc_clock`.
