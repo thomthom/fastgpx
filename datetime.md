@@ -46,7 +46,7 @@ int main() {
     const auto sys_time1 = std::chrono::sys_seconds{std::chrono::seconds{unix_timestamp}};
     // Making `utc_time` const affect output... ???
     auto utc_time1 = std::chrono::clock_cast<std::chrono::utc_clock>(sys_time1);
-    std::println("UTC Time: {}", utc_time1);
+    std::println(" UTC Time: {}", utc_time1);
 
     std::tm cal;
     cal.tm_year = 2024 - 1900;
@@ -58,7 +58,7 @@ int main() {
     const auto cal_time = std::mktime(&cal);
     const auto sys_time2 = std::chrono::sys_seconds{std::chrono::seconds{cal_time}};
     const auto utc_time2 = std::chrono::clock_cast<std::chrono::utc_clock>(sys_time2);
-    std::println("UTC Time: {}", utc_time2);
+    std::println(" UTC Time: {}", utc_time2);
 
     // const auto msecs = std::chrono::microseconds(440);
     const auto msecs = std::chrono::milliseconds(440);
@@ -70,7 +70,10 @@ int main() {
 
     std::println("     UNIX: {}", unix_timestamp);
     std::println("(ms) UNIX: {}", 1731079942440);
-    std::println("utc_clock: {}", utc_time_ms.time_since_epoch().count());
+    std::println("utc_clock: {} <- NOTE: Wrong!", utc_time_ms.time_since_epoch().count());
+
+    auto utc_sys = std::chrono::utc_clock::to_sys(utc_time_ms);
+    std::println("sys_clock: {}", utc_sys.time_since_epoch().count());
 }
 ```
 
@@ -80,13 +83,14 @@ ASM generation compiler returned: 0
 Execution build compiler returned: 0
 Program returned: 0
 Hello 123
-UTC Time: 2024-11-08 15:32:22
-UTC Time: 2024-11-08 15:32:22
+ UTC Time: 2024-11-08 15:32:22
+ UTC Time: 2024-11-08 15:32:22
  UTC Time: 2024-11-08 15:32:22.440
   ISO8601: 2024-11-08T15:32:22.440Z
      UNIX: 1731079942
 (ms) UNIX: 1731079942440
-utc_clock: 1731079969440
+utc_clock: 1731079969440 <- NOTE: Wrong!
+sys_clock: 1731079942440
 ```
 
 TODO: Modify `python_utc_chrono.hpp` to cast `std::chrono::utc_clock`.
