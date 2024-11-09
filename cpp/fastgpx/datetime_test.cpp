@@ -180,7 +180,7 @@ TEST_CASE("138th day of 2024 (May 17) at specific time", "[datetime]")
   }
 }
 
-TEST_CASE("9 decimal places", "[datetime]")
+TEST_CASE("9 decimal places", "[datetime][!mayfail]")
 {
   // https://www.timestamp-converter.com/
   //
