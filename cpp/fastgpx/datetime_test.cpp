@@ -100,6 +100,17 @@ TEST_CASE("Parse iso8601 date string", "[datetime]")
     const auto actual_timestamp = time_point_to_epoch(actual_time);
     CHECK(actual_timestamp == expected_timestamp);
   }
+
+  SECTION("v5 std::from_chars parser")
+  {
+    const auto actual_time = fastgpx::v5::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == time_string);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
 }
 
 TEST_CASE("Parse Last millisecond of May 18, 2024", "[datetime]")
