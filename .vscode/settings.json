@@ -126,6 +126,36 @@
   ],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
+  "testMate.cpp.test.advancedExecutables": [
+    {
+      "pattern": "{build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}*",
+      "catch2": {
+        "testGrouping": {
+          "groupByExecutable": {
+            "groupByTags": {
+              "tags": [
+                [
+                  "bounds"
+                ],
+                [
+                  "datetime"
+                ],
+                [
+                  "distance"
+                ],
+                [
+                  "parse"
+                ],
+                [
+                  "testdata"
+                ],
+              ],
+            },
+          },
+        }
+      }
+    }
+  ],
   "cSpell.words": [
     "fastgpx",
     "gpxcpp",
