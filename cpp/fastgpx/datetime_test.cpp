@@ -389,4 +389,8 @@ TEST_CASE("Benchmark parse iso8601 date string", "[!benchmark][datetime]")
   {
     return fastgpx::v4::parse_iso8601(time_string);
   };
+  BENCHMARK("v5 std::from_chars parser")
+  {
+    return fastgpx::v5::parse_iso8601(time_string);
+  };
 }
