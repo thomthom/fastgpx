@@ -665,8 +665,46 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
     context.last_chunk_type = chunk.type;
   }
 
-  // TODO: Parse tokens.
-  return {};
+  std::tm tm = {};
+  for (const auto &token : tokens)
+  {
+    // TODO: Handle fractional.
+    switch (token.type)
+    {
+    case iso8601::TokenType::Year:
+      // Adjust year to be relative to 1900
+      tm.tm_year = token.decimal->integral - 1900;
+      break;
+    case iso8601::TokenType::Month:
+      // Adjust month to be zero-based
+      tm.tm_mon = token.decimal->integral - 1;
+      break;
+    case iso8601::TokenType::Day:
+      tm.tm_mday = token.decimal->integral;
+      break;
+    case iso8601::TokenType::Week:
+      // TODO: ...
+      break;
+    case iso8601::TokenType::DayOfYear:
+      // TODO: ...
+      break;
+    case iso8601::TokenType::Hour:
+      tm.tm_hour = token.decimal->integral;
+      break;
+    case iso8601::TokenType::Minute:
+      tm.tm_min = token.decimal->integral;
+      break;
+    case iso8601::TokenType::Second:
+      tm.tm_sec = token.decimal->integral;
+      break;
+    case iso8601::TokenType::TimezoneHour:
+    case iso8601::TokenType::TimezoneMinute:
+      // TODO: ...
+      break;
+    }
+  }
+  const auto time = make_utc_time(&tm);
+  return std::chrono::system_clock::from_time_t(time);
 }
 
 } // namespace v5
