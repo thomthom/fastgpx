@@ -517,6 +517,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       {'-', iso8601::ChunkType::Hyphen},            //
       {'+', iso8601::ChunkType::Plus},              //
       {'.', iso8601::ChunkType::DecimalSeparator},  //
+      {',', iso8601::ChunkType::DecimalSeparator},  //
       {'T', iso8601::ChunkType::TimeIndicator},     //
       {':', iso8601::ChunkType::TimeSeparator},     //
       {'Z', iso8601::ChunkType::TimezoneIndicator}, //
