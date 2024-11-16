@@ -1,6 +1,7 @@
 #include "fastgpx/datetime.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 #include <charconv>
 #include <ctime>
@@ -288,6 +289,7 @@ enum class Parse
   Date,
   Time,
   Timezone,
+  Done,
 };
 
 struct Decimal
@@ -307,7 +309,6 @@ struct Context
   Parse parse;
   Format format;
   ChunkType last_chunk_type;
-  TokenType last_token_type;
   TokenType last_decimal_token_type;
 };
 
@@ -324,6 +325,98 @@ class parse_error : public fastgpx_error
 public:
   explicit parse_error(const std::string &message) : fastgpx_error(message) {}
 };
+
+namespace {
+
+iso8601::TokenType parse_date_type(const iso8601::Chunk &chunk, const iso8601::Context &context)
+{
+  assert(context.parse == iso8601::Parse::Date);
+  assert(chunk.type == iso8601::ChunkType::Decimal);
+
+  if (context.last_chunk_type == iso8601::ChunkType::WeekIndicator)
+  {
+    return iso8601::TokenType::Week;
+  }
+
+  switch (context.last_decimal_token_type)
+  {
+  case iso8601::TokenType::Unknown:
+    return iso8601::TokenType::Year;
+  case iso8601::TokenType::Year:
+    if (chunk.data.size() == 3) // TODO: Validate chunk sizes.
+    {
+      return iso8601::TokenType::DayOfYear;
+    }
+    return iso8601::TokenType::Month;
+  case iso8601::TokenType::Month:
+    return iso8601::TokenType::Day;
+  default:
+    throw parse_error("unexpected date decimal");
+  }
+}
+
+iso8601::TokenType parse_time_type(const iso8601::Chunk &chunk, const iso8601::Context &context)
+{
+  assert(context.parse == iso8601::Parse::Time);
+  assert(chunk.type == iso8601::ChunkType::Decimal);
+
+  if (context.last_chunk_type == iso8601::ChunkType::TimeIndicator)
+  {
+    return iso8601::TokenType::Hour;
+  }
+
+  switch (context.last_decimal_token_type)
+  {
+  case iso8601::TokenType::Hour:
+    return iso8601::TokenType::Minute;
+  case iso8601::TokenType::Minute:
+    return iso8601::TokenType::Second;
+  default:
+    throw parse_error("unexpected time decimal");
+  }
+}
+
+iso8601::TokenType parse_timezone_type(const iso8601::Chunk &chunk, const iso8601::Context &context)
+{
+  assert(context.parse == iso8601::Parse::Timezone);
+  assert(chunk.type == iso8601::ChunkType::Decimal);
+
+  switch (context.last_decimal_token_type)
+  {
+  case iso8601::TokenType::Hour:
+  case iso8601::TokenType::Minute:
+  case iso8601::TokenType::Second:
+    return iso8601::TokenType::TimezoneHour;
+  case iso8601::TokenType::TimezoneHour:
+    return iso8601::TokenType::TimezoneMinute;
+  default:
+    throw parse_error("unexpected timezone decimal");
+  }
+}
+
+iso8601::Token parse_decimal(const iso8601::Chunk &chunk, const iso8601::Context &context)
+{
+  iso8601::Token token;
+  if (context.parse == iso8601::Parse::Date)
+  {
+    token.type = parse_date_type(chunk, context);
+  }
+  else if (context.parse == iso8601::Parse::Time)
+  {
+    token.type = parse_time_type(chunk, context);
+  }
+  else if (context.parse == iso8601::Parse::Timezone)
+  {
+    token.type = parse_timezone_type(chunk, context);
+  }
+
+  int value;
+  std::from_chars(chunk.data.data(), chunk.data.data() + chunk.data.size(), value);
+  token.decimal = iso8601::Decimal{.integral = value};
+  return token;
+}
+
+} // namespace
 
 std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_str)
 {
@@ -472,37 +565,29 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
     {
     case iso8601::ChunkType::Decimal:
     {
-      // const auto token = parse_decimal(chunk, context);
-      iso8601::Token token;
-      if (context.parse == iso8601::Parse::Date)
+      if (context.last_chunk_type == iso8601::ChunkType::DecimalSeparator)
       {
-        token.type = iso8601::TokenType::Year;
-      }
-      else if (context.parse == iso8601::Parse::Time)
-      {
-        token.type = iso8601::TokenType::Hour;
-      }
-      // TODO: Parse type for Z timezone.
-      else if (context.parse == iso8601::Parse::Timezone)
-      {
-        token.type = iso8601::TokenType::TimezoneHour;
-      }
-
-      int value;
-      std::from_chars(chunk.data.data(), chunk.data.data() + chunk.data.size(), value);
-      if (token.decimal.has_value())
-      {
-        // TODO: Fractional logic is broken.
-        if (context.last_chunk_type != iso8601::ChunkType::DecimalSeparator)
+        if (tokens.empty() || !tokens.back().decimal.has_value())
         {
-          throw parse_error("Unexpected chunk type.");
+          throw parse_error("Unexpected fractional.");
         }
-        token.decimal->fractional = value;
+        int value;
+        std::from_chars(chunk.data.data(), chunk.data.data() + chunk.data.size(), value);
+        tokens.back().decimal->fractional = value;
+        if (context.parse == iso8601::Parse::Date)
+        {
+          context.parse = iso8601::Parse::Time;
+        }
+        else if (context.parse == iso8601::Parse::Time)
+        {
+          context.parse = iso8601::Parse::Timezone;
+        }
+        else if (context.parse == iso8601::Parse::Timezone)
+        {
+          context.parse = iso8601::Parse::Done;
+        }
       }
-      else
-      {
-        token.decimal = iso8601::Decimal{.integral = value};
-      }
+      const auto token = parse_decimal(chunk, context);
 
       tokens.emplace_back(token);
       context.last_decimal_token_type = token.type;
@@ -572,7 +657,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
     {
       const auto &token =
           tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezoneIndicator});
-      context.parse = iso8601::Parse::Timezone;
+      context.parse = iso8601::Parse::Done;
       break;
     }
     }
