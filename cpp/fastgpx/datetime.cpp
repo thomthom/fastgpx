@@ -306,7 +306,9 @@ struct Context
 {
   Parse parse;
   Format format;
+  ChunkType last_chunk_type;
   TokenType last_token_type;
+  TokenType last_decimal_token_type;
 };
 
 } // namespace iso8601
@@ -457,7 +459,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
   const auto num_chunks = std::ranges::distance(chunks);
   auto data = chunks | std::ranges::to<std::vector>(); // TODO: Debug. Remove.
 
-  iso8601::Context context;
+  iso8601::Context context{};
   std::vector<iso8601::Token> tokens;
   for (const auto &chunk : chunks)
   {
@@ -466,16 +468,119 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       throw parse_error("Unexpected chunk type.");
     }
 
-    if (chunk.type == iso8601::ChunkType::Decimal)
+    switch (chunk.type)
     {
-      // ...
-    }
-    else
+    case iso8601::ChunkType::Decimal:
     {
-      // ...
+      // const auto token = parse_decimal(chunk, context);
+      iso8601::Token token;
+      if (context.parse == iso8601::Parse::Date)
+      {
+        token.type = iso8601::TokenType::Year;
+      }
+      else if (context.parse == iso8601::Parse::Time)
+      {
+        token.type = iso8601::TokenType::Hour;
+      }
+      // TODO: Parse type for Z timezone.
+      else if (context.parse == iso8601::Parse::Timezone)
+      {
+        token.type = iso8601::TokenType::TimezoneHour;
+      }
+
+      int value;
+      std::from_chars(chunk.data.data(), chunk.data.data() + chunk.data.size(), value);
+      if (token.decimal.has_value())
+      {
+        // TODO: Fractional logic is broken.
+        if (context.last_chunk_type != iso8601::ChunkType::DecimalSeparator)
+        {
+          throw parse_error("Unexpected chunk type.");
+        }
+        token.decimal->fractional = value;
+      }
+      else
+      {
+        token.decimal = iso8601::Decimal{.integral = value};
+      }
+
+      tokens.emplace_back(token);
+      context.last_decimal_token_type = token.type;
+      break;
     }
+    case iso8601::ChunkType::DecimalSeparator:
+    {
+      if (context.last_chunk_type != iso8601::ChunkType::DecimalSeparator)
+      {
+        throw parse_error("Unexpected decimal separator.");
+      }
+      // TODO: ...
+      break;
+    }
+    case iso8601::ChunkType::Hyphen:
+    {
+      switch (context.parse)
+      {
+      case iso8601::Parse::Date:
+      {
+        const auto &token =
+            tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::DateSeparator});
+        break;
+      }
+      case iso8601::Parse::Time:
+      {
+        const auto &token =
+            tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezoneNegative});
+        context.parse = iso8601::Parse::Timezone;
+        break;
+      }
+      default:
+      {
+        throw parse_error("Unexpected token: -");
+      }
+      }
+      break;
+    case iso8601::ChunkType::Plus:
+    {
+      if (context.parse != iso8601::Parse::Time)
+      {
+        throw parse_error("Unexpected token: +");
+      }
+      const auto &token =
+          tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezonePositive});
+      context.parse = iso8601::Parse::Timezone;
+      break;
+    }
+    case iso8601::ChunkType::TimeSeparator:
+    {
+      if (context.parse != iso8601::Parse::Time)
+      {
+        throw parse_error("Unexpected time separator.");
+      }
+      const auto &token =
+          tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimeSeparator});
+      break;
+    }
+    case iso8601::ChunkType::TimeIndicator:
+    {
+      const auto &token =
+          tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimeIndicator});
+      context.parse = iso8601::Parse::Time;
+      break;
+    }
+    case iso8601::ChunkType::TimezoneIndicator:
+    {
+      const auto &token =
+          tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezoneIndicator});
+      context.parse = iso8601::Parse::Timezone;
+      break;
+    }
+    }
+    }
+    context.last_chunk_type = chunk.type;
   }
 
+  // TODO: Parse tokens.
   return {};
 }
 
