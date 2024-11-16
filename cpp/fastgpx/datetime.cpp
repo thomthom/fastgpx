@@ -8,6 +8,7 @@
 #include <optional>
 #include <ranges>
 #include <sstream>
+#include <unordered_map>
 
 namespace fastgpx {
 namespace {
@@ -235,24 +236,45 @@ namespace v5 {
 
 namespace iso8601 {
 
+enum class ChunkType
+{
+  Unknown,
+  Decimal,           // [0-9]
+  DecimalSeparator,  // .
+  Hyphen,            // -
+  Plus,              // +
+  WeekIndicator,     // W
+  TimeIndicator,     // T
+  TimeSeparator,     // :
+  TimezoneIndicator, // Z
+};
+
+struct Chunk
+{
+  ChunkType type;
+  std::string_view data;
+};
+
 enum class TokenType
 {
   Unknown,
-  Numeric,           // [0-9.]
   Year,              // YYYY
   Month,             // MM
+  WeekIndicator,     // W
   Week,              // ww
   Day,               // DD
   DayOfYear,         // DDD
   Hour,              // hh
   Minute,            // mm
   Second,            // ss
-  Timezone,          // hh:mm hh
   DateSeparator,     // -
-  TimeSeparator,     // :
-  WeekIndicator,     // W
   TimeIndicator,     // T
-  TimezoneIndicator, // Z + -
+  TimeSeparator,     // :
+  TimezoneIndicator, // Z
+  TimezonePositive,  // +
+  TimezoneNegative,  // -
+  TimezoneHour,      // hh
+  TimezoneMinute,    // mm
 };
 
 enum class Format
@@ -268,11 +290,16 @@ enum class Parse
   Timezone,
 };
 
+struct Decimal
+{
+  int integral;
+  std::optional<int> fractional;
+};
+
 struct Token
 {
   TokenType type;
-  std::string_view value;
-  std::optional<std::string_view> fraction;
+  std::optional<Decimal> decimal;
 };
 
 struct Context
@@ -391,254 +418,67 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
   //
   // Not relevant for GPX parsing.
 
-  // const auto extended_format =
-  //     std::ranges::any_of(time_str, [](const char c) { return c == '-' || c == ':'; });
-  bool has_date_separator = false;
-  bool has_time_separator = false;
-  bool has_time = false;
-  bool has_timezone = false;
-  for (const auto &c : time_str)
-  {
-    if (c == '-') // Might be timezone indicator.
+  const std::unordered_map<char, iso8601::ChunkType> char_to_chunk_type{
+      {'-', iso8601::ChunkType::Hyphen},            //
+      {'+', iso8601::ChunkType::Plus},              //
+      {'.', iso8601::ChunkType::DecimalSeparator},  //
+      {'T', iso8601::ChunkType::TimeIndicator},     //
+      {':', iso8601::ChunkType::TimeSeparator},     //
+      {'Z', iso8601::ChunkType::TimezoneIndicator}, //
+      {'W', iso8601::ChunkType::WeekIndicator},     //
+  };
+
+  auto is_digit_chuck = [](char a, char b) { return std::isdigit(a) == std::isdigit(b); };
+
+  auto chuck_type = [&char_to_chunk_type](const auto &data) {
+    const auto ch = *data.begin();
+    if (std::isdigit(ch))
     {
-      has_date_separator = true;
-    }
-    else if (c == ':')
-    {
-      has_time_separator = true;
-    }
-    else if (c == 'T')
-    {
-      has_time = true;
-    }
-    else if (c == 'Z')
-    {
-      has_timezone = true;
-    }
-  }
-  const auto extended_format = has_date_separator || has_time_separator;
-
-  constexpr std::string_view decimals = "0123456789."; // Also comma?
-
-  if (extended_format)
-  {
-    // constexpr std::string_view separators = "-:TZ";
-
-    auto is_decimal = [](char ch) { return (ch >= '0' && ch <= '9') || ch == '.'; };
-    auto is_decimal_chuck = [&is_decimal](char a, char b) {
-      return is_decimal(a) == is_decimal(b);
-    };
-
-    // Tokenizer
-
-    auto chunks = time_str | std::ranges::views::chunk_by(is_decimal_chuck);
-    auto tokens = chunks | std::views::transform([](const auto &chunk) {
-                    return iso8601::Token{.value = {chunk.begin(), chunk.end()}};
-                  });
-    auto data = tokens | std::ranges::to<std::vector>();
-
-    iso8601::Context context;
-    for (auto &token : data)
-    {
-      if (token.value == "T")
-      {
-        token.type = iso8601::TokenType::TimeSeparator;
-        context.parse = iso8601::Parse::Time;
-      }
-
-      else if (token.value == "Z")
-      {
-        token.type = iso8601::TokenType::Timezone;
-        context.parse = iso8601::Parse::Timezone;
-      }
-
-      else if (token.value == "W")
-      {
-        token.type = iso8601::TokenType::WeekIndicator;
-      }
-
-      else if (token.value == "-")
-      {
-        if (context.parse == iso8601::Parse::Date)
-        {
-          token.type = iso8601::TokenType::DateSeparator;
-          context.format = iso8601::Format::Extended;
-        }
-        else if (context.parse == iso8601::Parse::Time)
-        {
-          // TODO: We probaby don't expect this in Time, but after that parsed.
-          // However, we don't know when time might end. It might be hh, hh:mm, hh:mm:ss...
-          // TODO: Timezone in format of: +04:00, -04:00, +0400, -0400, ...
-          // Since this can be Z, + or -, the + or - need to be applied to the
-          // following timezone value.
-          token.type = iso8601::TokenType::TimezoneIndicator;
-          context.parse = iso8601::Parse::Timezone;
-        }
-        else
-        {
-          throw parse_error("Unexpected token: '-'");
-        }
-      }
-
-      else if (token.value == ":")
-      {
-        if (context.parse != iso8601::Parse::Time || context.parse != iso8601::Parse::Timezone)
-        {
-          throw parse_error("Unexpected time separator.");
-        }
-
-        token.type = iso8601::TokenType::TimeSeparator;
-        context.format = iso8601::Format::Extended;
-      }
-
-      else
-      {
-        if (!std::ranges::all_of(token.value, [](char ch) { return std::isdigit(ch); }))
-        {
-          throw parse_error("Unexpected non-numeric token.");
-        }
-        token.type = iso8601::TokenType::Numeric;
-        // TODO: context.has_date = true; etc...
-      }
-
-      context.last_token_type = token.type;
-    }
-
-    // Parser
-    // TODO: New context.
-    context.parse = iso8601::Parse::Date;
-    context.last_token_type == iso8601::TokenType::Unknown;
-    if (context.format == iso8601::Format::Basic)
-    {
-      // Parse Numeric tokens into their components.
-      // TODO: ...
+      return iso8601::ChunkType::Decimal;
     }
     else
     {
-      // Parse Extended tokens into their components.
-      for (auto &token : data)
+      try
       {
-        switch (token.type)
-        {
-        case iso8601::TokenType::Numeric:
-        {
-          switch (context.parse)
-          {
-          case iso8601::Parse::Date:
-          {
-            switch (context.last_token_type)
-            {
-            case iso8601::TokenType::Unknown:
-            {
-              if (token.value.size() != 4)
-              {
-                throw parse_error("Year must be 4 digits.");
-              }
-              token.type = iso8601::TokenType::Year;
-              break;
-            }
-            case iso8601::TokenType::Year:
-            {
-              if (token.value.size() == 2)
-              {
-                token.type = iso8601::TokenType::Month;
-              }
-              else if (token.value.size() == 3)
-              {
-                token.type = iso8601::TokenType::DayOfYear;
-              }
-              throw parse_error("Month must be 2 digits, Day of year must be 3 digits.");
-              break;
-            }
-            break;
-            case iso8601::TokenType::WeekIndicator:
-            {
-              if (token.value.size() != 2)
-              {
-                throw parse_error("Week must be 2 digits.");
-              }
-              token.type = iso8601::TokenType::Month;
-              break;
-            }
-            break;
-            }
-          }
-          }
-        }
-
-          // Compiler
-          std::tm tm = {};
-          for (const auto &token : data)
-          {
-            // TODO: What to do if there is only a time?
-            switch (token.type)
-            {
-            case iso8601::TokenType::Year:
-            {
-              std::from_chars(token.value.data(), token.value.data() + token.value.size(),
-                              tm.tm_year);
-              tm.tm_year -= 1900; // Adjust year to be relative to 1900
-              break;
-            }
-            case iso8601::TokenType::Month:
-            {
-              std::from_chars(token.value.data(), token.value.data() + token.value.size(),
-                              tm.tm_mon);
-              tm.tm_mon -= 1; // Adjust month to be zero-based
-              break;
-            }
-            case iso8601::TokenType::Day:
-            {
-              std::from_chars(token.value.data(), token.value.data() + token.value.size(),
-                              tm.tm_mday);
-              break;
-            }
-            case iso8601::TokenType::Hour:
-            {
-              std::from_chars(token.value.data(), token.value.data() + token.value.size(),
-                              tm.tm_hour);
-              break;
-            }
-            case iso8601::TokenType::Minute:
-            {
-              std::from_chars(token.value.data(), token.value.data() + token.value.size(),
-                              tm.tm_min);
-              break;
-            }
-            case iso8601::TokenType::Second:
-            {
-              std::from_chars(token.value.data(), token.value.data() + token.value.size(),
-                              tm.tm_sec);
-              break;
-            }
-            case iso8601::TokenType::Timezone:
-            {
-              // TODO: ...
-              break;
-            }
-            case iso8601::TokenType::DateSeparator:
-            case iso8601::TokenType::TimeSeparator:
-            case iso8601::TokenType::TimezoneIndicator:
-              break; // Skip these tokens.
-            default:
-              throw parse_error("Unexpected token type.");
-            };
-          }
-
-          const auto time = make_utc_time(&tm);
-          return std::chrono::system_clock::from_time_t(time);
-        }
-        else
-        {
-          // Basic format
-          // TODO:
-        }
-
-        std::tm tm2 = {};
-        const auto time2 = make_utc_time(&tm2);
-        return std::chrono::system_clock::from_time_t(time2);
+        return char_to_chunk_type.at(ch);
       }
+      catch (const std::out_of_range &error)
+      {
+        throw parse_error("unexpected chunk data"); // TODO: include ch
+      };
+    }
+  };
 
-    } // namespace v5
+  auto make_chunk = [&chuck_type](const auto &data) {
+    return iso8601::Chunk{.type = chuck_type(data), .data = {data.begin(), data.end()}};
+  };
 
-  } // namespace fastgpx
+  auto chunks = time_str | std::views::chunk_by(is_digit_chuck) | std::views::transform(make_chunk);
+  const auto num_chunks = std::ranges::distance(chunks);
+  auto data = chunks | std::ranges::to<std::vector>(); // TODO: Debug. Remove.
+
+  iso8601::Context context;
+  std::vector<iso8601::Token> tokens;
+  for (const auto &chunk : chunks)
+  {
+    if (tokens.empty() && chunk.type != iso8601::ChunkType::Decimal)
+    {
+      throw parse_error("Unexpected chunk type.");
+    }
+
+    if (chunk.type == iso8601::ChunkType::Decimal)
+    {
+      // ...
+    }
+    else
+    {
+      // ...
+    }
+  }
+
+  return {};
+}
+
+} // namespace v5
+
+} // namespace fastgpx
