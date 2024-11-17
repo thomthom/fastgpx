@@ -128,7 +128,7 @@
   "python.testing.pytestEnabled": true,
   "testMate.cpp.test.advancedExecutables": [
     {
-      "pattern": "{build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}*",
+      "pattern": "{build,Build,BUILD}/**/*{test,Test,TEST}*",
       "catch2": {
         "testGrouping": {
           "groupByExecutable": {
