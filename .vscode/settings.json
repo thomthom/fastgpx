@@ -133,6 +133,16 @@
         "testGrouping": {
           "groupByExecutable": {
             "groupByTags": {
+              "groupByTags": {
+                "tags": [
+                  [
+                    "!mayfail"
+                  ],
+                  [
+                    "!benchmark"
+                  ],
+                ]
+              },
               "tags": [
                 [
                   "bounds"
