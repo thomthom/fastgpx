@@ -23,7 +23,19 @@ time_t make_utc_time(std::tm *tm)
 #endif
 }
 
+std::string compose_message(const std::string &message, std::string_view source_str,
+                            std::string_view sub_str)
+{
+  std::size_t offset = sub_str.data() - source_str.data();
+  std::string marker_line = std::format("{:>{}}{}", "", offset, std::string(sub_str.size(), '^'));
+  return std::format("{}\n  \"{}\"\n   {}", message, source_str, marker_line);
+}
+
 } // namespace
+
+parse_error::parse_error(const std::string &message, std::string_view source_str,
+                         std::string_view sub_str)
+    : fastgpx_error(compose_message(message, source_str, sub_str)) {};
 
 namespace v1 {
 
@@ -325,30 +337,6 @@ struct Context
 };
 
 } // namespace iso8601
-
-class fastgpx_error : public std::runtime_error
-{
-public:
-  explicit fastgpx_error(const std::string &message) : std::runtime_error(message) {}
-};
-
-class parse_error : public fastgpx_error
-{
-public:
-  explicit parse_error(const std::string &message) : fastgpx_error(message) {}
-  parse_error(const std::string &message, std::string_view source_str, std::string_view sub_str)
-      : fastgpx_error(compose_message(message, source_str, sub_str))
-  {}
-
-private:
-  std::string compose_message(const std::string &message, std::string_view source_str,
-                              std::string_view sub_str)
-  {
-    std::size_t offset = sub_str.data() - source_str.data();
-    std::string marker_line = std::format("{:>{}}{}", "", offset, std::string(sub_str.size(), '^'));
-    return std::format("{}\n  \"{}\"\n   {}", message, source_str, marker_line);
-  }
-};
 
 namespace {
 
