@@ -34,7 +34,7 @@ auto time_point_to_epoch(const std::chrono::utc_clock::time_point& tp)
   return time_point_to_epoch(sys_tp);
 }
 
-TEST_CASE("Parse iso8601 date string", "[datetime]")
+TEST_CASE("Parse iso8601 date time zulu", "[datetime]")
 {
   // "2024-05-18T07:50:01Z"
   // https://www.timestamp-converter.com/
@@ -48,6 +48,8 @@ TEST_CASE("Parse iso8601 date string", "[datetime]")
   const std::string time_string = "2024-05-18T07:50:01Z";
   const std::time_t expected_timestamp = 1716018601;
   const auto expected_time = std::chrono::system_clock::from_time_t(expected_timestamp);
+
+  CAPTURE(time_string, expected_timestamp, expected_time);
 
   SECTION("v1 std::get_time")
   {
@@ -100,6 +102,34 @@ TEST_CASE("Parse iso8601 date string", "[datetime]")
     const auto actual_timestamp = time_point_to_epoch(actual_time);
     CHECK(actual_timestamp == expected_timestamp);
   }
+
+  SECTION("v5 std::from_chars parser")
+  {
+    const auto actual_time = fastgpx::v5::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == time_string);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
+}
+
+TEST_CASE("Parse iso8601 date time positive timezone", "[datetime]")
+{
+  // "2024-11-17T06:54:54+08:30"
+  // https://www.timestamp-converter.com/
+  //
+  // Timestamp                   1731795894
+  // Timestamp in milliseconds   1731795894000
+  // ISO 8601                    2024-11-16T22:24:54Z
+  // Date Time (UTC)             16 Nov 2024, 22:24:54
+
+  const std::string time_string = "2024-11-17T06:54:54+08:30";
+  const std::time_t expected_timestamp = 1731795894;
+  const auto expected_time = std::chrono::system_clock::from_time_t(expected_timestamp);
+
+  CAPTURE(time_string, expected_timestamp, expected_time);
 
   SECTION("v5 std::from_chars parser")
   {

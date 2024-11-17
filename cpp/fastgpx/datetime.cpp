@@ -308,6 +308,7 @@ enum class Parse
 
 struct Context
 {
+  std::string_view string;
   Parse parse;
   Format format;
   ChunkType last_chunk_type;
@@ -326,6 +327,18 @@ class parse_error : public fastgpx_error
 {
 public:
   explicit parse_error(const std::string &message) : fastgpx_error(message) {}
+  parse_error(const std::string &message, std::string_view source_str, std::string_view sub_str)
+      : fastgpx_error(compose_message(message, source_str, sub_str))
+  {}
+
+private:
+  std::string compose_message(const std::string &message, std::string_view source_str,
+                              std::string_view sub_str)
+  {
+    std::size_t offset = sub_str.data() - source_str.data();
+    std::string marker_line = std::format("{:>{}}{}", "", offset, std::string(sub_str.size(), '^'));
+    return std::format("{}\n  \"{}\"\n   {}", message, source_str, marker_line);
+  }
 };
 
 namespace {
@@ -353,7 +366,7 @@ iso8601::TokenType parse_date_type(const iso8601::Chunk &chunk, const iso8601::C
   case iso8601::TokenType::Month:
     return iso8601::TokenType::Day;
   default:
-    throw parse_error("unexpected date decimal");
+    throw parse_error("unexpected date decimal", context.string, chunk.data);
   }
 }
 
@@ -374,7 +387,7 @@ iso8601::TokenType parse_time_type(const iso8601::Chunk &chunk, const iso8601::C
   case iso8601::TokenType::Minute:
     return iso8601::TokenType::Second;
   default:
-    throw parse_error("unexpected time decimal");
+    throw parse_error("unexpected time decimal", context.string, chunk.data);
   }
 }
 
@@ -392,7 +405,7 @@ iso8601::TokenType parse_timezone_type(const iso8601::Chunk &chunk, const iso860
   case iso8601::TokenType::TimezoneHour:
     return iso8601::TokenType::TimezoneMinute;
   default:
-    throw parse_error("unexpected timezone decimal");
+    throw parse_error("unexpected timezone decimal", context.string, chunk.data);
   }
 }
 
@@ -555,13 +568,13 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
   const auto num_chunks = std::ranges::distance(chunks);
   auto data = chunks | std::ranges::to<std::vector>(); // TODO: Debug. Remove.
 
-  iso8601::Context context{};
+  iso8601::Context context{.string = time_str};
   std::vector<iso8601::Token> tokens;
   for (const auto &chunk : chunks)
   {
     if (tokens.empty() && chunk.type != iso8601::ChunkType::Decimal)
     {
-      throw parse_error("Unexpected chunk type.");
+      throw parse_error("Unexpected chunk type.", context.string, chunk.data);
     }
 
     switch (chunk.type)
@@ -573,7 +586,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       {
         if (tokens.empty() || !tokens.back().decimal.has_value())
         {
-          throw parse_error("Unexpected fractional.");
+          throw parse_error("Unexpected fractional.", context.string, chunk.data);
         }
 
         int value;
@@ -604,7 +617,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
     {
       if (context.last_chunk_type != iso8601::ChunkType::Decimal)
       {
-        throw parse_error("Unexpected decimal separator.");
+        throw parse_error("Unexpected decimal separator.", context.string, chunk.data);
       }
       // TODO: ...
       // TODO: Only the smallest time unit can have fraction. (?)
@@ -630,7 +643,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       }
       default:
       {
-        throw parse_error("Unexpected token: -");
+        throw parse_error("Unexpected token: -", context.string, chunk.data);
       }
       }
       break;
@@ -638,7 +651,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
     {
       if (context.parse != iso8601::Parse::Time)
       {
-        throw parse_error("Unexpected token: +");
+        throw parse_error("Unexpected token: +", context.string, chunk.data);
       }
       const auto &token =
           tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezonePositive});
@@ -649,7 +662,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
     {
       if (context.parse != iso8601::Parse::Time)
       {
-        throw parse_error("Unexpected time separator.");
+        throw parse_error("Unexpected time separator.", context.string, chunk.data);
       }
       const auto &token =
           tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimeSeparator});
