@@ -306,6 +306,14 @@ enum class Parse
   Done,
 };
 
+// Normal enum because it's used in arithmetics.
+enum TimezoneSign
+{
+  None = 0,
+  Positive = 1,
+  Negative = -1,
+};
+
 struct Context
 {
   std::string_view string;
@@ -313,6 +321,7 @@ struct Context
   Format format;
   ChunkType last_chunk_type;
   TokenType last_decimal_token_type;
+  TimezoneSign timezone_sign = TimezoneSign::None;
 };
 
 } // namespace iso8601
@@ -639,6 +648,8 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
         const auto &token =
             tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezoneNegative});
         context.parse = iso8601::Parse::Timezone;
+        assert(context.timezone_sign == iso8601::TimezoneSign::None); // TODO: throw
+        context.timezone_sign = iso8601::TimezoneSign::Negative;
         break;
       }
       default:
@@ -656,13 +667,15 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       const auto &token =
           tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezonePositive});
       context.parse = iso8601::Parse::Timezone;
+      assert(context.timezone_sign == iso8601::TimezoneSign::None); // TODO: throw
+      context.timezone_sign = iso8601::TimezoneSign::Positive;
       break;
     }
     case iso8601::ChunkType::TimeSeparator:
     {
-      if (context.parse != iso8601::Parse::Time)
+      if (context.parse != iso8601::Parse::Time && context.parse != iso8601::Parse::Timezone)
       {
-        throw parse_error("Unexpected time separator.", context.string, chunk.data);
+        throw parse_error("Unexpected time separator", context.string, chunk.data);
       }
       const auto &token =
           tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimeSeparator});
@@ -687,41 +700,51 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
     context.last_chunk_type = chunk.type;
   }
 
+  // https://en.cppreference.com/w/cpp/chrono/c/tm
+  // https://www.gnu.org/software/libc/manual/html_node/Broken_002ddown-Time.html
+  // https://man7.org/linux/man-pages/man3/tm.3type.html
+  // https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/localtime-s-localtime32-s-localtime64-s?view=msvc-170
   std::tm tm = {};
   for (const auto &token : tokens)
   {
     // TODO: Handle fractional.
     switch (token.type)
     {
-    case iso8601::TokenType::Year:
-      // Adjust year to be relative to 1900
+    case iso8601::TokenType::Year: // Year (current year minus 1900).
       tm.tm_year = token.decimal->integral - 1900;
       break;
-    case iso8601::TokenType::Month:
-      // Adjust month to be zero-based
+    case iso8601::TokenType::Month: // Month (0 - 11; January = 0).
       tm.tm_mon = token.decimal->integral - 1;
       break;
-    case iso8601::TokenType::Day:
+    case iso8601::TokenType::Day: // Day of month (1 - 31).
       tm.tm_mday = token.decimal->integral;
       break;
     case iso8601::TokenType::Week:
       // TODO: ...
       break;
-    case iso8601::TokenType::DayOfYear:
+    case iso8601::TokenType::DayOfYear: // Day of year (0 - 365; January 1 = 0).
       // TODO: ...
       break;
-    case iso8601::TokenType::Hour:
+    case iso8601::TokenType::Hour: // Hours since midnight (0 - 23).
       tm.tm_hour = token.decimal->integral;
       break;
-    case iso8601::TokenType::Minute:
+    case iso8601::TokenType::Minute: // Minutes after hour (0 - 59).
       tm.tm_min = token.decimal->integral;
       break;
-    case iso8601::TokenType::Second:
+    case iso8601::TokenType::Second: // Seconds after minute (0 - 59).
       tm.tm_sec = token.decimal->integral;
       break;
     case iso8601::TokenType::TimezoneHour:
+      assert(context.timezone_sign != iso8601::TimezoneSign::None);
+      tm.tm_hour -= (token.decimal->integral * context.timezone_sign);
+      // TODO: Over/underflow. This appear to work, but not described in the C/C++ standards.
+      // TODO: Use an hour-duration to offset?
+      break;
     case iso8601::TokenType::TimezoneMinute:
-      // TODO: ...
+      assert(context.timezone_sign != iso8601::TimezoneSign::None);
+      tm.tm_min -= (token.decimal->integral * context.timezone_sign);
+      // TODO: Over/underflow. This appear to work, but not described in the C/C++ standards.
+      // TODO: Use an minute-duration to offset?
       break;
     }
   }
