@@ -692,7 +692,9 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
   // https://www.gnu.org/software/libc/manual/html_node/Broken_002ddown-Time.html
   // https://man7.org/linux/man-pages/man3/tm.3type.html
   // https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/localtime-s-localtime32-s-localtime64-s?view=msvc-170
-  std::tm tm = {};
+  std::tm tm = {
+      .tm_mday = 1, // Unlike the other members, this starts at 1.
+  };
   for (const auto &token : tokens)
   {
     // TODO: Handle fractional.
