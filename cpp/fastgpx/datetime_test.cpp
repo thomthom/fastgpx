@@ -165,6 +165,54 @@ TEST_CASE("Parse iso8601 extended date time negative timezone", "[datetime]")
   }
 }
 
+TEST_CASE("Parse iso8601 extended date time no timezone", "[datetime][!mayfail]")
+{
+  // "2024-11-17T06:54:43"
+  // https://www.timestamp-converter.com/
+
+  {
+    using namespace std::chrono;
+
+    const auto now = std::chrono::system_clock::now();
+    const auto* time_zone = std::chrono::current_zone();
+    const auto offset = time_zone->get_info(now).offset.count();
+
+    if (offset == 0)
+    {
+      WARN("System local time is the same as UTC. This test will not be reliable.");
+    }
+  }
+
+  const std::string time_string = "2024-11-17T06:54:43";
+
+  // Assuming local time is UTC+1:
+  //  ISO 8601  2024-11-17T05:54:43Z
+  // Timestamp  1731822883
+
+  std::istringstream ss(time_string);
+  std::chrono::local_time<std::chrono::seconds> parsed_time;
+  ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", parsed_time);
+  const auto local = std::chrono::zoned_time(std::chrono::current_zone(), parsed_time);
+  const auto utc = std::chrono::zoned_time{"UTC", local};
+  const std::string expected_time_string = std::format("{:%Y-%m-%dT%H:%M:%SZ}", utc);
+
+  const auto expected_time = utc.get_sys_time();
+  const auto expected_timestamp = expected_time.time_since_epoch().count();
+
+  CAPTURE(time_string, expected_time_string);
+
+  SECTION("v5 std::from_chars parser")
+  {
+    const auto actual_time = fastgpx::v5::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == expected_time_string);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
+}
+
 TEST_CASE("Parse iso8601 extended time YYYY-MM-DDThh::mmZ", "[datetime]")
 {
   // "2024-11-17T06:54Z"
