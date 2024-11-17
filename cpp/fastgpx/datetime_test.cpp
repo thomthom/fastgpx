@@ -165,6 +165,54 @@ TEST_CASE("Parse iso8601 extended date time negative timezone", "[datetime]")
   }
 }
 
+TEST_CASE("Parse iso8601 extended time YYYY-MM-DDThh::mmZ", "[datetime]")
+{
+  // "2024-11-17T06:54Z"
+  // https://www.timestamp-converter.com/
+
+  const std::string time_string = "2024-11-17T06:54Z";
+  const std::string expected_time_string = "2024-11-17T06:54:00Z";
+  const std::time_t expected_timestamp = 1731826440;
+  const auto expected_time = std::chrono::system_clock::from_time_t(expected_timestamp);
+
+  CAPTURE(time_string, expected_timestamp, expected_time_string, expected_time);
+
+  SECTION("v5 std::from_chars parser")
+  {
+    const auto actual_time = fastgpx::v5::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == expected_time_string);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
+}
+
+TEST_CASE("Parse iso8601 extended time YYYY-MM-DDThhZ", "[datetime]")
+{
+  // "2024-11-17T06Z"
+  // https://www.timestamp-converter.com/ <- Note: doesn't handle this format.
+
+  const std::string time_string = "2024-11-17T06Z";
+  const std::string expected_time_string = "2024-11-17T06:00:00Z";
+  const std::time_t expected_timestamp = 1731823200;
+  const auto expected_time = std::chrono::system_clock::from_time_t(expected_timestamp);
+
+  CAPTURE(time_string, expected_timestamp, expected_time_string, expected_time);
+
+  SECTION("v5 std::from_chars parser")
+  {
+    const auto actual_time = fastgpx::v5::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == expected_time_string);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
+}
+
 TEST_CASE("Parse iso8601 extended date YYYY-MM-DD", "[datetime]")
 {
   // "2024-11-17"
@@ -237,7 +285,7 @@ TEST_CASE("Parse iso8601 date YYYY", "[datetime]")
   }
 }
 
-TEST_CASE("Parse iso8601 extended date Thh:mm::ss", "[datetime]")
+TEST_CASE("Parse iso8601 extended date Thh:mm::ss", "[datetime][invalid]")
 {
   const std::string time_string = "T15:24:43Z";
   SECTION("v5 std::from_chars parser")
