@@ -256,6 +256,13 @@ struct Chunk
   std::string_view data;
 };
 
+struct Decimal
+{
+  int integral;
+  std::optional<int> fractional;
+  size_t fractional_digits = 0;
+};
+
 enum class TokenType
 {
   Unknown,
@@ -278,8 +285,15 @@ enum class TokenType
   TimezoneMinute,    // mm
 };
 
+struct Token
+{
+  TokenType type;
+  std::optional<Decimal> decimal;
+};
+
 enum class Format
 {
+  Unknown,
   Basic,
   Extended,
 };
@@ -290,18 +304,6 @@ enum class Parse
   Time,
   Timezone,
   Done,
-};
-
-struct Decimal
-{
-  int integral;
-  std::optional<int> fractional;
-};
-
-struct Token
-{
-  TokenType type;
-  std::optional<Decimal> decimal;
 };
 
 struct Context
@@ -566,15 +568,19 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
     {
     case iso8601::ChunkType::Decimal:
     {
+      // Handle fractional components. Append to the last decimal token.
       if (context.last_chunk_type == iso8601::ChunkType::DecimalSeparator)
       {
         if (tokens.empty() || !tokens.back().decimal.has_value())
         {
           throw parse_error("Unexpected fractional.");
         }
+
         int value;
         std::from_chars(chunk.data.data(), chunk.data.data() + chunk.data.size(), value);
         tokens.back().decimal->fractional = value;
+        tokens.back().decimal->fractional_digits = chunk.data.size();
+
         if (context.parse == iso8601::Parse::Date)
         {
           context.parse = iso8601::Parse::Time;
@@ -588,19 +594,21 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
           context.parse = iso8601::Parse::Done;
         }
       }
-      const auto token = parse_decimal(chunk, context);
 
+      const auto token = parse_decimal(chunk, context);
       tokens.emplace_back(token);
       context.last_decimal_token_type = token.type;
       break;
     }
     case iso8601::ChunkType::DecimalSeparator:
     {
-      if (context.last_chunk_type != iso8601::ChunkType::DecimalSeparator)
+      if (context.last_chunk_type != iso8601::ChunkType::Decimal)
       {
         throw parse_error("Unexpected decimal separator.");
       }
       // TODO: ...
+      // TODO: Only the smallest time unit can have fraction. (?)
+      //       Does this reset for Time? (If Date have fractions.)
       break;
     }
     case iso8601::ChunkType::Hyphen:
