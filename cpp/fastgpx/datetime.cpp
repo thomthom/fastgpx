@@ -603,6 +603,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
         {
           context.parse = iso8601::Parse::Done;
         }
+        break;
       }
 
       const auto token = parse_decimal(chunk, context);
@@ -695,6 +696,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
   std::tm tm = {
       .tm_mday = 1, // Unlike the other members, this starts at 1.
   };
+  std::chrono::milliseconds adjustment(0);
   for (const auto &token : tokens)
   {
     // TODO: Handle fractional.
@@ -723,6 +725,11 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       break;
     case iso8601::TokenType::Second: // Seconds after minute (0 - 59).
       tm.tm_sec = token.decimal->integral;
+      if (token.decimal->fractional.has_value())
+      {
+        const std::chrono::milliseconds ms(token.decimal->fractional.value());
+        adjustment += ms;
+      }
       break;
     case iso8601::TokenType::TimezoneHour:
       assert(context.timezone_sign != iso8601::TimezoneSign::None);
@@ -739,7 +746,9 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
     }
   }
   const auto time = make_utc_time(&tm);
-  return std::chrono::system_clock::from_time_t(time);
+  auto time_point = std::chrono::system_clock::from_time_t(time);
+  time_point += adjustment;
+  return time_point;
 }
 
 } // namespace v5

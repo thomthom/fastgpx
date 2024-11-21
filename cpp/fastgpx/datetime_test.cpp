@@ -8,9 +8,10 @@
 
 #include "fastgpx/datetime.hpp"
 
+template<typename TIME = std::chrono::seconds>
 std::string format_iso8601(const std::chrono::system_clock::time_point& tp)
 {
-  const auto tp_seconds = std::chrono::floor<std::chrono::seconds>(tp);
+  const auto tp_seconds = std::chrono::floor<TIME>(tp);
   return std::format("{:%Y-%m-%dT%H:%M:%SZ}", tp_seconds);
 }
 
@@ -20,9 +21,10 @@ std::string format_iso8601(const std::chrono::utc_clock::time_point& tp)
   return std::format("{:%Y-%m-%dT%H:%M:%SZ}", tp_seconds);
 }
 
+template<typename TIME = std::chrono::seconds>
 auto time_point_to_epoch(const std::chrono::system_clock::time_point& tp)
 {
-  return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
+  return std::chrono::duration_cast<TIME>(tp.time_since_epoch()).count();
 }
 
 auto time_point_to_epoch(const std::chrono::utc_clock::time_point& tp)
@@ -232,6 +234,32 @@ TEST_CASE("Parse iso8601 date YYYY", "[datetime]")
 
     const auto actual_timestamp = time_point_to_epoch(actual_time);
     CHECK(actual_timestamp == expected_timestamp);
+  }
+}
+
+TEST_CASE("Parse iso8601 extended time YYYY-MM-DDThh:mm:ss.sssZ", "[datetime]")
+{
+  // "2024-11-17T06:54:12.123Z"
+  // https://www.timestamp-converter.com/
+
+  const std::string time_string = "2024-11-17T06:54:12.123Z";
+  const std::string expected_time_string = "2024-11-17T06:54:12.123Z";
+  const std::time_t expected_timestamp = 1731826452;
+  const std::time_t expected_timestamp_ms = 1731826452123;
+  const auto expected_time =
+      std::chrono::system_clock::time_point(std::chrono::milliseconds(expected_timestamp_ms));
+
+  CAPTURE(time_string, expected_timestamp, expected_time_string, expected_time);
+
+  SECTION("v5 std::from_chars parser")
+  {
+    const auto actual_time = fastgpx::v5::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601<std::chrono::milliseconds>(actual_time) == expected_time_string);
+
+    const auto actual_timestamp = time_point_to_epoch<std::chrono::milliseconds>(actual_time);
+    CHECK(actual_timestamp == expected_timestamp_ms);
   }
 }
 
