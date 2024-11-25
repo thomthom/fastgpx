@@ -9,6 +9,7 @@
 #include <optional>
 #include <ranges>
 #include <sstream>
+#include <type_traits>
 #include <unordered_map>
 
 namespace fastgpx {
@@ -760,97 +761,166 @@ enum Iso8601FormatLength
   DateTimeMilliSecondsNoTimezone = 23, // YYYY-MM-DDThh:mm:ss.sss
 };
 
-void ExtractTo(std::string_view in, size_t start, size_t length, int &out)
+template<typename T>
+class ParsedValue
 {
-  auto [_ptr, ec] = std::from_chars(in.data() + start, in.data() + start + length, out);
-  if (ec == std::errc::invalid_argument || ec == std::errc::result_out_of_range)
-  {
-    // TODO: Include range info.
-    throw parse_error("unable to extract numeric value");
-  }
-}
+public:
+  explicit ParsedValue(const T &value) : value_(value) {};
 
-int ExtractSign(std::string_view in, size_t start)
+  T value() const { return value_; }
+
+  template<typename... Args>
+  ParsedValue<T> &OneOf(Args... args)
+  {
+    static_assert((std::is_same_v<T, Args> && ...), "All arguments must have the same type as T");
+
+    if (!((value_ == args) || ...))
+    {
+      const auto message = std::format("unexpected value: {}", value_);
+      throw parse_error(message);
+    }
+    return *this;
+  }
+
+  // Inclusive range: [min, max]
+  ParsedValue<T> &InRange(const T &min, const T &max)
+  {
+    if (value_ < min or value_ > max)
+    {
+      const auto message =
+          std::format("value out or range: {} (expected: [{}, {}])", value_, min, max);
+      throw parse_error(message);
+    }
+    return *this;
+  }
+
+  ParsedValue<T> &Offset(const T &offset) { return ParsedValue<T>(value + offset); }
+
+private:
+  T value_;
+};
+
+class StringParser
 {
-  const auto chr = in[start];
-  if (chr == '+')
-  {
-    // If it's a positive timezone we need to subtract it to get UTC.
-    return -1;
-  }
-  if (chr == '-')
-  {
-    return 1;
-  }
-  throw parse_error("unable to extract timezone sign");
-}
+public:
+  StringParser(std::string_view input) : input_(input), it_(input.begin()) {}
 
-void Check(std::string_view in, size_t start, char ch)
-{
-  if (in[start] != ch)
+  ParsedValue<int> ExtractInt(size_t num)
   {
-    // TODO: Include range info.
-    throw parse_error("unexpected character");
+    int out;
+    const auto start = &(*it_);
+    const auto end = start + num;
+    auto [_ptr, ec] = std::from_chars(start, end, out);
+    if (ec == std::errc::invalid_argument || ec == std::errc::result_out_of_range)
+    {
+      std::string_view view(it_, std::next(it_, num));
+      throw parse_error("unable to extract numeric value", input_, view);
+    }
+    std::advance(it_, num);
+    return ParsedValue<int>(out);
   }
-}
 
-void CheckDecimalSeparator(std::string_view in, size_t start)
-{
-  const auto chr = in[start];
-  if (chr != ',' && chr != '.')
+  ParsedValue<char> ExtractChar()
   {
-    // TODO: Include range info.
-    throw parse_error("unexpected character");
+    if (it_ == std::end(input_))
+    {
+      throw parse_error("unable to extract character after end of string");
+    }
+    char out = *it_;
+    std::advance(it_, 1);
+    return ParsedValue<char>(out);
   }
-}
 
-void ExtractCommonDateAndTime(std::string_view time_str, std::tm &tm)
+  void Expect(char ch)
+  {
+    if (*it_ != ch)
+    {
+      std::string_view view(it_, std::next(it_));
+      const auto message = std::format("unexpected character: {} (expected: {})", *it_, ch);
+      throw parse_error(message, input_, view);
+    }
+    std::advance(it_, 1);
+  }
+
+private:
+  std::string_view input_;
+  std::string_view::iterator it_;
+};
+
+void ParseCommonDateAndTime(StringParser &parser, std::tm &tm)
 {
   // YYYY-MM-DDThh:mm:ssZ
   // ^^^^
-  ExtractTo(time_str, 0, 4, tm.tm_year);
-  tm.tm_year -= 1900; // Adjust year to be relative to 1900
+  // Adjust year to be relative to 1900.
+  tm.tm_year = parser.ExtractInt(4).InRange(0, 9999).value() - 1900;
 
   // YYYY-MM-DDThh:mm:ssZ
   //     ^
-  Check(time_str, 4, '-');
+  parser.Expect('-');
 
   // YYYY-MM-DDThh:mm:ssZ
   //      ^^
-  ExtractTo(time_str, 5, 2, tm.tm_mon);
-  tm.tm_mon -= 1; // Adjust month to be zero-based
+  // Adjust month to be zero-based.
+  tm.tm_mon = parser.ExtractInt(2).InRange(1, 12).value() - 1;
 
   // YYYY-MM-DDThh:mm:ssZ
   //        ^
-  Check(time_str, 7, '-');
+  parser.Expect('-');
 
   // YYYY-MM-DDThh:mm:ssZ
   //         ^^
-  ExtractTo(time_str, 8, 2, tm.tm_mday);
+  tm.tm_mday = parser.ExtractInt(2).InRange(1, 31).value();
 
   // YYYY-MM-DDThh:mm:ssZ
   //           ^
-  Check(time_str, 10, 'T');
+  parser.Expect('T');
 
   // YYYY-MM-DDThh:mm:ssZ
   //            ^^
-  ExtractTo(time_str, 11, 2, tm.tm_hour);
+  tm.tm_hour = parser.ExtractInt(2).InRange(0, 24).value();
 
   // YYYY-MM-DDThh:mm:ssZ
   //              ^
-  Check(time_str, 13, ':');
+  parser.Expect(':');
 
   // YYYY-MM-DDThh:mm:ssZ
   //               ^^
-  ExtractTo(time_str, 14, 2, tm.tm_min);
+  tm.tm_min = parser.ExtractInt(2).InRange(0, 59).value();
 
   // YYYY-MM-DDThh:mm:ssZ
   //                 ^
-  Check(time_str, 16, ':');
+  parser.Expect(':');
 
   // YYYY-MM-DDThh:mm:ssZ
   //                  ^^
-  ExtractTo(time_str, 17, 2, tm.tm_sec);
+  // 60 is used to denote an added leap second.
+  tm.tm_sec = parser.ExtractInt(2).InRange(0, 60).value();
+}
+
+std::chrono::minutes ParseTimezone(StringParser &parser)
+{
+  std::chrono::minutes adjustment(0);
+
+  // YYYY-MM-DDThh:mm:ss±hh:mm
+  //                    ^
+  const auto ch = parser.ExtractChar().value();
+  const int sign = (ch == '+') ? -1 : 1;
+
+  // YYYY-MM-DDThh:mm:ss±hh:mm
+  //                     ^^
+  const auto hours = parser.ExtractInt(2).InRange(0, 24).value();
+  adjustment += std::chrono::hours(hours * sign);
+
+  // YYYY-MM-DDThh:mm:ss±hh:mm
+  //                        ^^
+  parser.Expect(':');
+
+  // YYYY-MM-DDThh:mm:ss±hh:mm
+  //                        ^^
+  const auto mins = parser.ExtractInt(2).InRange(0, 59).value();
+  adjustment += std::chrono::minutes(mins * sign);
+
+  return adjustment;
 }
 
 } // namespace
@@ -866,6 +936,8 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
   };
   std::chrono::milliseconds adjustment(0);
 
+  StringParser parser(time_str);
+
   // Ordered by assumed likelihood.
   switch (time_str.size())
   {
@@ -873,125 +945,88 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
   {
     // YYYY-MM-DDThh:mm:ssZ
     // ^^^^^^^^^^^^^^^^^^^
-    ExtractCommonDateAndTime(time_str, tm);
+    ParseCommonDateAndTime(parser, tm);
 
     // YYYY-MM-DDThh:mm:ssZ
     //                    ^
-    Check(time_str, 19, 'Z');
+    parser.Expect('Z');
     break;
   }
   case Iso8601FormatLength::DateTimeMilliSecondsZulu:
   {
     // YYYY-MM-DDThh:mm:ss.sssZ
     // ^^^^^^^^^^^^^^^^^^^
-    ExtractCommonDateAndTime(time_str, tm);
+    ParseCommonDateAndTime(parser, tm);
 
     // YYYY-MM-DDThh:mm:ss.sssZ
     //                    ^
-    CheckDecimalSeparator(time_str, 19);
+    parser.ExtractChar().OneOf(',', '.');
 
     // YYYY-MM-DDThh:mm:ss.sssZ
     //                     ^^^
-    int ms = 0;
-    ExtractTo(time_str, 20, 3, ms);
+    const auto ms = parser.ExtractInt(3).value();
     adjustment += std::chrono::milliseconds(ms);
 
     // YYYY-MM-DDThh:mm:ss.sssZ
     //                        ^
-    Check(time_str, 23, 'Z');
+    parser.Expect('Z');
     break;
   }
   case Iso8601FormatLength::DateTimeTimeZone:
   {
     // YYYY-MM-DDThh:mm:ss±hh:mm
     // ^^^^^^^^^^^^^^^^^^^
-    ExtractCommonDateAndTime(time_str, tm);
+    ParseCommonDateAndTime(parser, tm);
 
     // YYYY-MM-DDThh:mm:ss±hh:mm
-    //                    ^
-    const int sign = ExtractSign(time_str, 19);
-
-    // YYYY-MM-DDThh:mm:ss±hh:mm
-    //                     ^^
-    int hours = 0;
-    ExtractTo(time_str, 20, 2, hours);
-    adjustment += std::chrono::hours(hours * sign);
-
-    // YYYY-MM-DDThh:mm:ss±hh:mm
-    //                        ^^
-    Check(time_str, 22, ':');
-
-    // YYYY-MM-DDThh:mm:ss±hh:mm
-    //                        ^^
-    int mins = 0;
-    ExtractTo(time_str, 23, 2, mins);
-    adjustment += std::chrono::minutes(mins * sign);
-
+    //                    ^^^^^^
+    adjustment += ParseTimezone(parser);
     break;
   }
   case Iso8601FormatLength::DateTimeMilliSecondsTimeZone:
   {
     // YYYY-MM-DDThh:mm:ss.sss±hh:mm
     // ^^^^^^^^^^^^^^^^^^^
-    ExtractCommonDateAndTime(time_str, tm);
+    ParseCommonDateAndTime(parser, tm);
 
     // YYYY-MM-DDThh:mm:ss.sss±hh:mm
     //                    ^
-    CheckDecimalSeparator(time_str, 19);
+    parser.ExtractChar().OneOf(',', '.');
 
     // YYYY-MM-DDThh:mm:ss.sss±hh:mm
     //                     ^^^
-    int ms = 0;
-    ExtractTo(time_str, 20, 3, ms);
+    const auto ms = parser.ExtractInt(3).value();
     adjustment = +std::chrono::milliseconds(ms);
 
     // YYYY-MM-DDThh:mm:ss.sss±hh:mm
-    //                        ^
-    const int sign = ExtractSign(time_str, 23);
-
-    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
-    //                         ^^
-    int hours = 0;
-    ExtractTo(time_str, 24, 2, hours);
-    adjustment += std::chrono::hours(hours * sign);
-
-    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
-    //                            ^^
-    Check(time_str, 26, ':');
-
-    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
-    //                            ^^
-    int mins = 0;
-    ExtractTo(time_str, 27, 2, mins);
-    adjustment += std::chrono::minutes(mins * sign);
+    //                        ^^^^^^
+    adjustment += ParseTimezone(parser);
     break;
   }
   case Iso8601FormatLength::DateTimeNoTimezone:
   {
     // YYYY-MM-DDThh:mm:ss
     // ^^^^^^^^^^^^^^^^^^^
-    ExtractCommonDateAndTime(time_str, tm);
+    ParseCommonDateAndTime(parser, tm);
     break;
   }
   case Iso8601FormatLength::DateTimeMilliSecondsNoTimezone:
   {
     // YYYY-MM-DDThh:mm:ss.sss
     // ^^^^^^^^^^^^^^^^^^^
-    ExtractCommonDateAndTime(time_str, tm);
+    ParseCommonDateAndTime(parser, tm);
 
     // YYYY-MM-DDThh:mm:ss.sss
     //                    ^
-    CheckDecimalSeparator(time_str, 19);
+    parser.ExtractChar().OneOf(',', '.');
 
     // YYYY-MM-DDThh:mm:ss.sss
     //                     ^^^
-    int ms = 0;
-    ExtractTo(time_str, 20, 3, ms);
-    adjustment += std::chrono::milliseconds(ms);
+    const auto ms = parser.ExtractInt(3).value();
+    adjustment = +std::chrono::milliseconds(ms);
     break;
   }
   default:
-    // TODO: Include the time_str, if it's small enough, in error message for logging.
     throw parse_error("invalid or unexpected format");
   }
 
