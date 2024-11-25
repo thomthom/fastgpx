@@ -36,7 +36,7 @@ auto time_point_to_epoch(const std::chrono::utc_clock::time_point& tp)
   return time_point_to_epoch(sys_tp);
 }
 
-TEST_CASE("Parse iso8601 extended time YYYY-MM-DDThh:mm:ssZ", "[datetime]")
+TEST_CASE("Parse iso8601 extended time YYYY-MM-DDThh:mm:ssZ", "[datetime][gpxtime]")
 {
   // "2024-05-18T07:50:01Z"
   // https://www.timestamp-converter.com/
@@ -108,6 +108,17 @@ TEST_CASE("Parse iso8601 extended time YYYY-MM-DDThh:mm:ssZ", "[datetime]")
   SECTION("v5 std::from_chars parser")
   {
     const auto actual_time = fastgpx::v5::parse_iso8601(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == time_string);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
+
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    const auto actual_time = fastgpx::v6::parse_gpx_time(time_string);
     CHECK(actual_time == expected_time);
 
     CHECK(format_iso8601(actual_time) == time_string);
@@ -237,7 +248,7 @@ TEST_CASE("Parse iso8601 date YYYY", "[datetime]")
   }
 }
 
-TEST_CASE("Parse iso8601 extended time YYYY-MM-DDThh:mm:ss.sssZ", "[datetime]")
+TEST_CASE("Parse iso8601 extended time YYYY-MM-DDThh:mm:ss.sssZ", "[datetime][gpxtime]")
 {
   // "2024-11-17T06:54:12.123Z"
   // https://www.timestamp-converter.com/
@@ -261,9 +272,20 @@ TEST_CASE("Parse iso8601 extended time YYYY-MM-DDThh:mm:ss.sssZ", "[datetime]")
     const auto actual_timestamp = time_point_to_epoch<std::chrono::milliseconds>(actual_time);
     CHECK(actual_timestamp == expected_timestamp_ms);
   }
+
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    const auto actual_time = fastgpx::v6::parse_gpx_time(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601<std::chrono::milliseconds>(actual_time) == expected_time_string);
+
+    const auto actual_timestamp = time_point_to_epoch<std::chrono::milliseconds>(actual_time);
+    CHECK(actual_timestamp == expected_timestamp_ms);
+  }
 }
 
-TEST_CASE("Parse iso8601 extended date time positive timezone", "[datetime]")
+TEST_CASE("Parse iso8601 extended date time positive timezone", "[datetime][gpxtime]")
 {
   // "2024-11-17T06:14:13+08:30"
   // https://www.timestamp-converter.com/
@@ -286,9 +308,20 @@ TEST_CASE("Parse iso8601 extended date time positive timezone", "[datetime]")
     const auto actual_timestamp = time_point_to_epoch(actual_time);
     CHECK(actual_timestamp == expected_timestamp);
   }
+
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    const auto actual_time = fastgpx::v6::parse_gpx_time(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == expected_time_string);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
 }
 
-TEST_CASE("Parse iso8601 extended date time negative timezone", "[datetime]")
+TEST_CASE("Parse iso8601 extended date time negative timezone", "[datetime][gpxtime]")
 {
   // "2024-11-17T06:54:43-08:30"
   // https://www.timestamp-converter.com/
@@ -310,6 +343,71 @@ TEST_CASE("Parse iso8601 extended date time negative timezone", "[datetime]")
 
     const auto actual_timestamp = time_point_to_epoch(actual_time);
     CHECK(actual_timestamp == expected_timestamp);
+  }
+
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    const auto actual_time = fastgpx::v6::parse_gpx_time(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == expected_time_string);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
+}
+
+TEST_CASE("Parse iso8601 extended date time milliseconds positive timezone", "[datetime][gpxtime]")
+{
+  // "2024-11-17T06:14:13.123+08:30"
+  // https://www.timestamp-converter.com/
+
+  // Timezone chosen to "underflow" TZ hour and minute.
+  const std::string time_string = "2024-11-17T06:14:13.123+08:30";
+  const std::string expected_time_string = "2024-11-16T21:44:13.123Z";
+  const std::time_t expected_timestamp = 1731793453;
+  const std::time_t expected_timestamp_ms = 1731793453123;
+  const auto expected_time =
+      std::chrono::system_clock::time_point(std::chrono::milliseconds(expected_timestamp_ms));
+
+  CAPTURE(time_string, expected_timestamp, expected_time_string, expected_time);
+
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    const auto actual_time = fastgpx::v6::parse_gpx_time(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601<std::chrono::milliseconds>(actual_time) == expected_time_string);
+
+    const auto actual_timestamp = time_point_to_epoch<std::chrono::milliseconds>(actual_time);
+    CHECK(actual_timestamp == expected_timestamp_ms);
+  }
+}
+
+TEST_CASE("Parse iso8601 extended date time milliseconds negative timezone", "[datetime][gpxtime]")
+{
+  // "2024-11-17T06:54:43.123-08:30"
+  // https://www.timestamp-converter.com/
+
+  // Timezone chosen to "overflow" TZ hour and minute.
+  const std::string time_string = "2024-11-17T06:54:43.123-08:30";
+  const std::string expected_time_string = "2024-11-17T15:24:43.123Z";
+  const std::time_t expected_timestamp = 1731857083;
+  const std::time_t expected_timestamp_ms = 1731857083123;
+  const auto expected_time =
+      std::chrono::system_clock::time_point(std::chrono::milliseconds(expected_timestamp_ms));
+
+  CAPTURE(time_string, expected_timestamp, expected_time_string, expected_time);
+
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    const auto actual_time = fastgpx::v6::parse_gpx_time(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601<std::chrono::milliseconds>(actual_time) == expected_time_string);
+
+    const auto actual_timestamp = time_point_to_epoch<std::chrono::milliseconds>(actual_time);
+    CHECK(actual_timestamp == expected_timestamp_ms);
   }
 }
 
@@ -368,6 +466,56 @@ TEST_CASE("Parse iso8601 extended time Thh:mm::ss", "[datetime][invalid]")
   {
     // Only time make no sense in context of GPX timestamps.
     REQUIRE_THROWS_AS(fastgpx::v5::parse_iso8601(time_string), fastgpx::parse_error);
+  }
+}
+
+TEST_CASE("Parse GPX time missing timezone YYYY-MM-DDThh:mm:ss", "[datetime][gpxtime]")
+{
+  // "2024-11-17T06:54:12"
+  // https://www.timestamp-converter.com/
+
+  const std::string time_string = "2024-11-17T06:54:12";
+  const std::string expected_time_string = "2024-11-17T06:54:12Z";
+  const std::time_t expected_timestamp = 1731826452;
+  const auto expected_time = std::chrono::system_clock::from_time_t(expected_timestamp);
+
+  CAPTURE(time_string, expected_timestamp, expected_time_string, expected_time);
+
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    const auto actual_time = fastgpx::v6::parse_gpx_time(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601(actual_time) == expected_time_string);
+
+    const auto actual_timestamp = time_point_to_epoch(actual_time);
+    CHECK(actual_timestamp == expected_timestamp);
+  }
+}
+
+TEST_CASE("Parse GPX time missing timezone YYYY-MM-DDThh:mm:ss.sss", "[datetime][gpxtime]")
+{
+  // "2024-11-17T06:54:12.123"
+  // https://www.timestamp-converter.com/
+
+  const std::string time_string = "2024-11-17T06:54:12.123";
+  const std::string expected_time_string = "2024-11-17T06:54:12.123Z";
+  const std::time_t expected_timestamp = 1731826452;
+  const std::time_t expected_timestamp_ms = 1731826452123;
+  const auto expected_time =
+      std::chrono::system_clock::time_point(std::chrono::milliseconds(expected_timestamp_ms));
+
+  CAPTURE(time_string, expected_timestamp, expected_time_string, expected_time);
+
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    const auto actual_time = fastgpx::v6::parse_gpx_time(time_string);
+    CHECK(actual_time == expected_time);
+
+    CHECK(format_iso8601<std::chrono::milliseconds>(actual_time) == expected_time_string);
+
+    const auto actual_timestamp = time_point_to_epoch<std::chrono::milliseconds>(actual_time);
+    CHECK(actual_timestamp == expected_timestamp_ms);
   }
 }
 
@@ -650,5 +798,9 @@ TEST_CASE("Benchmark parse iso8601 date string", "[!benchmark][datetime]")
   BENCHMARK("v5 std::from_chars parser")
   {
     return fastgpx::v5::parse_iso8601(time_string);
+  };
+  BENCHMARK("v6 std::from_chars gpx_time")
+  {
+    return fastgpx::v6::parse_gpx_time(time_string);
   };
 }

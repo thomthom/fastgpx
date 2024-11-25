@@ -753,4 +753,261 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
 
 } // namespace v5
 
+namespace v6 {
+
+namespace {
+
+enum Iso8601FormatLength
+{
+  DateTimeZulu = 20,                   // YYYY-MM-DDThh:mm:ssZ
+  DateTimeMilliSecondsZulu = 24,       // YYYY-MM-DDThh:mm:ss.sssZ
+  DateTimeTimeZone = 25,               // YYYY-MM-DDThh:mm:ss±hh:mm
+  DateTimeMilliSecondsTimeZone = 29,   // YYYY-MM-DDThh:mm:ss.sss±hh:mm
+  DateTimeNoTimezone = 19,             // YYYY-MM-DDThh:mm:ss
+  DateTimeMilliSecondsNoTimezone = 23, // YYYY-MM-DDThh:mm:ss.sss
+};
+
+void ExtractTo(std::string_view in, size_t start, size_t length, int &out)
+{
+  auto [_ptr, ec] = std::from_chars(in.data() + start, in.data() + start + length, out);
+  if (ec == std::errc::invalid_argument || ec == std::errc::result_out_of_range)
+  {
+    // TODO: Include range info.
+    throw parse_error("unable to extract numeric value");
+  }
+}
+
+int ExtractSign(std::string_view in, size_t start)
+{
+  const auto chr = in[start];
+  if (chr == '+')
+  {
+    // If it's a positive timezone we need to subtract it to get UTC.
+    return -1;
+  }
+  if (chr == '-')
+  {
+    return 1;
+  }
+  throw parse_error("unable to extract timezone sign");
+}
+
+void Check(std::string_view in, size_t start, char ch)
+{
+  if (in[start] != ch)
+  {
+    // TODO: Include range info.
+    throw parse_error("unexpected character");
+  }
+}
+
+void CheckDecimalSeparator(std::string_view in, size_t start)
+{
+  const auto chr = in[start];
+  if (chr != ',' && chr != '.')
+  {
+    // TODO: Include range info.
+    throw parse_error("unexpected character");
+  }
+}
+
+void ExtractCommonDateAndTime(std::string_view time_str, std::tm &tm)
+{
+  // YYYY-MM-DDThh:mm:ssZ
+  // ^^^^
+  ExtractTo(time_str, 0, 4, tm.tm_year);
+  tm.tm_year -= 1900; // Adjust year to be relative to 1900
+
+  // YYYY-MM-DDThh:mm:ssZ
+  //     ^
+  Check(time_str, 4, '-');
+
+  // YYYY-MM-DDThh:mm:ssZ
+  //      ^^
+  ExtractTo(time_str, 5, 2, tm.tm_mon);
+  tm.tm_mon -= 1; // Adjust month to be zero-based
+
+  // YYYY-MM-DDThh:mm:ssZ
+  //        ^
+  Check(time_str, 7, '-');
+
+  // YYYY-MM-DDThh:mm:ssZ
+  //         ^^
+  ExtractTo(time_str, 8, 2, tm.tm_mday);
+
+  // YYYY-MM-DDThh:mm:ssZ
+  //           ^
+  Check(time_str, 10, 'T');
+
+  // YYYY-MM-DDThh:mm:ssZ
+  //            ^^
+  ExtractTo(time_str, 11, 2, tm.tm_hour);
+
+  // YYYY-MM-DDThh:mm:ssZ
+  //              ^
+  Check(time_str, 13, ':');
+
+  // YYYY-MM-DDThh:mm:ssZ
+  //               ^^
+  ExtractTo(time_str, 14, 2, tm.tm_min);
+
+  // YYYY-MM-DDThh:mm:ssZ
+  //                 ^
+  Check(time_str, 16, ':');
+
+  // YYYY-MM-DDThh:mm:ssZ
+  //                  ^^
+  ExtractTo(time_str, 17, 2, tm.tm_sec);
+}
+
+} // namespace
+
+std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
+{
+  // https://en.cppreference.com/w/cpp/chrono/c/tm
+  // https://www.gnu.org/software/libc/manual/html_node/Broken_002ddown-Time.html
+  // https://man7.org/linux/man-pages/man3/tm.3type.html
+  // https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/localtime-s-localtime32-s-localtime64-s?view=msvc-170
+  std::tm tm = {
+      .tm_mday = 1, // Unlike the other members, this starts at 1.
+  };
+  std::chrono::milliseconds adjustment(0);
+
+  // Ordered by assumed likelihood.
+  switch (time_str.size())
+  {
+  case Iso8601FormatLength::DateTimeZulu:
+  {
+    // YYYY-MM-DDThh:mm:ssZ
+    // ^^^^^^^^^^^^^^^^^^^
+    ExtractCommonDateAndTime(time_str, tm);
+
+    // YYYY-MM-DDThh:mm:ssZ
+    //                    ^
+    Check(time_str, 19, 'Z');
+    break;
+  }
+  case Iso8601FormatLength::DateTimeMilliSecondsZulu:
+  {
+    // YYYY-MM-DDThh:mm:ss.sssZ
+    // ^^^^^^^^^^^^^^^^^^^
+    ExtractCommonDateAndTime(time_str, tm);
+
+    // YYYY-MM-DDThh:mm:ss.sssZ
+    //                    ^
+    CheckDecimalSeparator(time_str, 19);
+
+    // YYYY-MM-DDThh:mm:ss.sssZ
+    //                     ^^^
+    int ms = 0;
+    ExtractTo(time_str, 20, 3, ms);
+    adjustment += std::chrono::milliseconds(ms);
+
+    // YYYY-MM-DDThh:mm:ss.sssZ
+    //                        ^
+    Check(time_str, 23, 'Z');
+    break;
+  }
+  case Iso8601FormatLength::DateTimeTimeZone:
+  {
+    // YYYY-MM-DDThh:mm:ss±hh:mm
+    // ^^^^^^^^^^^^^^^^^^^
+    ExtractCommonDateAndTime(time_str, tm);
+
+    // YYYY-MM-DDThh:mm:ss±hh:mm
+    //                    ^
+    const int sign = ExtractSign(time_str, 19);
+
+    // YYYY-MM-DDThh:mm:ss±hh:mm
+    //                     ^^
+    int hours = 0;
+    ExtractTo(time_str, 20, 2, hours);
+    adjustment += std::chrono::hours(hours * sign);
+
+    // YYYY-MM-DDThh:mm:ss±hh:mm
+    //                        ^^
+    Check(time_str, 22, ':');
+
+    // YYYY-MM-DDThh:mm:ss±hh:mm
+    //                        ^^
+    int mins = 0;
+    ExtractTo(time_str, 23, 2, mins);
+    adjustment += std::chrono::minutes(mins * sign);
+
+    break;
+  }
+  case Iso8601FormatLength::DateTimeMilliSecondsTimeZone:
+  {
+    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
+    // ^^^^^^^^^^^^^^^^^^^
+    ExtractCommonDateAndTime(time_str, tm);
+
+    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
+    //                    ^
+    CheckDecimalSeparator(time_str, 19);
+
+    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
+    //                     ^^^
+    int ms = 0;
+    ExtractTo(time_str, 20, 3, ms);
+    adjustment = +std::chrono::milliseconds(ms);
+
+    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
+    //                        ^
+    const int sign = ExtractSign(time_str, 23);
+
+    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
+    //                         ^^
+    int hours = 0;
+    ExtractTo(time_str, 24, 2, hours);
+    adjustment += std::chrono::hours(hours * sign);
+
+    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
+    //                            ^^
+    Check(time_str, 26, ':');
+
+    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
+    //                            ^^
+    int mins = 0;
+    ExtractTo(time_str, 27, 2, mins);
+    adjustment += std::chrono::minutes(mins * sign);
+    break;
+  }
+  case Iso8601FormatLength::DateTimeNoTimezone:
+  {
+    // YYYY-MM-DDThh:mm:ss
+    // ^^^^^^^^^^^^^^^^^^^
+    ExtractCommonDateAndTime(time_str, tm);
+    break;
+  }
+  case Iso8601FormatLength::DateTimeMilliSecondsNoTimezone:
+  {
+    // YYYY-MM-DDThh:mm:ss.sss
+    // ^^^^^^^^^^^^^^^^^^^
+    ExtractCommonDateAndTime(time_str, tm);
+
+    // YYYY-MM-DDThh:mm:ss.sss
+    //                    ^
+    CheckDecimalSeparator(time_str, 19);
+
+    // YYYY-MM-DDThh:mm:ss.sss
+    //                     ^^^
+    int ms = 0;
+    ExtractTo(time_str, 20, 3, ms);
+    adjustment += std::chrono::milliseconds(ms);
+    break;
+  }
+  default:
+    // TODO: Include the time_str, if it's small enough, in error message for logging.
+    throw parse_error("invalid or unexpected format");
+  }
+
+  const auto time = make_utc_time(&tm);
+  auto time_point = std::chrono::system_clock::from_time_t(time);
+  time_point += adjustment;
+  return time_point;
+}
+
+} // namespace v6
+
 } // namespace fastgpx
