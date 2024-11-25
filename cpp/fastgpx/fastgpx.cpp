@@ -32,7 +32,7 @@ std::chrono::system_clock::time_point TimePoint::value() const
   if (std::holds_alternative<std::string>(data_))
   {
     const auto &time_string = std::get<std::string>(data_);
-    data_ = parse_iso8601(time_string);
+    data_ = parse_gpx_time(time_string);
   }
   assert(std::holds_alternative<std::chrono::system_clock::time_point>(data_));
   return std::get<std::chrono::system_clock::time_point>(data_);
