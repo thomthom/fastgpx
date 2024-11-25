@@ -116,6 +116,12 @@ pugixml 2481753.2382055665 meters
 pugixml (C++): 0.381095 seconds (Average: 0.127032 seconds)
 ```
 
+## Coverage
+
+```sh
+coverage.bat ~[real_world]
+```
+
 # Python C Extension
 
 Once set up, you can build the C++ extension with a simple `pip install .` or `pip install --editable .` for development builds.
