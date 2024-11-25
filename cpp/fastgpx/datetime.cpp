@@ -550,7 +550,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       {
         return char_to_chunk_type.at(ch);
       }
-      catch (const std::out_of_range &error)
+      catch (const std::out_of_range &)
       {
         throw parse_error("unexpected chunk data"); // TODO: include ch
       };
@@ -562,7 +562,6 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
   };
 
   auto chunks = time_str | std::views::chunk_by(is_digit_chuck) | std::views::transform(make_chunk);
-  const auto num_chunks = std::ranges::distance(chunks);
   auto data = chunks | std::ranges::to<std::vector>(); // TODO: Debug. Remove.
 
   iso8601::Context context{.string = time_str};
@@ -628,14 +627,12 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       {
       case iso8601::Parse::Date:
       {
-        const auto &token =
-            tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::DateSeparator});
+        tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::DateSeparator});
         break;
       }
       case iso8601::Parse::Time:
       {
-        const auto &token =
-            tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezoneNegative});
+        tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezoneNegative});
         context.parse = iso8601::Parse::Timezone;
         assert(context.timezone_sign == iso8601::TimezoneSign::None); // TODO: throw
         context.timezone_sign = iso8601::TimezoneSign::Negative;
@@ -653,8 +650,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       {
         throw parse_error("Unexpected token: +", context.string, chunk.data);
       }
-      const auto &token =
-          tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezonePositive});
+      tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezonePositive});
       context.parse = iso8601::Parse::Timezone;
       assert(context.timezone_sign == iso8601::TimezoneSign::None); // TODO: throw
       context.timezone_sign = iso8601::TimezoneSign::Positive;
@@ -666,21 +662,18 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       {
         throw parse_error("Unexpected time separator", context.string, chunk.data);
       }
-      const auto &token =
-          tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimeSeparator});
+      tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimeSeparator});
       break;
     }
     case iso8601::ChunkType::TimeIndicator:
     {
-      const auto &token =
-          tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimeIndicator});
+      tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimeIndicator});
       context.parse = iso8601::Parse::Time;
       break;
     }
     case iso8601::ChunkType::TimezoneIndicator:
     {
-      const auto &token =
-          tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezoneIndicator});
+      tokens.emplace_back(iso8601::Token{.type = iso8601::TokenType::TimezoneIndicator});
       context.parse = iso8601::Parse::Done;
       break;
     }

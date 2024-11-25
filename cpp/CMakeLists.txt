@@ -28,6 +28,29 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(tinyxml2 pugixml Catch2 json)
 
+function(set_common_properties TARGET)
+  set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD 23)
+  set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET ${TARGET} PROPERTY CXX_EXTENSIONS OFF)
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # Elevate warning level.
+    # Ignore unknown pragmas (mac).
+    target_compile_options(${TARGET} PRIVATE
+        /W4 /WX
+        /wd4068
+    )
+  else()
+    # Elevate warning level.
+    # Ignore unknown pragmas (win).
+    target_compile_options(${TARGET} PRIVATE
+        -Wall -Wextra -pedantic -Werror
+        -Wshadow -Wconversion
+        -Wno-unknown-pragmas
+    )
+  endif()
+endfunction()
+
 # fastgpx static library
 
 set(SOURCES
@@ -43,9 +66,7 @@ set(SOURCES
   fastgpx/polyline.cpp
 )
 add_library(fastgpx-static ${SOURCES})
-set_property(TARGET fastgpx-static PROPERTY CXX_STANDARD 23)
-set_property(TARGET fastgpx-static PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET fastgpx-static PROPERTY CXX_EXTENSIONS OFF)
+set_common_properties(fastgpx-static)
 target_link_libraries(fastgpx-static PUBLIC tinyxml2 pugixml)
 target_include_directories(fastgpx-static PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 

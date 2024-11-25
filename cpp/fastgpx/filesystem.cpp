@@ -58,13 +58,10 @@ FILE *open_file(const std::filesystem::path &file_path)
 #ifdef _WIN32
   // On Windows, open with wide string support
   const auto pathu16 = utf8_to_utf16(file_path.string());
-  file = _wfopen(
-      pathu16.c_str(),
-      L"rb"); // Open for reading in binary mode
-              // file = _wfopen(file_path.c_str(), L"rb"); // Open for reading in binary mode
+  _wfopen_s(&file, pathu16.c_str(), L"rb");
 #else
   // On other platforms, open with standard fopen
-  file = fopen(file_path.string().c_str(), "rb"); // Open for reading in binary mode
+  file = fopen(file_path.string().c_str(), "rb");
 #endif
 
   return file;

@@ -133,9 +133,9 @@ void Bounds::Add(const Bounds &bounds)
 
 Bounds Bounds::MaxBounds(const Bounds &bounds) const
 {
-  Bounds max = *this;
-  max.Add(bounds);
-  return max;
+  Bounds computed_max = *this;
+  computed_max.Add(bounds);
+  return computed_max;
 }
 
 // Segment
@@ -178,9 +178,9 @@ const TimeBounds &Segment::GetTimeBounds() const
 
 Bounds Segment::ComputeBounds() const
 {
-  Bounds bounds;
-  bounds.Add(points);
-  return bounds;
+  Bounds computed_bounds;
+  computed_bounds.Add(points);
+  return computed_bounds;
 }
 
 double Segment::ComputeLength2D() const
@@ -203,15 +203,15 @@ double Segment::ComputeLength3D() const
 
 TimeBounds Segment::ComputeTimeBounds() const
 {
-  TimeBounds bounds;
+  TimeBounds computed_bounds;
   for (const auto &point : points)
   {
     if (point.time.has_value())
     {
-      bounds.Add(point.time->value());
+      computed_bounds.Add(point.time->value());
     }
   }
-  return bounds;
+  return computed_bounds;
 }
 
 // Track
@@ -254,12 +254,12 @@ const TimeBounds &Track::GetTimeBounds() const
 
 Bounds Track::ComputeBounds() const
 {
-  Bounds bounds;
+  Bounds computed_bounds;
   for (const auto &segment : segments)
   {
-    bounds.Add(segment.GetBounds());
+    computed_bounds.Add(segment.GetBounds());
   }
-  return bounds;
+  return computed_bounds;
 }
 
 double Track::ComputeLength2D() const
@@ -278,12 +278,12 @@ double Track::ComputeLength3D() const
 
 TimeBounds Track::ComputeTimeBounds() const
 {
-  TimeBounds bounds;
+  TimeBounds computed_bounds;
   for (const auto &segment : segments)
   {
-    bounds.Add(segment.GetTimeBounds());
+    computed_bounds.Add(segment.GetTimeBounds());
   }
-  return bounds;
+  return computed_bounds;
 }
 
 // Gpx
@@ -326,12 +326,12 @@ const TimeBounds &Gpx::GetTimeBounds() const
 
 Bounds Gpx::ComputeBounds() const
 {
-  Bounds bounds;
+  Bounds computed_bounds;
   for (const auto &track : tracks)
   {
-    bounds.Add(track.GetBounds());
+    computed_bounds.Add(track.GetBounds());
   }
-  return bounds;
+  return computed_bounds;
 }
 
 double Gpx::ComputeLength2D() const
@@ -348,12 +348,12 @@ double Gpx::ComputeLength3D() const
 
 TimeBounds Gpx::ComputeTimeBounds() const
 {
-  TimeBounds bounds;
+  TimeBounds computed_bounds;
   for (const auto &track : tracks)
   {
-    bounds.Add(track.GetTimeBounds());
+    computed_bounds.Add(track.GetTimeBounds());
   }
-  return bounds;
+  return computed_bounds;
 }
 
 Gpx ParseGpx(const std::filesystem::path &path)
