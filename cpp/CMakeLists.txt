@@ -29,6 +29,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(tinyxml2 pugixml Catch2 json)
 
 function(set_common_properties TARGET)
+  if(NOT TARGET ${TARGET})
+    message(FATAL_ERROR "Target ${TARGET} does not exist!")
+  endif()
+
   set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD 23)
   set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD_REQUIRED ON)
   set_property(TARGET ${TARGET} PROPERTY CXX_EXTENSIONS OFF)
@@ -78,10 +82,9 @@ set(PYBIND11_NEWPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 
 pybind11_add_module(fastgpx python_fastgpx.cpp python_utc_chrono.hpp)
-set_property(TARGET fastgpx PROPERTY CXX_STANDARD 23)
-set_property(TARGET fastgpx PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET fastgpx PROPERTY CXX_EXTENSIONS OFF)
+set_common_properties(fastgpx)
 target_link_libraries(fastgpx PRIVATE fastgpx-static)
+target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS) # std::gmtime on MSVC
 
 install(TARGETS fastgpx LIBRARY DESTINATION .)
 
@@ -94,9 +97,7 @@ add_custom_command(TARGET fastgpx POST_BUILD
 # fastgpx debug app
 
 add_executable(fastgpxcli app.cpp)
-set_property(TARGET fastgpxcli PROPERTY CXX_STANDARD 23)
-set_property(TARGET fastgpxcli PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET fastgpxcli PROPERTY CXX_EXTENSIONS OFF)
+set_common_properties(fastgpxcli)
 target_link_libraries(fastgpxcli PRIVATE fastgpx-static)
 
 # fastgpx tests
@@ -112,9 +113,7 @@ set(TEST_SOURCES
   fastgpx/test_data_test.cpp
 )
 add_executable(fastgpx_test ${TEST_UTILS} ${TEST_SOURCES})
-set_property(TARGET fastgpx_test PROPERTY CXX_STANDARD 23)
-set_property(TARGET fastgpx_test PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET fastgpx_test PROPERTY CXX_EXTENSIONS OFF)
+set_common_properties(fastgpx_test)
 target_link_libraries(fastgpx_test PRIVATE Catch2::Catch2WithMain fastgpx-static nlohmann_json)
 target_compile_definitions(fastgpx_test PRIVATE FASTGPX_PROJECT_DIR="${CMAKE_SOURCE_DIR}")
 
@@ -125,9 +124,7 @@ catch_discover_tests(fastgpx_test)
 # experimental Python C Extension
 
 pybind11_add_module(gpxcpp gpxcpp.cpp gpx.hpp gpx.cpp)
-set_property(TARGET gpxcpp PROPERTY CXX_STANDARD 23)
-set_property(TARGET gpxcpp PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET gpxcpp PROPERTY CXX_EXTENSIONS OFF)
+set_common_properties(gpxcpp)
 target_link_libraries(gpxcpp PRIVATE tinyxml2 pugixml fastgpx-static)
 
 install(TARGETS gpxcpp LIBRARY DESTINATION .)
@@ -141,7 +138,5 @@ add_custom_command(TARGET gpxcpp POST_BUILD
 # experimantal CLI app
 
 add_executable(gpxreader main.cpp gpx.hpp gpx.cpp)
-set_property(TARGET gpxreader PROPERTY CXX_STANDARD 23)
-set_property(TARGET gpxreader PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET gpxreader PROPERTY CXX_EXTENSIONS OFF)
+set_common_properties(gpxreader)
 target_link_libraries(gpxreader PRIVATE tinyxml2 pugixml fastgpx-static)
