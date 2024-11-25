@@ -1,5 +1,6 @@
 OpenCppCoverage.exe^
   --export_type html:coverage^
+  --modules fastgpx_test.exe^
   --sources cpp\fastgpx\*^
   --excluded_sources cpp\fastgpx\*_test.cpp^
   --excluded_sources cpp\fastgpx\test_data.*^

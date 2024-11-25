@@ -557,6 +557,78 @@ TEST_CASE("Parse iso8601 extended time YYYY-DDDThh:mm:ssZ", "[datetime]")
   }
 }
 
+TEST_CASE("Parse iso8601 invalid string", "[datetime][gpxtime]")
+{
+  const std::string time_string = "hello";
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    REQUIRE_THROWS_AS(fastgpx::v6::parse_gpx_time(time_string), fastgpx::parse_error);
+  }
+}
+
+TEST_CASE("Parse iso8601 invalid string empty", "[datetime][gpxtime]")
+{
+  const std::string time_string = "";
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    REQUIRE_THROWS_AS(fastgpx::v6::parse_gpx_time(time_string), fastgpx::parse_error);
+  }
+}
+
+TEST_CASE("Parse iso8601 invalid string valid length", "[datetime][gpxtime]")
+{
+  const std::string time_string = "xxxxxxxxxxxxxxxxxxxx";
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    REQUIRE_THROWS_AS(fastgpx::v6::parse_gpx_time(time_string), fastgpx::parse_error);
+  }
+}
+
+TEST_CASE("Parse iso8601 invalid year", "[datetime][gpxtime]")
+{
+  const std::string time_string = "20x4-05-18T07:50:01Z";
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    REQUIRE_THROWS_AS(fastgpx::v6::parse_gpx_time(time_string), fastgpx::parse_error);
+  }
+}
+
+TEST_CASE("Parse iso8601 invalid month out of range", "[datetime][gpxtime]")
+{
+  const std::string time_string = "2024-30-18T07:50:01Z";
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    REQUIRE_THROWS_AS(fastgpx::v6::parse_gpx_time(time_string), fastgpx::parse_error);
+  }
+}
+
+TEST_CASE("Parse iso8601 invalid time annotation", "[datetime][gpxtime]")
+{
+  const std::string time_string = "2024-05-18x07:50:01Z";
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    REQUIRE_THROWS_AS(fastgpx::v6::parse_gpx_time(time_string), fastgpx::parse_error);
+  }
+}
+
+TEST_CASE("Parse iso8601 invalid timezone annotation", "[datetime][gpxtime]")
+{
+  const std::string time_string = "2024-05-18T07:50:01x";
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    REQUIRE_THROWS_AS(fastgpx::v6::parse_gpx_time(time_string), fastgpx::parse_error);
+  }
+}
+
+TEST_CASE("Parse iso8601 invalid timezone sign", "[datetime][gpxtime]")
+{
+  const std::string time_string = "2024-05-18T07:50:01x08:30";
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    REQUIRE_THROWS_AS(fastgpx::v6::parse_gpx_time(time_string), fastgpx::parse_error);
+  }
+}
+
 TEST_CASE("Benchmark parse iso8601 date string", "[!benchmark][datetime]")
 {
   const std::string time_string = "2024-05-18T06:50:01Z";

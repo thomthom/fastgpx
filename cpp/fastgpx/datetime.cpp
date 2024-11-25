@@ -807,13 +807,23 @@ public:
 
   ParsedValue<int> ExtractInt(size_t num)
   {
-    int out;
+    const auto it_end = std::next(it_, num);
+    const std::string_view view(it_, it_end);
+    if (view.size() != num)
+    {
+      throw parse_error("not enough characters to extract", input_, view);
+    }
+    if (!std::ranges::all_of(view, [](unsigned char ch) { return std::isdigit(ch) != 0; }))
+    {
+      throw parse_error("characters are not all digits", input_, view);
+    }
+
     const auto start = &(*it_);
     const auto end = start + num;
-    auto [_ptr, ec] = std::from_chars(start, end, out);
+    int out;
+    const auto [_ptr, ec] = std::from_chars(start, end, out);
     if (ec == std::errc::invalid_argument || ec == std::errc::result_out_of_range)
     {
-      std::string_view view(it_, std::next(it_, num));
       throw parse_error("unable to extract numeric value", input_, view);
     }
     std::advance(it_, num);
@@ -903,7 +913,7 @@ std::chrono::minutes ParseTimezone(StringParser &parser)
 
   // YYYY-MM-DDThh:mm:ss±hh:mm
   //                    ^
-  const auto ch = parser.ExtractChar().value();
+  const auto ch = parser.ExtractChar().OneOf('+', '-').value();
   const int sign = (ch == '+') ? -1 : 1;
 
   // YYYY-MM-DDThh:mm:ss±hh:mm
