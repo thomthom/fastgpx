@@ -81,21 +81,73 @@ TEST_CASE("Compute 2D distance", "[distance]")
   };
 }
 
+static double fastgpx_distance2d_haversine(const fastgpx::LatLong &ll1, const fastgpx::LatLong &ll2)
+{
+  return fastgpx::v1::distance2d(ll1, ll2, true);
+}
+
+static double fastgpx_distance3d_haversine(const fastgpx::LatLong &ll1, const fastgpx::LatLong &ll2)
+{
+  return fastgpx::v1::distance3d(ll1, ll2, true);
+}
+
+TEST_CASE("Compute haversine distance", "[distance]")
+{
+  // ~380km route
+  const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
+  const auto gpx = fastgpx::ParseGpx(path);
+
+  const auto expected_haversine_2d = GpxLength(gpx, fastgpx::v2::haversine);
+  const auto expected_haversine_3d = GpxLength(gpx, fastgpx::v2::haversine);
+
+  const auto kImplTolMeters = 400.0; // Accepted tolerance deviations between implementations.
+
+  SECTION("v2 distance2d with haversine")
+  {
+    double distance = GpxLength(gpx, fastgpx_distance2d_haversine);
+    CHECK_THAT(distance, WithinAbs(expected_haversine_2d, kImplTolMeters));
+  };
+
+  SECTION("v2 distance3d with haversine")
+  {
+    double distance = GpxLength(gpx, fastgpx_distance3d_haversine);
+    CHECK_THAT(distance, WithinAbs(expected_haversine_3d, kImplTolMeters));
+  };
+}
+
 TEST_CASE("Benchmark distance", "[!benchmark][distance]")
 {
   // ~380km route
   const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
   const auto gpx = fastgpx::ParseGpx(path);
 
-  BENCHMARK("gpxpy haversine") { return GpxLength(gpx, fastgpx::v1::haversine); };
+  BENCHMARK("gpxpy haversine")
+  {
+    return GpxLength(gpx, fastgpx::v1::haversine);
+  };
 
-  BENCHMARK("gpxpy distance2d") { return GpxLength(gpx, fastgpx_distance2d); };
+  BENCHMARK("gpxpy distance2d")
+  {
+    return GpxLength(gpx, fastgpx_distance2d);
+  };
 
-  BENCHMARK("gpxpy distance3d") { return GpxLength(gpx, fastgpx_distance3d); };
+  BENCHMARK("gpxpy distance3d")
+  {
+    return GpxLength(gpx, fastgpx_distance3d);
+  };
 
-  BENCHMARK("v2 haversine") { return GpxLength(gpx, fastgpx::v2::haversine); };
+  BENCHMARK("v2 haversine")
+  {
+    return GpxLength(gpx, fastgpx::v2::haversine);
+  };
 
-  BENCHMARK("v2 distance2d") { return GpxLength(gpx, fastgpx::v2::distance2d); };
+  BENCHMARK("v2 distance2d")
+  {
+    return GpxLength(gpx, fastgpx::v2::distance2d);
+  };
 
-  BENCHMARK("v2 distance3d") { return GpxLength(gpx, fastgpx::v2::distance3d); };
+  BENCHMARK("v2 distance3d")
+  {
+    return GpxLength(gpx, fastgpx::v2::distance3d);
+  };
 }
