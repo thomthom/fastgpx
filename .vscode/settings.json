@@ -154,6 +154,12 @@
                   "distance"
                 ],
                 [
+                  "filesystem"
+                ],
+                [
+                  "unicode"
+                ],
+                [
                   "parse"
                 ],
                 [

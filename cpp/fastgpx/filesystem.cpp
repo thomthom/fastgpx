@@ -1,8 +1,9 @@
 #include "fastgpx/filesystem.hpp"
 
+#include <stdexcept>
+
 #ifdef _WIN32
   #include <windows.h> // for _wfopen
-  #include <stdexcept>
 #endif
 
 namespace fastgpx {
@@ -15,10 +16,11 @@ std::wstring utf8_to_utf16(const std::string &utf8_str)
     return std::wstring(); // Return an empty wide string if input is empty
   }
 
-  // Step 1: Determine the size of the wide string buffer required
-  int wide_char_count =
+  const DWORD flags = MB_ERR_INVALID_CHARS;
+
+  const int wide_char_count =
       MultiByteToWideChar(CP_UTF8,                           // Source string is in UTF-8
-                          0,                                 // No special flags
+                          flags,                             // Flags
                           utf8_str.c_str(),                  // Input UTF-8 string
                           static_cast<int>(utf8_str.size()), // Length of the input string
                           nullptr,                           // No output buffer yet
@@ -30,17 +32,15 @@ std::wstring utf8_to_utf16(const std::string &utf8_str)
     throw std::runtime_error("Error converting UTF-8 to UTF-16: MultiByteToWideChar failed.");
   }
 
-  // Step 2: Allocate the necessary buffer
   std::wstring utf16_str(wide_char_count, 0);
-
-  // Step 3: Perform the conversion
-  int result = MultiByteToWideChar(CP_UTF8,                           // Source string is in UTF-8
-                                   0,                                 // No special flags
-                                   utf8_str.c_str(),                  // Input UTF-8 string
-                                   static_cast<int>(utf8_str.size()), // Length of the input string
-                                   &utf16_str[0],  // Output buffer for the wide string
-                                   wide_char_count // Size of the output buffer
-  );
+  const int result =
+      MultiByteToWideChar(CP_UTF8,                           // Source string is in UTF-8
+                          flags,                             // Flags
+                          utf8_str.c_str(),                  // Input UTF-8 string
+                          static_cast<int>(utf8_str.size()), // Length of the input string
+                          &utf16_str[0],                     // Output buffer
+                          wide_char_count                    // Size of output buffer
+      );
 
   if (result == 0)
   {

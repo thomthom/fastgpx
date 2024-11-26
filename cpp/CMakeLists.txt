@@ -116,6 +116,7 @@ set(TEST_UTILS
 set(TEST_SOURCES
   fastgpx/datetime_test.cpp
   fastgpx/fastgpx_test.cpp
+  fastgpx/filesystem_test.cpp
   fastgpx/geom_test.cpp
   fastgpx/test_data_test.cpp
 )
