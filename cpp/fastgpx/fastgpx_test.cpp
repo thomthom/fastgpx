@@ -8,6 +8,7 @@
 #include <catch2/generators/catch_generators_range.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include "fastgpx/errors.hpp"
 #include "fastgpx/fastgpx.hpp"
 #include "fastgpx/test_data.hpp"
 
@@ -196,8 +197,7 @@ TEST_CASE("Benchmark GPX Parsing", "[!benchmark][parse]")
 TEST_CASE("Parse string file path", "[parse][simple]")
 {
   const auto path = project_path / "gpx/not-a-real-path/fake.gpx";
-  // REQUIRE_THROWS_AS(fastgpx::ParseGpx(path), fastgpx::parse_error); // TODO:
-  REQUIRE_THROWS(fastgpx::ParseGpx(path));
+  REQUIRE_THROWS_AS(fastgpx::ParseGpx(path), fastgpx::parse_error);
 }
 
 TEST_CASE("Parse non-existing file path", "[parse][simple]")

@@ -7,6 +7,7 @@
 #include <catch2/generators/catch_generators.hpp>
 
 #include "fastgpx/datetime.hpp"
+#include "fastgpx/errors.hpp"
 
 template<typename TIME = std::chrono::seconds>
 std::string format_iso8601(const std::chrono::system_clock::time_point& tp)

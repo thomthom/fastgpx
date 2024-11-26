@@ -7,19 +7,6 @@
 
 namespace fastgpx {
 
-class fastgpx_error : public std::runtime_error
-{
-public:
-  explicit fastgpx_error(const std::string &message) : std::runtime_error(message) {}
-};
-
-class parse_error : public fastgpx_error
-{
-public:
-  explicit parse_error(const std::string &message) : fastgpx_error(message) {}
-  parse_error(const std::string &message, std::string_view source_str, std::string_view sub_str);
-};
-
 namespace v1 {
 
 std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str);

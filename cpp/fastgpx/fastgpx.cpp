@@ -20,6 +20,7 @@
 #include <string>
 
 #include "fastgpx/datetime.hpp"
+#include "fastgpx/errors.hpp"
 #include "fastgpx/filesystem.hpp"
 #include "fastgpx/geom.hpp"
 
@@ -364,9 +365,9 @@ Gpx ParseGpx(const std::filesystem::path &path)
   pugi::xml_parse_result result = doc.load_file(path16.c_str());
   if (!result)
   {
-    // std::cerr << "Failed to load GPX file: " << result.description() << "\n";
-    std::println("Failed to load GPX file: {} - {}", result.description(), path.string());
-    throw "Failed to load GPX file";
+    const auto message =
+        std::format("Failed to load GPX file: {} - {}", result.description(), path.string());
+    throw parse_error(message);
   }
 
   pugi::xml_node root = doc.child("gpx");

@@ -67,6 +67,8 @@ endfunction()
 set(SOURCES
   fastgpx/datetime.hpp
   fastgpx/datetime.cpp
+  fastgpx/errors.hpp
+  fastgpx/errors.cpp
   fastgpx/fastgpx.hpp
   fastgpx/fastgpx.cpp
   fastgpx/filesystem.hpp
