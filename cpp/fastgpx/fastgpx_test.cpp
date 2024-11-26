@@ -89,6 +89,26 @@ TEST_CASE("Parse time bounds of real world GPX file", "[parse][simple]")
   CHECK(*gpx_time_bounds.end_time == expected_end);
 }
 
+TEST_CASE("Parse bounds of real world GPX file", "[parse][simple]")
+{
+  const auto path =
+      project_path /
+      "gpx/2024 TopCamp/Connected_20240529_091916_Harald_Bothners_Veg_36_7052_Trondheim.gpx";
+  const auto gpx = fastgpx::ParseGpx(path);
+
+  REQUIRE(gpx.tracks.size() == 1);
+
+  const fastgpx::LatLong expected_min(61.841507, 9.090457);
+  const fastgpx::LatLong expected_max(63.422417, 10.44321899);
+
+  const auto gpx_bounds = gpx.GetBounds();
+  REQUIRE(!gpx_bounds.IsEmpty());
+  CHECK_THAT(gpx_bounds.min->latitude, WithinAbs(expected_min.latitude, 1e-8));
+  CHECK_THAT(gpx_bounds.min->longitude, WithinAbs(expected_min.longitude, 1e-8));
+  CHECK_THAT(gpx_bounds.max->latitude, WithinAbs(expected_max.latitude, 1e-8));
+  CHECK_THAT(gpx_bounds.max->longitude, WithinAbs(expected_max.longitude, 1e-8));
+}
+
 TEST_CASE("Parse real world GPX files", "[parse][real_world]")
 {
   const auto json_path = project_path / "cpp/expected_gpx_data.json";
@@ -159,7 +179,10 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
 TEST_CASE("Benchmark GPX Parsing", "[!benchmark][parse]")
 {
   const auto path1 = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
-  BENCHMARK("Connected_20240518_094959_.gpx") { return fastgpx::ParseGpx(path1); };
+  BENCHMARK("Connected_20240518_094959_.gpx")
+  {
+    return fastgpx::ParseGpx(path1);
+  };
 
   const auto path2 =
       project_path /
@@ -168,6 +191,23 @@ TEST_CASE("Benchmark GPX Parsing", "[!benchmark][parse]")
   {
     return fastgpx::ParseGpx(path2);
   };
+}
+
+TEST_CASE("Parse string file path", "[parse][simple]")
+{
+  const auto path = project_path / "gpx/not-a-real-path/fake.gpx";
+  // REQUIRE_THROWS_AS(fastgpx::ParseGpx(path), fastgpx::parse_error); // TODO:
+  REQUIRE_THROWS(fastgpx::ParseGpx(path));
+}
+
+TEST_CASE("Parse non-existing file path", "[parse][simple]")
+{
+  const auto path = project_path / "gpx/test/debug-segment.gpx";
+  const auto path_string = path.string();
+  const auto gpx = fastgpx::ParseGpx(path_string);
+
+  REQUIRE(gpx.tracks.size() == 1);
+  REQUIRE(gpx.tracks[0].segments.size() == 1);
 }
 
 // Bounds
@@ -181,7 +221,7 @@ TEST_CASE("Add to Bounds", "[bounds]")
 
   SECTION("Single LatLong")
   {
-    LatLong ll1{-10.0, 20.0};
+    const LatLong ll1{-10.0, 20.0};
     bounds.Add(ll1);
     CHECK(!bounds.IsEmpty());
     CHECK_THAT(bounds.min->latitude, WithinAbs(-10.0, 1e-8));
@@ -189,7 +229,7 @@ TEST_CASE("Add to Bounds", "[bounds]")
     CHECK_THAT(bounds.max->latitude, WithinAbs(-10.0, 1e-8));
     CHECK_THAT(bounds.max->longitude, WithinAbs(20.0, 1e-8));
 
-    LatLong ll2{15.0, -5.0};
+    const LatLong ll2{15.0, -5.0};
     bounds.Add(ll2);
     CHECK(!bounds.IsEmpty());
     CHECK_THAT(bounds.min->latitude, WithinAbs(-10.0, 1e-8));
@@ -200,7 +240,7 @@ TEST_CASE("Add to Bounds", "[bounds]")
 
   SECTION("Another Bounds")
   {
-    Bounds other1{LatLong{-10.0, -5.0}, LatLong{15.0, 20.0}};
+    const Bounds other1{LatLong{-10.0, -5.0}, LatLong{15.0, 20.0}};
     bounds.Add(other1);
     CHECK(!bounds.IsEmpty());
     CHECK_THAT(bounds.min->latitude, WithinAbs(-10.0, 1e-8));
@@ -208,7 +248,7 @@ TEST_CASE("Add to Bounds", "[bounds]")
     CHECK_THAT(bounds.max->latitude, WithinAbs(15.0, 1e-8));
     CHECK_THAT(bounds.max->longitude, WithinAbs(20.0, 1e-8));
 
-    Bounds other2{LatLong{-15.0, 5.0}, LatLong{10.0, 30.0}};
+    const Bounds other2{LatLong{-15.0, 5.0}, LatLong{10.0, 30.0}};
     bounds.Add(other2);
     CHECK(!bounds.IsEmpty());
     CHECK_THAT(bounds.min->latitude, WithinAbs(-15.0, 1e-8));
@@ -216,4 +256,28 @@ TEST_CASE("Add to Bounds", "[bounds]")
     CHECK_THAT(bounds.max->latitude, WithinAbs(15.0, 1e-8));
     CHECK_THAT(bounds.max->longitude, WithinAbs(30.0, 1e-8));
   }
+}
+
+TEST_CASE("Max Bounds", "[bounds]")
+{
+  const Bounds bounds;
+  REQUIRE(bounds.IsEmpty());
+  REQUIRE_FALSE(bounds.min.has_value());
+  REQUIRE_FALSE(bounds.max.has_value());
+
+  const Bounds other1{LatLong{-10.0, -5.0}, LatLong{15.0, 20.0}};
+  const auto result1 = bounds.MaxBounds(other1);
+  CHECK(!result1.IsEmpty());
+  CHECK_THAT(result1.min->latitude, WithinAbs(-10.0, 1e-8));
+  CHECK_THAT(result1.min->longitude, WithinAbs(-5.0, 1e-8));
+  CHECK_THAT(result1.max->latitude, WithinAbs(15.0, 1e-8));
+  CHECK_THAT(result1.max->longitude, WithinAbs(20.0, 1e-8));
+
+  const Bounds other2{LatLong{-15.0, 5.0}, LatLong{10.0, 30.0}};
+  const auto result2 = result1.MaxBounds(other2);
+  CHECK(!result2.IsEmpty());
+  CHECK_THAT(result2.min->latitude, WithinAbs(-15.0, 1e-8));
+  CHECK_THAT(result2.min->longitude, WithinAbs(-5.0, 1e-8));
+  CHECK_THAT(result2.max->latitude, WithinAbs(15.0, 1e-8));
+  CHECK_THAT(result2.max->longitude, WithinAbs(30.0, 1e-8));
 }
