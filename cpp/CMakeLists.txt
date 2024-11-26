@@ -44,6 +44,13 @@ function(set_common_properties TARGET)
         /W4 /WX
         /wd4068
     )
+
+    # Enable Build with Multiple Processes.
+    target_compile_options(${TARGET} PRIVATE /MP)
+
+    # Ensure MSVC report up to date version for __cplusplus macro.
+    # https://docs.microsoft.com/en-us/cpp/build/reference/zc-cplusplus?view=msvc-160
+    target_compile_options(${TARGET} PRIVATE /Zc:__cplusplus)
   else()
     # Elevate warning level.
     # Ignore unknown pragmas (win).
