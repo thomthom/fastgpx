@@ -630,6 +630,54 @@ TEST_CASE("Parse iso8601 invalid timezone sign", "[datetime][gpxtime]")
   }
 }
 
+namespace {
+
+time_t make_utc_time(std::tm* tm)
+{
+#ifdef _WIN32
+  return _mkgmtime(tm);
+#else
+  return timegm(tm);
+#endif
+}
+
+} // namespace
+
+TEST_CASE("std:tm to utc_clock", "[datetime][gpxtime]")
+{
+  const std::string time_string = "2024-05-18T07:50:01Z";
+  const std::time_t expected_timestamp = 1716018601;
+  const std::time_t expected_timestamp_ms = 1716018601000;
+  const std::chrono::milliseconds millis_duration(expected_timestamp_ms);
+  const auto expected_time = std::chrono::system_clock::from_time_t(expected_timestamp);
+  const auto expected_formatted = format_iso8601(expected_time);
+
+  CAPTURE(time_string, expected_formatted, expected_timestamp, expected_timestamp_ms,
+          expected_time);
+
+  std::tm tm = {
+      .tm_sec = 1,
+      .tm_min = 50,
+      .tm_hour = 7,
+      .tm_mday = 18, // Unlike the other members, this starts at 1.
+      .tm_mon = 4,
+      .tm_year = 2024 - 1900,
+  };
+  std::chrono::milliseconds adjustment(0);
+  const auto time = make_utc_time(&tm);
+  auto time_point = std::chrono::system_clock::from_time_t(time);
+  time_point += adjustment;
+
+  // const auto actual_time = fastgpx::v3::parse_iso8601(time_string);
+  const auto actual_time = time_point;
+  CHECK(actual_time == expected_time);
+
+  CHECK(format_iso8601(actual_time) == expected_formatted);
+
+  const auto actual_timestamp = time_point_to_epoch(actual_time);
+  CHECK(actual_timestamp == expected_timestamp);
+}
+
 TEST_CASE("Benchmark parse iso8601 date string", "[!benchmark][datetime]")
 {
   const std::string time_string = "2024-05-18T06:50:01Z";
