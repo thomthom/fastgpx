@@ -41,7 +41,7 @@ fastgpx::polyline::Precision IntToPrecision(const int value)
   return precision;
 }
 
-using OptionalTimePoint = std::optional<std::chrono::system_clock::time_point>;
+using OptionalTimePoint = std::optional<std::chrono::utc_clock::time_point>;
 
 } // namespace
 

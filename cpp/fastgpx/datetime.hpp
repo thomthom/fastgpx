@@ -60,9 +60,9 @@ namespace v6 {
  * | 2008-07-18T16:07:50           |     19 | Assume Zulu time?                |
  *
  * @param time_str
- * @return std::chrono::system_clock::time_point
+ * @return std::chrono::utc_clock::time_point
  */
-std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str);
+std::chrono::utc_clock::time_point parse_gpx_time(std::string_view time_str);
 
 } // namespace v6
 

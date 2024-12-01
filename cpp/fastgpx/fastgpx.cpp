@@ -28,15 +28,15 @@ namespace fastgpx {
 
 // TimePoint
 
-std::chrono::system_clock::time_point TimePoint::value() const
+std::chrono::utc_clock::time_point TimePoint::value() const
 {
   if (std::holds_alternative<std::string>(data_))
   {
     const auto &time_string = std::get<std::string>(data_);
     data_ = parse_gpx_time(time_string);
   }
-  assert(std::holds_alternative<std::chrono::system_clock::time_point>(data_));
-  return std::get<std::chrono::system_clock::time_point>(data_);
+  assert(std::holds_alternative<std::chrono::utc_clock::time_point>(data_));
+  return std::get<std::chrono::utc_clock::time_point>(data_);
 }
 
 // TimeBounds
@@ -47,7 +47,7 @@ bool TimeBounds::IsEmpty() const
   return !start_time.has_value() && !end_time.has_value();
 }
 
-void TimeBounds::Add(const std::chrono::system_clock::time_point time_point)
+void TimeBounds::Add(const std::chrono::utc_clock::time_point time_point)
 {
   if (start_time.has_value())
   {

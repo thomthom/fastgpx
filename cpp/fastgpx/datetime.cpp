@@ -925,7 +925,7 @@ std::chrono::minutes ParseTimezone(StringParser &parser)
 
 } // namespace
 
-std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
+std::chrono::utc_clock::time_point parse_gpx_time(std::string_view time_str)
 {
   // https://en.cppreference.com/w/cpp/chrono/c/tm
   // https://www.gnu.org/software/libc/manual/html_node/Broken_002ddown-Time.html
@@ -1033,7 +1033,12 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
   const auto time = make_utc_time(&tm);
   auto time_point = std::chrono::system_clock::from_time_t(time);
   time_point += adjustment;
-  return time_point;
+
+  [[maybe_unused]] const auto sys_time = std::chrono::sys_seconds{std::chrono::seconds{time}};
+  [[maybe_unused]] const auto utc_time = std::chrono::clock_cast<std::chrono::utc_clock>(sys_time);
+
+  auto time_point_utc = std::chrono::utc_clock::from_sys(time_point);
+  return time_point_utc;
 }
 
 } // namespace v6

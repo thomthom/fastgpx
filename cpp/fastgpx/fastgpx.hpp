@@ -14,22 +14,22 @@ class TimePoint
 {
 public:
   TimePoint(const std::string &time_string) : data_(time_string) {}
-  TimePoint(const std::chrono::system_clock::time_point time_point) : data_(time_point) {}
+  TimePoint(const std::chrono::utc_clock::time_point time_point) : data_(time_point) {}
 
-  std::chrono::system_clock::time_point value() const;
+  std::chrono::utc_clock::time_point value() const;
 
 private:
-  mutable std::variant<std::string, std::chrono::system_clock::time_point> data_;
+  mutable std::variant<std::string, std::chrono::utc_clock::time_point> data_;
 };
 
 struct TimeBounds
 {
-  std::optional<std::chrono::system_clock::time_point> start_time;
-  std::optional<std::chrono::system_clock::time_point> end_time;
+  std::optional<std::chrono::utc_clock::time_point> start_time;
+  std::optional<std::chrono::utc_clock::time_point> end_time;
 
   bool IsEmpty() const;
 
-  void Add(std::chrono::system_clock::time_point time_point);
+  void Add(std::chrono::utc_clock::time_point time_point);
   void Add(const TimeBounds &time_bounds);
 };
 
