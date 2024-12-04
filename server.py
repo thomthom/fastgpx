@@ -20,6 +20,8 @@ load_dotenv()
 MAPBOX_ACCESS_TOKEN = os.getenv('MAPBOX_ACCESS_TOKEN')
 GPX_PATH = os.getenv('GPX_PATH')
 
+print(f'GPX path: {GPX_PATH}')
+
 app = Flask(__name__)
 
 
