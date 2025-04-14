@@ -95,7 +95,7 @@ set_common_properties(fastgpx)
 target_link_libraries(fastgpx PRIVATE fastgpx-static)
 target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS) # std::gmtime on MSVC
 
-install(TARGETS fastgpx LIBRARY DESTINATION .)
+install(TARGETS fastgpx LIBRARY DESTINATION fastgpx)
 
 add_custom_command(TARGET fastgpx POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different

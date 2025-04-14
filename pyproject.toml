@@ -6,6 +6,10 @@ build-backend = "scikit_build_core.build"
 # cmake.build-type = "Release"
 cmake.build-type = "RelWithDebInfo"
 
+[tool.scikit-build]
+# https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#customizing-the-built-wheel
+wheel.packages = ["fastgpx"]
+
 [project]
 name = "route-map"
 version = "0.0.1"
