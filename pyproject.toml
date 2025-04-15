@@ -11,7 +11,7 @@ cmake.build-type = "RelWithDebInfo"
 wheel.packages = ["fastgpx"]
 
 [project]
-name = "route-map"
+name = "fastgpx"
 version = "0.0.1"
 
 # Specify dependencies here, replacing the need for requirements.txt
