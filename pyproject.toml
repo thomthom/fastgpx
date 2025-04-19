@@ -1,28 +1,33 @@
 [build-system]
 requires = ["scikit-build-core", "pybind11"]
 build-backend = "scikit_build_core.build"
-# cmake.build-type = "Debug"
-# cmake.build-type = "Release"
-cmake.build-type = "RelWithDebInfo"
-
-[tool.scikit-build]
-# https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#customizing-the-built-wheel
-wheel.packages = ["src/fastgpx"]
-sdist.include = ["src"]
 
 [project]
 name = "fastgpx"
 version = "0.0.1"
 requires-python = ">=3.11"
 
-dependencies = [
-  "colorama",
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
   "gpxpy",
   "lxml",
   "polyline",
-  "pybind11",
-  "scikit-build-core",
+  "colorama",
+  "pytest",
+  "pybind11-stubgen",
+  "snakeviz",
+  "types-colorama",
+  "lxml-stubs",
 ]
 
-[project.optional-dependencies]
-dev = ["pytest", "pybind11-stubgen", "snakeviz", "types-colorama", "lxml-stubs"]
+[tool.scikit-build]
+# https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#customizing-the-built-wheel
+wheel.packages = ["src/fastgpx"]
+sdist.include = ["src"]
+
+# https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#configuring-cmake-arguments-and-defines
+# cmake.build-type = "Debug"
+# cmake.build-type = "Release"
+cmake.build-type = "RelWithDebInfo"
