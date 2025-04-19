@@ -32,4 +32,11 @@ dependencies = [
 
 [project.optional-dependencies]
 # Optionally define dev dependencies for testing, development, etc.
-dev = ["pytest", "pybind11-stubgen", "snakeviz"]
+dev = [
+  "pytest",
+  "pybind11-stubgen",
+  "snakeviz",
+  "types-requests",
+  "types-colorama",
+  "lxml-stubs",
+]
