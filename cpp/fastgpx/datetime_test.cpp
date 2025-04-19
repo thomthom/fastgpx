@@ -412,7 +412,7 @@ TEST_CASE("Parse iso8601 extended date time milliseconds negative timezone", "[d
   }
 }
 
-TEST_CASE("Parse iso8601 extended date time no timezone", "[datetime][!mayfail]")
+TEST_CASE("Parse iso8601 extended date time no timezone", "[datetime]")
 {
   // "2024-11-17T06:54:43"
   // https://www.timestamp-converter.com/
