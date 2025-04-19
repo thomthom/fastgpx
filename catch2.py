@@ -1,50 +1,42 @@
 import json
-import os
 from pathlib import Path
 
 import fastgpx
 
 
-def get_gpx_files(path: str):
-    gpx_files = []
-    files = os.listdir(path)
-    for filename in files:
-        if filename.endswith(".gpx"):
-            gpx_path = os.path.join(path, filename)
-            gpx_files.append(gpx_path)
-    return gpx_files
+def get_gpx_files(dir_path: Path):
+    return sorted(dir_path.glob("*.gpx"))
 
 
-GPX_PATH = 'gpx/2024 Great Roadtrip'
-# GPX_PATH = 'gpx/2024 TopCamp'
+GPX_ROOTS = [
+    Path("gpx/2024 Great Roadtrip"),
+    Path("gpx/2024 Sommertur"),
+    Path("gpx/2024 TopCamp"),
+]
 
 
 def main():
-    # files = ["gpx/2024 TopCamp/Connected_20240518_094959_.gpx"]
-
     files = []
-    files.extend(get_gpx_files('gpx/2024 Great Roadtrip'))
-    files.extend(get_gpx_files('gpx/2024 Sommertur'))
-    files.extend(get_gpx_files('gpx/2024 TopCamp'))
+    for root in GPX_ROOTS:
+        files.extend(get_gpx_files(root))
 
     data = []
-    for gpx_filepath in files:
-        gpx_filepath = Path(gpx_filepath).as_posix()
+    for gpx_path in files:
+        print(gpx_path.as_posix())
 
-        print(gpx_filepath)
-        fullpath = os.path.abspath(gpx_filepath)
-        assert os.path.exists(fullpath)
+        assert gpx_path.exists()
 
-        gpx = fastgpx.parse(fullpath)
+        gpx = fastgpx.parse(str(gpx_path.resolve()))
 
         gpx_data = {
-            "path": gpx_filepath,
-            "length2d": float(f'{gpx.length_2d():.4f}'),
-            "length3d": float(f'{gpx.length_3d():.4f}'),
+            "path": gpx_path.as_posix(),
+            "length2d": round(gpx.length_2d(), 4),
+            "length3d": round(gpx.length_3d(), 4),
             "tracks": [],
         }
+
         gpx_time = gpx.time_bounds()
-        if gpx_time.start_time is not None and gpx_time.end_time is not None:
+        if gpx_time.start_time and gpx_time.end_time:
             gpx_data["time_bounds"] = {
                 "start_time": int(gpx_time.start_time.timestamp()),
                 "end_time": int(gpx_time.end_time.timestamp()),
@@ -52,12 +44,13 @@ def main():
 
         for track in gpx.tracks:
             track_data = {
-                "length2d": float(f'{track.length_2d():.4f}'),
-                "length3d": float(f'{track.length_3d():.4f}'),
+                "length2d": round(track.length_2d(), 4),
+                "length3d": round(track.length_3d(), 4),
                 "segments": [],
             }
+
             track_time = track.time_bounds()
-            if track_time.start_time is not None and track_time.end_time is not None:
+            if track_time.start_time and track_time.end_time:
                 track_data["time_bounds"] = {
                     "start_time": int(track_time.start_time.timestamp()),
                     "end_time": int(track_time.end_time.timestamp()),
@@ -65,25 +58,29 @@ def main():
 
             for segment in track.segments:
                 segment_data = {
-                    "length2d": float(f'{segment.length_2d():.4f}'),
-                    "length3d": float(f'{segment.length_3d():.4f}'),
+                    "length2d": round(segment.length_2d(), 4),
+                    "length3d": round(segment.length_3d(), 4),
                 }
+
                 segment_time = segment.time_bounds()
-                if segment_time.start_time is not None and segment_time.end_time is not None:
+                if segment_time.start_time and segment_time.end_time:
                     segment_data["time_bounds"] = {
                         "start_time": int(segment_time.start_time.timestamp()),
                         "end_time": int(segment_time.end_time.timestamp()),
                     }
-                track_data['segments'].append(segment_data)
 
-            gpx_data['tracks'].append(track_data)
+                track_data["segments"].append(segment_data)
+
+            gpx_data["tracks"].append(track_data)
 
         data.append(gpx_data)
 
-    path = 'cpp/expected_gpx_data.json'
-    with open(path, 'w', encoding='utf-8') as json_file:
+    output_path = Path("cpp/expected_gpx_data.json")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with output_path.open("w", encoding="utf-8") as json_file:
         json.dump(data, json_file, indent=2)
-        json_file.write('\n')
+        json_file.write("\n")
 
 
 if __name__ == "__main__":
