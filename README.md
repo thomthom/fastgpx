@@ -175,6 +175,12 @@ snakeviz profiling/polyline_encode.prof
 
 # Catch2 Tests
 
+If the output prints UTF-8 characters the terminal needs to be set to UTF-8 mode on Windows:
+
+```sh
+chcp 65001
+```
+
 ```sh
 build\cpp\RelWithDebInfo\fastgpx_test.exe [!benchmark]
 ```

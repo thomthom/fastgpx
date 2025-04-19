@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 
 import fastgpx
 
@@ -28,6 +29,8 @@ def main():
 
     data = []
     for gpx_filepath in files:
+        gpx_filepath = Path(gpx_filepath).as_posix()
+
         print(gpx_filepath)
         fullpath = os.path.abspath(gpx_filepath)
         assert os.path.exists(fullpath)
