@@ -12,7 +12,7 @@ const auto project_path = std::filesystem::path(FASTGPX_PROJECT_DIR);
 
 TEST_CASE("Load expected GPX data", "[testdata]")
 {
-  const auto json_path = project_path / "cpp/fastgpx/test_data.json";
+  const auto json_path = project_path / "src/cpp/fastgpx/test_data.json";
   const auto expected_data = LoadExpectedGpxData(json_path);
 
   REQUIRE(expected_data.size() == 1);

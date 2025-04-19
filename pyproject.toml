@@ -8,7 +8,8 @@ cmake.build-type = "RelWithDebInfo"
 
 [tool.scikit-build]
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#customizing-the-built-wheel
-wheel.packages = ["fastgpx"]
+wheel.packages = ["src/fastgpx"]
+sdist.include = ["src"]
 
 [project]
 name = "fastgpx"

@@ -11,7 +11,7 @@ int main()
 {
   std::println("GPX Reader");
 
-  const auto relative_path = std::filesystem::path("../../gpx/2024 Great Roadtrip");
+  const auto relative_path = std::filesystem::path("../../../gpx/2024 Great Roadtrip");
   const auto path = std::filesystem::absolute(relative_path);
   std::println("{}", path.string());
 

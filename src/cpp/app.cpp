@@ -11,7 +11,7 @@ int main()
 {
   std::println("fastgpx");
 
-  const auto relative_path = std::filesystem::path("../../../gpx/test");
+  const auto relative_path = std::filesystem::path("../../../../gpx/test");
   auto path = std::filesystem::absolute(relative_path);
   path.append("debug-segment.gpx");
   std::println("{}", path.string());

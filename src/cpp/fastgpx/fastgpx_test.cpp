@@ -112,7 +112,7 @@ TEST_CASE("Parse bounds of real world GPX file", "[parse][simple]")
 
 TEST_CASE("Parse real world GPX files", "[parse][real_world]")
 {
-  const auto json_path = project_path / "cpp/expected_gpx_data.json";
+  const auto json_path = project_path / "src/cpp/expected_gpx_data.json";
   const auto expected_data = LoadExpectedGpxData(json_path);
 
   SECTION("Matches expected values")
