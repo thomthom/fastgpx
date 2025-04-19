@@ -432,18 +432,25 @@ TEST_CASE("Parse iso8601 extended date time no timezone", "[datetime][!mayfail]"
 
   const std::string time_string = "2024-11-17T06:54:43";
 
-  // Assuming local time is UTC+1:
-  //  ISO 8601  2024-11-17T05:54:43Z
-  // Timestamp  1731822883
-
+  // Interpret the string as UTC regardless of missing 'Z', this isn't what the
+  // ISO8601 standard describe but it is what the GPX standard describe.
+  //
+  // ISO8601 standard:
+  // > If no UTC relation information is given with a time representation, the
+  // > time is assumed to be in local time. While it may be safe to assume local
+  // > time when communicating in the same time zone, it is ambiguous when used
+  // > in communicating across different time zones.
+  //
+  // GPX 1.1 standard:
+  // > Creation/modification timestamp for element. Date and time in are in
+  // > Univeral Coordinated Time (UTC), not local time! Conforms to ISO 8601
+  // > specification for date/time representation. Fractional seconds are
+  // > allowed for millisecond timing in tracklogs.
   std::istringstream ss(time_string);
-  std::chrono::local_time<std::chrono::seconds> parsed_time;
-  ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", parsed_time);
-  const auto local = std::chrono::zoned_time(std::chrono::current_zone(), parsed_time);
-  const auto utc = std::chrono::zoned_time{"UTC", local};
-  const std::string expected_time_string = std::format("{:%Y-%m-%dT%H:%M:%SZ}", utc);
+  std::chrono::sys_time<std::chrono::seconds> expected_time;
+  ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", expected_time);
 
-  const auto expected_time = utc.get_sys_time();
+  const std::string expected_time_string = "2024-11-17T06:54:43Z";
   const auto expected_timestamp = expected_time.time_since_epoch().count();
 
   CAPTURE(time_string, expected_time_string);
