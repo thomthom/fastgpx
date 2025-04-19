@@ -64,7 +64,7 @@ def main():
 
                 segment_time = segment.time_bounds()
                 if segment_time.start_time and segment_time.end_time:
-                    segment_data["time_bounds"] = {
+                    segment_data["time_bounds"] = {  # type: ignore
                         "start_time": int(segment_time.start_time.timestamp()),
                         "end_time": int(segment_time.end_time.timestamp()),
                     }
