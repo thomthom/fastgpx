@@ -6,14 +6,14 @@
 #include "fastgpx/fastgpx.hpp"
 #include "gpx.hpp"
 
-std::string process_string(const std::string &input)
+std::string process_string(const std::string& input)
 {
   return "Processed: " + input;
 }
 
 // tinyxml
 
-double wrap_tinyxml_gpx_length2d(const std::string &gpx_path)
+double wrap_tinyxml_gpx_length2d(const std::string& gpx_path)
 {
   const auto length = tinyxml_gpx_length2d(gpx_path);
   return length;
@@ -21,7 +21,7 @@ double wrap_tinyxml_gpx_length2d(const std::string &gpx_path)
 
 // pugixml
 
-double wrap_pugixml_gpx_length2d(const std::string &gpx_path)
+double wrap_pugixml_gpx_length2d(const std::string& gpx_path)
 {
   const auto length = pugixml_gpx_length2d(gpx_path);
   return length;
@@ -29,14 +29,14 @@ double wrap_pugixml_gpx_length2d(const std::string &gpx_path)
 
 // fastgpx
 
-double wrap_fastgpx_gpx_length2d(const std::string &gpx_path)
+double wrap_fastgpx_gpx_length2d(const std::string& gpx_path)
 {
   const auto gpx = fastgpx::ParseGpx(gpx_path);
   const auto length = gpx.GetLength2D();
   return length;
 }
 
-double wrap_fastgpx_track_length(const std::string &gpx_path, size_t tid)
+double wrap_fastgpx_track_length(const std::string& gpx_path, size_t tid)
 {
   const auto gpx = fastgpx::ParseGpx(gpx_path);
   const auto track = gpx.tracks[tid];
@@ -44,7 +44,7 @@ double wrap_fastgpx_track_length(const std::string &gpx_path, size_t tid)
   return length;
 }
 
-double wrap_fastgpx_segment_length(const std::string &gpx_path, size_t tid, size_t sid)
+double wrap_fastgpx_segment_length(const std::string& gpx_path, size_t tid, size_t sid)
 {
   const auto gpx = fastgpx::ParseGpx(gpx_path);
   const auto track = gpx.tracks[tid];

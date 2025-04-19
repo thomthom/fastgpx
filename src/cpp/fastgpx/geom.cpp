@@ -21,7 +21,7 @@ double to_radians(double degrees) noexcept
   return degrees * TO_RADIANS;
 }
 
-double haversine(const LatLong &ll1, const LatLong &ll2) noexcept
+double haversine(const LatLong& ll1, const LatLong& ll2) noexcept
 {
   const auto d_lon = to_radians(ll1.longitude - ll2.longitude);
   const auto lat1 = to_radians(ll1.latitude);
@@ -57,7 +57,7 @@ double haversine(const LatLong &ll1, const LatLong &ll2) noexcept
  * @param use_2d
  * @return double Meters
  */
-double distance(const LatLong &ll2, const LatLong &ll1, bool use_haversine = false,
+double distance(const LatLong& ll2, const LatLong& ll1, bool use_haversine = false,
                 bool use_2d = true) noexcept
 {
   if (use_haversine ||
@@ -81,12 +81,12 @@ double distance(const LatLong &ll2, const LatLong &ll1, bool use_haversine = fal
   return std::sqrt((distance_2d * distance_2d) + (ele_diff * ele_diff));
 }
 
-double distance2d(const LatLong &ll1, const LatLong &ll2, bool use_haversine) noexcept
+double distance2d(const LatLong& ll1, const LatLong& ll2, bool use_haversine) noexcept
 {
   return v1::distance(ll1, ll2, use_haversine, true);
 }
 
-double distance3d(const LatLong &ll1, const LatLong &ll2, bool use_haversine) noexcept
+double distance3d(const LatLong& ll1, const LatLong& ll2, bool use_haversine) noexcept
 {
   return v1::distance(ll1, ll2, use_haversine, false);
 }
@@ -117,7 +117,7 @@ inline constexpr double rad_to_deg(double radians) noexcept
 /// @brief Earth's quadratic mean radius for WGS84
 constexpr const double EARTH_RADIUS_IN_METERS = 6372797.560856;
 
-double haversine(const LatLong &ll1, const LatLong &ll2) noexcept
+double haversine(const LatLong& ll1, const LatLong& ll2) noexcept
 {
   using namespace geom;
   // https://github.com/osmcode/libosmium/blob/f88048769c13210ca81efca17668dc57ea64c632/include/osmium/geom/haversine.hpp#L48-L73
@@ -131,12 +131,12 @@ double haversine(const LatLong &ll1, const LatLong &ll2) noexcept
   return 2.0 * EARTH_RADIUS_IN_METERS * std::asin(std::sqrt(lat + tmp * lon));
 }
 
-double distance2d(const LatLong &ll1, const LatLong &ll2) noexcept
+double distance2d(const LatLong& ll1, const LatLong& ll2) noexcept
 {
   return v2::haversine(ll1, ll2);
 }
 
-double distance3d(const LatLong &ll1, const LatLong &ll2) noexcept
+double distance3d(const LatLong& ll1, const LatLong& ll2) noexcept
 {
   const auto distance = v2::haversine(ll1, ll2);
 

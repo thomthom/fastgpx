@@ -60,3 +60,10 @@ This organization helps to ensure that your file includes what it needs directly
 #include "utils.h"
 #include "data_processing.h"
 ```
+
+### Reformat all C++ sources
+
+```sh
+cd src\cpp
+for /R %f in (*.cpp *.hpp) do "C:\Program Files\LLVM\bin\clang-format.exe" -i "%f"
+```

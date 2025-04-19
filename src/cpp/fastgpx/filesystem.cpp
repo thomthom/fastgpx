@@ -9,7 +9,7 @@
 namespace fastgpx {
 
 #ifdef _WIN32
-std::wstring utf8_to_utf16(const std::string &utf8_str)
+std::wstring utf8_to_utf16(const std::string& utf8_str)
 {
   if (utf8_str.empty())
   {
@@ -51,9 +51,9 @@ std::wstring utf8_to_utf16(const std::string &utf8_str)
 }
 #endif
 
-FILE *open_file(const std::filesystem::path &file_path)
+FILE* open_file(const std::filesystem::path& file_path)
 {
-  FILE *file = nullptr;
+  FILE* file = nullptr;
 
 #ifdef _WIN32
   // On Windows, open with wide string support

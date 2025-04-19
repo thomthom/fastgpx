@@ -5,7 +5,7 @@
 namespace fastgpx {
 namespace {
 
-std::string compose_message(const std::string &message, std::string_view source_str,
+std::string compose_message(const std::string& message, std::string_view source_str,
                             std::string_view sub_str)
 {
   const std::size_t offset = sub_str.data() - source_str.data();
@@ -16,7 +16,7 @@ std::string compose_message(const std::string &message, std::string_view source_
 
 } // namespace
 
-parse_error::parse_error(const std::string &message, std::string_view source_str,
+parse_error::parse_error(const std::string& message, std::string_view source_str,
                          std::string_view sub_str)
     : fastgpx_error(compose_message(message, source_str, sub_str)) {};
 

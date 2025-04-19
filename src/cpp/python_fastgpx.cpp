@@ -65,7 +65,7 @@ PYBIND11_MODULE(fastgpx, m)
 
   py::class_<fastgpx::Bounds>(m, "Bounds")
       .def(py::init<>())
-      .def(py::init<const fastgpx::LatLong &, const fastgpx::LatLong &>(), py::arg("min"),
+      .def(py::init<const fastgpx::LatLong&, const fastgpx::LatLong&>(), py::arg("min"),
            py::arg("max"))
       // Allow tuples instead of explicit LatLong objects.
       .def(py::init([](std::tuple<double, double> min_tuple, std::tuple<double, double> max_tuple) {
@@ -77,15 +77,15 @@ PYBIND11_MODULE(fastgpx, m)
       .def_readwrite("min", &fastgpx::Bounds::min)
       .def_readwrite("max", &fastgpx::Bounds::max)
       .def("is_empty", &fastgpx::Bounds::IsEmpty)
-      .def("add", py::overload_cast<const fastgpx::LatLong &>(&fastgpx::Bounds::Add),
+      .def("add", py::overload_cast<const fastgpx::LatLong&>(&fastgpx::Bounds::Add),
            py::arg("location"))
-      .def("add", py::overload_cast<const fastgpx::Bounds &>(&fastgpx::Bounds::Add),
+      .def("add", py::overload_cast<const fastgpx::Bounds&>(&fastgpx::Bounds::Add),
            py::arg("bounds"))
       .def("max_bounds", &fastgpx::Bounds::MaxBounds, py::arg("bounds"))
       // gpxpy compatibility:
       .def_property(
           "min_latitude",
-          [](const fastgpx::Bounds &self) -> std::optional<double> {
+          [](const fastgpx::Bounds& self) -> std::optional<double> {
             if (self.min.has_value())
             {
               return self.min->latitude;
@@ -95,7 +95,7 @@ PYBIND11_MODULE(fastgpx, m)
               return std::nullopt;
             }
           },
-          [](fastgpx::Bounds &self, double value) {
+          [](fastgpx::Bounds& self, double value) {
             if (!self.min.has_value())
             {
               // Kludge: Setting only one member is not ideal.
@@ -106,7 +106,7 @@ PYBIND11_MODULE(fastgpx, m)
           })
       .def_property(
           "min_longitude",
-          [](const fastgpx::Bounds &self) -> std::optional<double> {
+          [](const fastgpx::Bounds& self) -> std::optional<double> {
             if (self.min.has_value())
             {
               return self.min->longitude;
@@ -116,7 +116,7 @@ PYBIND11_MODULE(fastgpx, m)
               return std::nullopt;
             }
           },
-          [](fastgpx::Bounds &self, double value) {
+          [](fastgpx::Bounds& self, double value) {
             if (!self.min.has_value())
             {
               // Kludge: Setting only one member is not ideal.
@@ -127,7 +127,7 @@ PYBIND11_MODULE(fastgpx, m)
           })
       .def_property(
           "max_latitude",
-          [](const fastgpx::Bounds &self) -> std::optional<double> {
+          [](const fastgpx::Bounds& self) -> std::optional<double> {
             if (self.max.has_value())
             {
               return self.max->latitude;
@@ -137,7 +137,7 @@ PYBIND11_MODULE(fastgpx, m)
               return std::nullopt;
             }
           },
-          [](fastgpx::Bounds &self, double value) {
+          [](fastgpx::Bounds& self, double value) {
             if (!self.max.has_value())
             {
               // Kludge: Setting only one member is not ideal.
@@ -149,7 +149,7 @@ PYBIND11_MODULE(fastgpx, m)
 
       .def_property(
           "max_longitude",
-          [](const fastgpx::Bounds &self) -> std::optional<double> {
+          [](const fastgpx::Bounds& self) -> std::optional<double> {
             if (self.max.has_value())
             {
               return self.max->longitude;
@@ -159,7 +159,7 @@ PYBIND11_MODULE(fastgpx, m)
               return std::nullopt;
             }
           },
-          [](fastgpx::Bounds &self, double value) {
+          [](fastgpx::Bounds& self, double value) {
             if (!self.max.has_value())
             {
               // Kludge: Setting only one member is not ideal.
@@ -204,7 +204,7 @@ PYBIND11_MODULE(fastgpx, m)
       .def("length_2d", &fastgpx::Gpx::GetLength2D)
       .def("length_3d", &fastgpx::Gpx::GetLength3D);
 
-  m.def("parse", py::overload_cast<const std::string &>(&fastgpx::ParseGpx), py::arg("path"));
+  m.def("parse", py::overload_cast<const std::string&>(&fastgpx::ParseGpx), py::arg("path"));
 
   // fastgpx geo
 
@@ -234,14 +234,14 @@ PYBIND11_MODULE(fastgpx, m)
   polyline_mod.def(
       "encode",
       // Wrapping in std::vector because std::span doesn't work out of the box.
-      [](const std::vector<fastgpx::LatLong> &points, fastgpx::polyline::Precision precision) {
+      [](const std::vector<fastgpx::LatLong>& points, fastgpx::polyline::Precision precision) {
         return fastgpx::polyline::encode(points, precision);
       },
       py::arg("locations"), py::arg("precision") = fastgpx::polyline::Precision::Five);
 
   polyline_mod.def(
       "encode",
-      [](const std::vector<fastgpx::LatLong> &points, int precision) {
+      [](const std::vector<fastgpx::LatLong>& points, int precision) {
         return fastgpx::polyline::encode(points, IntToPrecision(precision));
       },
       py::arg("locations"), py::arg("precision") = 5);

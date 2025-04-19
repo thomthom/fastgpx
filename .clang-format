@@ -25,9 +25,12 @@ BraceWrapping:
   BeforeWhile: true
   SplitEmptyFunction: false
 ColumnLimit: 100
+DerivePointerAlignment: false
 IncludeBlocks: Preserve
 IndentCaseLabels: false
 IndentExternBlock: NoIndent
 IndentPPDirectives: BeforeHash
+PointerAlignment: Left
+ReferenceAlignment: Left
 SpaceAfterTemplateKeyword: false
 SpacesBeforeTrailingComments: 1

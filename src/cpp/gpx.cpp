@@ -14,9 +14,9 @@
 #include "fastgpx/filesystem.hpp"
 #include "fastgpx/geom.hpp"
 
-double tinyxml_gpx_length2d(const std::filesystem::path &path)
+double tinyxml_gpx_length2d(const std::filesystem::path& path)
 {
-  FILE *xmlFile = fastgpx::open_file(path);
+  FILE* xmlFile = fastgpx::open_file(path);
 
   // std::println("Loading XML doc...");
   // std::println("path: {}", path.string().c_str());
@@ -41,7 +41,7 @@ double tinyxml_gpx_length2d(const std::filesystem::path &path)
       double segment_distance = 0.0;
 
       // std::println("Iterate trkpt...");
-      tinyxml2::XMLElement *prev_trkpt = nullptr;
+      tinyxml2::XMLElement* prev_trkpt = nullptr;
       // Iterate over each <trkpt> in the segment
       for (auto trkpt = segment->FirstChildElement("trkpt"); trkpt;
            trkpt = trkpt->NextSiblingElement("trkpt"))
@@ -68,7 +68,7 @@ double tinyxml_gpx_length2d(const std::filesystem::path &path)
   return total_distance;
 }
 
-double pugixml_gpx_length2d(const std::filesystem::path &path)
+double pugixml_gpx_length2d(const std::filesystem::path& path)
 {
   pugi::xml_document doc;
 

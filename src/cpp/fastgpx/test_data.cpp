@@ -15,7 +15,7 @@ using json = nlohmann::json;
 
 namespace fastgpx {
 
-void from_json(const json &json, TimeBounds &bounds)
+void from_json(const json& json, TimeBounds& bounds)
 {
   int start_time, end_time;
   json.at("start_time").get_to(start_time);
@@ -24,7 +24,7 @@ void from_json(const json &json, TimeBounds &bounds)
   bounds.end_time = std::chrono::system_clock::from_time_t(end_time);
 }
 
-void from_json(const json &json, ExpectedSegment &segment)
+void from_json(const json& json, ExpectedSegment& segment)
 {
   json.at("length2d").get_to(segment.length2d);
   json.at("length3d").get_to(segment.length3d);
@@ -32,7 +32,7 @@ void from_json(const json &json, ExpectedSegment &segment)
     json.at("time_bounds").get_to(segment.time_bounds);
 }
 
-void from_json(const json &json, ExpectedTrack &track)
+void from_json(const json& json, ExpectedTrack& track)
 {
   json.at("length2d").get_to(track.length2d);
   json.at("length3d").get_to(track.length3d);
@@ -41,7 +41,7 @@ void from_json(const json &json, ExpectedTrack &track)
     json.at("time_bounds").get_to(track.time_bounds);
 }
 
-void from_json(const json &json, ExpectedGpx &gpx)
+void from_json(const json& json, ExpectedGpx& gpx)
 {
   json.at("path").get_to(gpx.path);
   json.at("length2d").get_to(gpx.length2d);

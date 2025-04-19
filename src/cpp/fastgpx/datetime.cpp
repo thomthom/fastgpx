@@ -17,7 +17,7 @@
 namespace fastgpx {
 namespace {
 
-time_t make_utc_time(std::tm *tm)
+time_t make_utc_time(std::tm* tm)
 {
 #ifdef _WIN32
   return _mkgmtime(tm);
@@ -30,7 +30,7 @@ time_t make_utc_time(std::tm *tm)
 
 namespace v1 {
 
-std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
+std::chrono::system_clock::time_point parse_iso8601(const std::string& time_str)
 {
   std::tm tm = {};
   std::istringstream ss(time_str);
@@ -85,7 +85,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
 
 namespace v2 {
 
-std::chrono::utc_clock::time_point parse_iso8601(const std::string &time_str)
+std::chrono::utc_clock::time_point parse_iso8601(const std::string& time_str)
 {
   // https://github.com/pybind/pybind11/discussions/3451
 
@@ -99,7 +99,7 @@ std::chrono::utc_clock::time_point parse_iso8601(const std::string &time_str)
 
 namespace v3 {
 
-std::chrono::system_clock::time_point parse_iso8601(const std::string &time_str)
+std::chrono::system_clock::time_point parse_iso8601(const std::string& time_str)
 {
   // https://github.com/pybind/pybind11/discussions/3451
 
@@ -331,7 +331,7 @@ struct Context
 
 namespace {
 
-iso8601::TokenType parse_date_type(const iso8601::Chunk &chunk, const iso8601::Context &context)
+iso8601::TokenType parse_date_type(const iso8601::Chunk& chunk, const iso8601::Context& context)
 {
   assert(context.parse == iso8601::Parse::Date);
   assert(chunk.type == iso8601::ChunkType::Decimal);
@@ -358,7 +358,7 @@ iso8601::TokenType parse_date_type(const iso8601::Chunk &chunk, const iso8601::C
   }
 }
 
-iso8601::TokenType parse_time_type(const iso8601::Chunk &chunk, const iso8601::Context &context)
+iso8601::TokenType parse_time_type(const iso8601::Chunk& chunk, const iso8601::Context& context)
 {
   assert(context.parse == iso8601::Parse::Time);
   assert(chunk.type == iso8601::ChunkType::Decimal);
@@ -379,7 +379,7 @@ iso8601::TokenType parse_time_type(const iso8601::Chunk &chunk, const iso8601::C
   }
 }
 
-iso8601::TokenType parse_timezone_type(const iso8601::Chunk &chunk, const iso8601::Context &context)
+iso8601::TokenType parse_timezone_type(const iso8601::Chunk& chunk, const iso8601::Context& context)
 {
   assert(context.parse == iso8601::Parse::Timezone);
   assert(chunk.type == iso8601::ChunkType::Decimal);
@@ -397,7 +397,7 @@ iso8601::TokenType parse_timezone_type(const iso8601::Chunk &chunk, const iso860
   }
 }
 
-iso8601::Token parse_decimal(const iso8601::Chunk &chunk, const iso8601::Context &context)
+iso8601::Token parse_decimal(const iso8601::Chunk& chunk, const iso8601::Context& context)
 {
   iso8601::Token token;
   if (context.parse == iso8601::Parse::Date)
@@ -529,7 +529,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
 
   auto is_digit_chuck = [](char a, char b) { return std::isdigit(a) == std::isdigit(b); };
 
-  auto chuck_type = [&char_to_chunk_type](const auto &data) {
+  auto chuck_type = [&char_to_chunk_type](const auto& data) {
     const auto ch = *data.begin();
     if (std::isdigit(ch))
     {
@@ -541,14 +541,14 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       {
         return char_to_chunk_type.at(ch);
       }
-      catch (const std::out_of_range &)
+      catch (const std::out_of_range&)
       {
         throw parse_error("unexpected chunk data"); // TODO: include ch
       };
     }
   };
 
-  auto make_chunk = [&chuck_type](const auto &data) {
+  auto make_chunk = [&chuck_type](const auto& data) {
     return iso8601::Chunk{.type = chuck_type(data), .data = {data.begin(), data.end()}};
   };
 
@@ -557,7 +557,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
 
   iso8601::Context context{.string = time_str};
   std::vector<iso8601::Token> tokens;
-  for (const auto &chunk : chunks)
+  for (const auto& chunk : chunks)
   {
     if (tokens.empty() && chunk.type != iso8601::ChunkType::Decimal)
     {
@@ -681,7 +681,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       .tm_mday = 1, // Unlike the other members, this starts at 1.
   };
   std::chrono::milliseconds adjustment(0);
-  for (const auto &token : tokens)
+  for (const auto& token : tokens)
   {
     // TODO: Handle fractional.
     switch (token.type)
@@ -755,12 +755,12 @@ template<typename T>
 class ParsedValue
 {
 public:
-  explicit ParsedValue(const T &value) : value_(value) {};
+  explicit ParsedValue(const T& value) : value_(value) {};
 
   T value() const { return value_; }
 
   template<typename... Args>
-  ParsedValue<T> &OneOf(Args... args)
+  ParsedValue<T>& OneOf(Args... args)
   {
     static_assert((std::is_same_v<T, Args> && ...), "All arguments must have the same type as T");
 
@@ -773,7 +773,7 @@ public:
   }
 
   // Inclusive range: [min, max]
-  ParsedValue<T> &InRange(const T &min, const T &max)
+  ParsedValue<T>& InRange(const T& min, const T& max)
   {
     if (value_ < min or value_ > max)
     {
@@ -784,7 +784,7 @@ public:
     return *this;
   }
 
-  ParsedValue<T> &Offset(const T &offset) { return ParsedValue<T>(value + offset); }
+  ParsedValue<T>& Offset(const T& offset) { return ParsedValue<T>(value + offset); }
 
 private:
   T value_;
@@ -847,7 +847,7 @@ private:
   std::string_view::iterator it_;
 };
 
-void ParseCommonDateAndTime(StringParser &parser, std::tm &tm)
+void ParseCommonDateAndTime(StringParser& parser, std::tm& tm)
 {
   // YYYY-MM-DDThh:mm:ssZ
   // ^^^^
@@ -897,7 +897,7 @@ void ParseCommonDateAndTime(StringParser &parser, std::tm &tm)
   tm.tm_sec = parser.ExtractInt(2).InRange(0, 60).value();
 }
 
-std::chrono::minutes ParseTimezone(StringParser &parser)
+std::chrono::minutes ParseTimezone(StringParser& parser)
 {
   std::chrono::minutes adjustment(0);
 

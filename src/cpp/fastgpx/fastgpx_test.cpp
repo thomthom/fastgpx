@@ -127,16 +127,16 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
     REQUIRE(gpx.tracks.size() == expected_gpx.tracks.size());
     for (size_t track_index = 0; track_index < gpx.tracks.size(); track_index++)
     {
-      const auto &track = gpx.tracks[track_index];
-      const auto &expected_track = expected_gpx.tracks[track_index];
+      const auto& track = gpx.tracks[track_index];
+      const auto& expected_track = expected_gpx.tracks[track_index];
 
       CAPTURE(track_index);
 
       REQUIRE(track.segments.size() == expected_track.segments.size());
       for (size_t segment_index = 0; segment_index < track.segments.size(); segment_index++)
       {
-        const auto &segment = track.segments[segment_index];
-        const auto &expected_segment = expected_track.segments[segment_index];
+        const auto& segment = track.segments[segment_index];
+        const auto& expected_segment = expected_track.segments[segment_index];
 
         CAPTURE(segment_index);
 

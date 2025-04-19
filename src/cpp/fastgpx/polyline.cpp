@@ -13,7 +13,7 @@ std::string encode(std::span<const LatLong> locations, Precision precision)
   int last_lat = 0;
   int last_lng = 0;
 
-  for (const auto &coord : locations)
+  for (const auto& coord : locations)
   {
     const int lat = static_cast<int>(std::round(coord.latitude * factor));
     const int lng = static_cast<int>(std::round(coord.longitude * factor));
@@ -53,7 +53,7 @@ std::vector<LatLong> decode(std::string_view encoded, Precision precision)
 
   while (index < encoded.size())
   {
-    auto decode_value = [&](int &value) -> void {
+    auto decode_value = [&](int& value) -> void {
       int shift = 0;
       int result = 0;
       int byte;

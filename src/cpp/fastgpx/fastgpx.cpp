@@ -32,7 +32,7 @@ std::chrono::system_clock::time_point TimePoint::value() const
 {
   if (std::holds_alternative<std::string>(data_))
   {
-    const auto &time_string = std::get<std::string>(data_);
+    const auto& time_string = std::get<std::string>(data_);
     data_ = parse_gpx_time(time_string);
   }
   assert(std::holds_alternative<std::chrono::system_clock::time_point>(data_));
@@ -68,7 +68,7 @@ void TimeBounds::Add(const std::chrono::system_clock::time_point time_point)
   }
 }
 
-void TimeBounds::Add(const TimeBounds &bounds)
+void TimeBounds::Add(const TimeBounds& bounds)
 {
   if (bounds.start_time.has_value())
   {
@@ -88,7 +88,7 @@ bool Bounds::IsEmpty() const
   return !min.has_value() && !max.has_value();
 }
 
-void Bounds::Add(const LatLong &location)
+void Bounds::Add(const LatLong& location)
 {
   // TODO: compare all values? In case min/max is not initialized correctly.
   if (min.has_value())
@@ -114,13 +114,13 @@ void Bounds::Add(const LatLong &location)
 
 void Bounds::Add(std::span<const LatLong> locations)
 {
-  for (const auto &location : locations)
+  for (const auto& location : locations)
   {
     Add(location);
   }
 }
 
-void Bounds::Add(const Bounds &bounds)
+void Bounds::Add(const Bounds& bounds)
 {
   if (bounds.min.has_value())
   {
@@ -132,7 +132,7 @@ void Bounds::Add(const Bounds &bounds)
   }
 }
 
-Bounds Bounds::MaxBounds(const Bounds &bounds) const
+Bounds Bounds::MaxBounds(const Bounds& bounds) const
 {
   Bounds computed_max = *this;
   computed_max.Add(bounds);
@@ -141,7 +141,7 @@ Bounds Bounds::MaxBounds(const Bounds &bounds) const
 
 // Segment
 
-const Bounds &Segment::GetBounds() const
+const Bounds& Segment::GetBounds() const
 {
   if (!bounds.has_value())
   {
@@ -168,7 +168,7 @@ double Segment::GetLength3D() const
   return length3D.value();
 }
 
-const TimeBounds &Segment::GetTimeBounds() const
+const TimeBounds& Segment::GetTimeBounds() const
 {
   if (!time_bounds.has_value())
   {
@@ -187,7 +187,7 @@ Bounds Segment::ComputeBounds() const
 double Segment::ComputeLength2D() const
 {
   auto distances = std::views::zip(points, points | std::views::drop(1)) |
-                   std::views::transform([](const auto &pair) {
+                   std::views::transform([](const auto& pair) {
                      return distance2d(std::get<0>(pair), std::get<1>(pair));
                    });
   return std::accumulate(distances.begin(), distances.end(), 0.0);
@@ -196,7 +196,7 @@ double Segment::ComputeLength2D() const
 double Segment::ComputeLength3D() const
 {
   auto distances = std::views::zip(points, points | std::views::drop(1)) |
-                   std::views::transform([](const auto &pair) {
+                   std::views::transform([](const auto& pair) {
                      return distance3d(std::get<0>(pair), std::get<1>(pair));
                    });
   return std::accumulate(distances.begin(), distances.end(), 0.0);
@@ -205,7 +205,7 @@ double Segment::ComputeLength3D() const
 TimeBounds Segment::ComputeTimeBounds() const
 {
   TimeBounds computed_bounds;
-  for (const auto &point : points)
+  for (const auto& point : points)
   {
     if (point.time.has_value())
     {
@@ -217,7 +217,7 @@ TimeBounds Segment::ComputeTimeBounds() const
 
 // Track
 
-const Bounds &Track::GetBounds() const
+const Bounds& Track::GetBounds() const
 {
   if (!bounds.has_value())
   {
@@ -244,7 +244,7 @@ double Track::GetLength3D() const
   return length3D.value();
 }
 
-const TimeBounds &Track::GetTimeBounds() const
+const TimeBounds& Track::GetTimeBounds() const
 {
   if (!time_bounds.has_value())
   {
@@ -256,7 +256,7 @@ const TimeBounds &Track::GetTimeBounds() const
 Bounds Track::ComputeBounds() const
 {
   Bounds computed_bounds;
-  for (const auto &segment : segments)
+  for (const auto& segment : segments)
   {
     computed_bounds.Add(segment.GetBounds());
   }
@@ -267,20 +267,20 @@ double Track::ComputeLength2D() const
 {
   return std::accumulate(
       segments.cbegin(), segments.cend(), 0.0,
-      [](double acc, const Segment &segment) { return acc + segment.GetLength2D(); });
+      [](double acc, const Segment& segment) { return acc + segment.GetLength2D(); });
 }
 
 double Track::ComputeLength3D() const
 {
   return std::accumulate(
       segments.cbegin(), segments.cend(), 0.0,
-      [](double acc, const Segment &segment) { return acc + segment.GetLength3D(); });
+      [](double acc, const Segment& segment) { return acc + segment.GetLength3D(); });
 }
 
 TimeBounds Track::ComputeTimeBounds() const
 {
   TimeBounds computed_bounds;
-  for (const auto &segment : segments)
+  for (const auto& segment : segments)
   {
     computed_bounds.Add(segment.GetTimeBounds());
   }
@@ -289,7 +289,7 @@ TimeBounds Track::ComputeTimeBounds() const
 
 // Gpx
 
-const Bounds &Gpx::GetBounds() const
+const Bounds& Gpx::GetBounds() const
 {
   if (!bounds.has_value())
   {
@@ -316,7 +316,7 @@ double Gpx::GetLength3D() const
   return length3D.value();
 }
 
-const TimeBounds &Gpx::GetTimeBounds() const
+const TimeBounds& Gpx::GetTimeBounds() const
 {
   if (!time_bounds.has_value())
   {
@@ -328,7 +328,7 @@ const TimeBounds &Gpx::GetTimeBounds() const
 Bounds Gpx::ComputeBounds() const
 {
   Bounds computed_bounds;
-  for (const auto &track : tracks)
+  for (const auto& track : tracks)
   {
     computed_bounds.Add(track.GetBounds());
   }
@@ -338,26 +338,26 @@ Bounds Gpx::ComputeBounds() const
 double Gpx::ComputeLength2D() const
 {
   return std::accumulate(tracks.cbegin(), tracks.cend(), 0.0,
-                         [](double acc, const Track &track) { return acc + track.GetLength2D(); });
+                         [](double acc, const Track& track) { return acc + track.GetLength2D(); });
 }
 
 double Gpx::ComputeLength3D() const
 {
   return std::accumulate(tracks.cbegin(), tracks.cend(), 0.0,
-                         [](double acc, const Track &track) { return acc + track.GetLength3D(); });
+                         [](double acc, const Track& track) { return acc + track.GetLength3D(); });
 }
 
 TimeBounds Gpx::ComputeTimeBounds() const
 {
   TimeBounds computed_bounds;
-  for (const auto &track : tracks)
+  for (const auto& track : tracks)
   {
     computed_bounds.Add(track.GetTimeBounds());
   }
   return computed_bounds;
 }
 
-Gpx ParseGpx(const std::filesystem::path &path)
+Gpx ParseGpx(const std::filesystem::path& path)
 {
   pugi::xml_document doc;
 
@@ -377,14 +377,14 @@ Gpx ParseGpx(const std::filesystem::path &path)
   for (pugi::xml_node track = root.child("trk"); track; track = track.next_sibling("trk"))
   {
     gpx.tracks.push_back({});
-    auto &gpx_track = gpx.tracks.back();
+    auto& gpx_track = gpx.tracks.back();
 
     // Iterate over each <trkseg> element
     for (pugi::xml_node segment = track.child("trkseg"); segment;
          segment = segment.next_sibling("trkseg"))
     {
       gpx_track.segments.push_back({});
-      auto &gpx_segment = gpx_track.segments.back();
+      auto& gpx_segment = gpx_track.segments.back();
 
       pugi::xml_node prev_trkpt;
       // Iterate over each <trkpt> in the segment
@@ -405,7 +405,7 @@ Gpx ParseGpx(const std::filesystem::path &path)
           elevation = ele.text().as_double();
         }
 
-        auto &point = gpx_segment.points.emplace_back(lat, lon, elevation);
+        auto& point = gpx_segment.points.emplace_back(lat, lon, elevation);
 
         // TODO: Add parse options, selectively choose what to parse.
         // <time>
@@ -428,7 +428,7 @@ Gpx ParseGpx(const std::filesystem::path &path)
   return gpx;
 }
 
-Gpx ParseGpx(const std::string &path)
+Gpx ParseGpx(const std::string& path)
 {
   return ParseGpx(std::filesystem::path(path));
 }

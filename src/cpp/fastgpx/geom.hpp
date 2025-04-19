@@ -16,7 +16,7 @@ namespace v1 {
  * @param ll2
  * @return double Meters.
  */
-double haversine(const LatLong &ll1, const LatLong &ll2) noexcept;
+double haversine(const LatLong& ll1, const LatLong& ll2) noexcept;
 
 /**
  * @brief Computes the distance in 2d between two point using gpxpy logic.
@@ -28,7 +28,7 @@ double haversine(const LatLong &ll1, const LatLong &ll2) noexcept;
  * @param use_haversine Force haversine
  * @return double Meters
  */
-double distance2d(const LatLong &ll1, const LatLong &ll2, bool use_haversine = false) noexcept;
+double distance2d(const LatLong& ll1, const LatLong& ll2, bool use_haversine = false) noexcept;
 
 /**
  * @brief Computes the distance in 3d between two point using gpxpy logic.
@@ -40,7 +40,7 @@ double distance2d(const LatLong &ll1, const LatLong &ll2, bool use_haversine = f
  * @param use_haversine Force haversine
  * @return double Meters
  */
-double distance3d(const LatLong &ll1, const LatLong &ll2, bool use_haversine = false) noexcept;
+double distance3d(const LatLong& ll1, const LatLong& ll2, bool use_haversine = false) noexcept;
 } // namespace v1
 
 /**
@@ -57,7 +57,7 @@ namespace v2 {
  * @param ll2
  * @return double Meters.
  */
-double haversine(const LatLong &ll1, const LatLong &ll2) noexcept;
+double haversine(const LatLong& ll1, const LatLong& ll2) noexcept;
 
 /**
  * @brief Computes the distance in 2d between two point using gpxpy logic.
@@ -66,7 +66,7 @@ double haversine(const LatLong &ll1, const LatLong &ll2) noexcept;
  * @param ll2
  * @return double Meters
  */
-double distance2d(const LatLong &ll1, const LatLong &ll2) noexcept;
+double distance2d(const LatLong& ll1, const LatLong& ll2) noexcept;
 
 /**
  * @brief Computes the distance in 3d between two point using gpxpy logic.
@@ -75,7 +75,7 @@ double distance2d(const LatLong &ll1, const LatLong &ll2) noexcept;
  * @param ll2
  * @return double Meters
  */
-double distance3d(const LatLong &ll1, const LatLong &ll2) noexcept;
+double distance3d(const LatLong& ll1, const LatLong& ll2) noexcept;
 
 } // namespace v2
 

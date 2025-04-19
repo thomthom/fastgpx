@@ -20,18 +20,17 @@ constexpr double kMETERS_TOL = 1e-4;
 
 const auto project_path = std::filesystem::path(FASTGPX_PROJECT_DIR);
 
-using GpxLengthFunc =
-    const std::function<double(const fastgpx::LatLong &, const fastgpx::LatLong &)>;
-static double GpxLength(const fastgpx::Gpx &gpx, const GpxLengthFunc &func)
+using GpxLengthFunc = const std::function<double(const fastgpx::LatLong&, const fastgpx::LatLong&)>;
+static double GpxLength(const fastgpx::Gpx& gpx, const GpxLengthFunc& func)
 {
   double distance = 0.0;
-  for (const auto &track : gpx.tracks)
+  for (const auto& track : gpx.tracks)
   {
-    for (const auto &segment : track.segments)
+    for (const auto& segment : track.segments)
     {
-      const auto &points = segment.points;
+      const auto& points = segment.points;
       auto distances = std::views::zip(points, points | std::views::drop(1)) |
-                       std::views::transform([&func](const auto &pair) {
+                       std::views::transform([&func](const auto& pair) {
                          return func(std::get<0>(pair), std::get<1>(pair));
                        });
       distance += std::accumulate(distances.begin(), distances.end(), 0.0);
@@ -40,12 +39,12 @@ static double GpxLength(const fastgpx::Gpx &gpx, const GpxLengthFunc &func)
   return distance;
 }
 
-static double fastgpx_distance2d(const fastgpx::LatLong &ll1, const fastgpx::LatLong &ll2)
+static double fastgpx_distance2d(const fastgpx::LatLong& ll1, const fastgpx::LatLong& ll2)
 {
   return fastgpx::v1::distance2d(ll1, ll2, false);
 }
 
-static double fastgpx_distance3d(const fastgpx::LatLong &ll1, const fastgpx::LatLong &ll2)
+static double fastgpx_distance3d(const fastgpx::LatLong& ll1, const fastgpx::LatLong& ll2)
 {
   return fastgpx::v1::distance3d(ll1, ll2, false);
 }
@@ -81,12 +80,12 @@ TEST_CASE("Compute 2D distance", "[distance]")
   };
 }
 
-static double fastgpx_distance2d_haversine(const fastgpx::LatLong &ll1, const fastgpx::LatLong &ll2)
+static double fastgpx_distance2d_haversine(const fastgpx::LatLong& ll1, const fastgpx::LatLong& ll2)
 {
   return fastgpx::v1::distance2d(ll1, ll2, true);
 }
 
-static double fastgpx_distance3d_haversine(const fastgpx::LatLong &ll1, const fastgpx::LatLong &ll2)
+static double fastgpx_distance3d_haversine(const fastgpx::LatLong& ll1, const fastgpx::LatLong& ll2)
 {
   return fastgpx::v1::distance3d(ll1, ll2, true);
 }

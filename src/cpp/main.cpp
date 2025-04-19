@@ -27,7 +27,7 @@ int main()
   {
     auto start = std::chrono::high_resolution_clock::now();
     double total_length = 0.0;
-    for (const auto &entry : std::filesystem::directory_iterator(path))
+    for (const auto& entry : std::filesystem::directory_iterator(path))
     {
       if (entry.path().extension() != ".gpx")
       {
@@ -47,7 +47,7 @@ int main()
   {
     auto start = std::chrono::high_resolution_clock::now();
     double total_length = 0.0;
-    for (const auto &entry : std::filesystem::directory_iterator(path))
+    for (const auto& entry : std::filesystem::directory_iterator(path))
     {
       if (entry.path().extension() != ".gpx")
       {

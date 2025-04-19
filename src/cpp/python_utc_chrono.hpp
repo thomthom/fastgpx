@@ -71,8 +71,8 @@ public:
   }
 
   // If this is a duration just return it back
-  static const std::chrono::duration<rep, period> &get_duration(
-      const std::chrono::duration<rep, period> &src)
+  static const std::chrono::duration<rep, period>& get_duration(
+      const std::chrono::duration<rep, period>& src)
   {
     return src;
   }
@@ -80,12 +80,12 @@ public:
   // If this is a time_point get the time_since_epoch
   template<typename Clock>
   static std::chrono::duration<rep, period> get_duration(
-      const std::chrono::time_point<Clock, std::chrono::duration<rep, period>> &src)
+      const std::chrono::time_point<Clock, std::chrono::duration<rep, period>>& src)
   {
     return src.time_since_epoch();
   }
 
-  static handle cast(const type &src, return_value_policy /* policy */, handle /* parent */)
+  static handle cast(const type& src, return_value_policy /* policy */, handle /* parent */)
   {
     using namespace std::chrono;
 
@@ -115,7 +115,7 @@ public:
   PYBIND11_TYPE_CASTER(type, const_name("datetime.timedelta"));
 };
 
-inline std::tm *localtime_thread_safe(const std::time_t *time, std::tm *buf)
+inline std::tm* localtime_thread_safe(const std::time_t* time, std::tm* buf)
 {
 #if (defined(__STDC_LIB_EXT1__) && defined(__STDC_WANT_LIB_EXT1__)) || defined(_MSC_VER)
   if (localtime_s(buf, time))
@@ -124,7 +124,7 @@ inline std::tm *localtime_thread_safe(const std::time_t *time, std::tm *buf)
 #else
   static std::mutex mtx;
   std::lock_guard<std::mutex> lock(mtx);
-  std::tm *tm_ptr = std::localtime(time);
+  std::tm* tm_ptr = std::localtime(time);
   if (tm_ptr != nullptr)
   {
     *buf = *tm_ptr;
@@ -199,7 +199,7 @@ public:
     return true;
   }
 
-  static handle cast(const std::chrono::time_point<std::chrono::system_clock, Duration> &src,
+  static handle cast(const std::chrono::time_point<std::chrono::system_clock, Duration>& src,
                      return_value_policy /* policy */, handle /* parent */)
   {
     using namespace std::chrono;

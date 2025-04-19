@@ -13,7 +13,7 @@ namespace fastgpx {
 class TimePoint
 {
 public:
-  TimePoint(const std::string &time_string) : data_(time_string) {}
+  TimePoint(const std::string& time_string) : data_(time_string) {}
   TimePoint(const std::chrono::system_clock::time_point time_point) : data_(time_point) {}
 
   std::chrono::system_clock::time_point value() const;
@@ -30,7 +30,7 @@ struct TimeBounds
   bool IsEmpty() const;
 
   void Add(std::chrono::system_clock::time_point time_point);
-  void Add(const TimeBounds &time_bounds);
+  void Add(const TimeBounds& time_bounds);
 };
 
 // Represent <trkpt> data in GPX files.
@@ -49,11 +49,11 @@ struct Bounds
 
   bool IsEmpty() const;
 
-  void Add(const LatLong &location);
+  void Add(const LatLong& location);
   void Add(std::span<const LatLong> locations);
-  void Add(const Bounds &bounds);
+  void Add(const Bounds& bounds);
 
-  Bounds MaxBounds(const Bounds &bounds) const;
+  Bounds MaxBounds(const Bounds& bounds) const;
 };
 
 // Represent <trkseg> data in GPX files.
@@ -62,10 +62,10 @@ struct Segment
   std::vector<LatLong> points;
   // <extensions>
 
-  const Bounds &GetBounds() const;
+  const Bounds& GetBounds() const;
   double GetLength2D() const;
   double GetLength3D() const;
-  const TimeBounds &GetTimeBounds() const;
+  const TimeBounds& GetTimeBounds() const;
 
 private:
   Bounds ComputeBounds() const;
@@ -91,10 +91,10 @@ struct Track
   // <extensions>
   std::vector<Segment> segments; // <trkseg>
 
-  const Bounds &GetBounds() const;
+  const Bounds& GetBounds() const;
   double GetLength2D() const;
   double GetLength3D() const;
-  const TimeBounds &GetTimeBounds() const;
+  const TimeBounds& GetTimeBounds() const;
 
 private:
   Bounds ComputeBounds() const;
@@ -115,10 +115,10 @@ struct Gpx
   // <tre>
   std::vector<Track> tracks; // <trk>
 
-  const Bounds &GetBounds() const;
+  const Bounds& GetBounds() const;
   double GetLength2D() const;
   double GetLength3D() const;
-  const TimeBounds &GetTimeBounds() const;
+  const TimeBounds& GetTimeBounds() const;
 
 private:
   Bounds ComputeBounds() const;
@@ -132,9 +132,9 @@ private:
   mutable std::optional<TimeBounds> time_bounds;
 };
 
-Gpx ParseGpx(const std::filesystem::path &path);
+Gpx ParseGpx(const std::filesystem::path& path);
 // pybind11 appear to mangle the unicode string when binding directly to
 // std::filesystem::path. But going via a std::string works.
-Gpx ParseGpx(const std::string &path);
+Gpx ParseGpx(const std::string& path);
 
 } // namespace fastgpx
