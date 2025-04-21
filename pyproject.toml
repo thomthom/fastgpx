@@ -31,3 +31,7 @@ sdist.include = ["README.md", "CMakeLists.txt", "src"]
 # cmake.build-type = "Debug"
 # cmake.build-type = "Release"
 cmake.build-type = "RelWithDebInfo"
+
+[tool.scikit-build.cmake.define]
+# No need to build the tests in the wheel.
+BUILD_TESTING = false

@@ -6,19 +6,26 @@ FetchContent_Declare(
   GIT_TAG        db78afc2b7d8f043b4bc6b185635d949ea2ed2a8 # v1.14
 )
 
-FetchContent_Declare(
-  Catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG v3.7.1
-)
+FetchContent_MakeAvailable(pugixml)
 
-FetchContent_Declare(
-  json
-  GIT_REPOSITORY https://github.com/nlohmann/json.git
-  GIT_TAG v3.11.3
-)
+if(BUILD_TESTING)
 
-FetchContent_MakeAvailable(pugixml Catch2 json)
+  FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG v3.7.1
+  )
+
+  FetchContent_Declare(
+    json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.3
+  )
+
+  FetchContent_MakeAvailable(Catch2 json)
+
+endif()
+
 
 function(set_common_properties TARGET)
   if(NOT TARGET ${TARGET})
@@ -99,31 +106,34 @@ add_custom_command(TARGET fastgpx POST_BUILD
         "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx/fastgpx.cp311-win_amd64.pyd"
 )
 
-# fastgpx debug app
+if(BUILD_TESTING)
 
-add_executable(fastgpxcli app.cpp)
-set_common_properties(fastgpxcli)
-target_link_libraries(fastgpxcli PRIVATE fastgpx-static)
+  # fastgpx debug app
 
-# fastgpx tests
+  add_executable(fastgpxcli app.cpp)
+  set_common_properties(fastgpxcli)
+  target_link_libraries(fastgpxcli PRIVATE fastgpx-static)
 
-set(TEST_UTILS
-  fastgpx/test_data.hpp
-  fastgpx/test_data.cpp
-)
-set(TEST_SOURCES
-  fastgpx/datetime_test.cpp
-  fastgpx/errors_test.cpp
-  fastgpx/fastgpx_test.cpp
-  fastgpx/filesystem_test.cpp
-  fastgpx/geom_test.cpp
-  fastgpx/test_data_test.cpp
-)
-add_executable(fastgpx_test ${TEST_UTILS} ${TEST_SOURCES})
-set_common_properties(fastgpx_test)
-target_link_libraries(fastgpx_test PRIVATE Catch2::Catch2WithMain fastgpx-static nlohmann_json)
-target_compile_definitions(fastgpx_test PRIVATE FASTGPX_PROJECT_DIR="${CMAKE_SOURCE_DIR}")
+  # fastgpx tests
 
-include(CTest)
-include(Catch)
-catch_discover_tests(fastgpx_test)
+  set(TEST_UTILS
+    fastgpx/test_data.hpp
+    fastgpx/test_data.cpp
+  )
+  set(TEST_SOURCES
+    fastgpx/datetime_test.cpp
+    fastgpx/errors_test.cpp
+    fastgpx/fastgpx_test.cpp
+    fastgpx/filesystem_test.cpp
+    fastgpx/geom_test.cpp
+    fastgpx/test_data_test.cpp
+  )
+  add_executable(fastgpx_test ${TEST_UTILS} ${TEST_SOURCES})
+  set_common_properties(fastgpx_test)
+  target_link_libraries(fastgpx_test PRIVATE Catch2::Catch2WithMain fastgpx-static nlohmann_json)
+  target_compile_definitions(fastgpx_test PRIVATE FASTGPX_PROJECT_DIR="${CMAKE_SOURCE_DIR}")
+
+  include(Catch)
+  catch_discover_tests(fastgpx_test)
+
+endif()
