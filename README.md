@@ -175,9 +175,16 @@ If the output prints UTF-8 characters the terminal needs to be set to UTF-8 mode
 ```sh
 chcp 65001
 ```
+## Running Tests
 
 ```sh
-build\cpp\RelWithDebInfo\fastgpx_test.exe [!benchmark]
+build\src\cpp\RelWithDebInfo\fastgpx_test.exe
+```
+
+## Running Benchmarks
+
+```sh
+build\src\cpp\RelWithDebInfo\fastgpx_test.exe [!benchmark]
 ```
 
 # GPX
