@@ -66,8 +66,7 @@ namespace v5 {
  * @brief Parses ISO 8601 date-time strings using a custom parser.
  *
  * This is a more complete parser for ISO 8601 date-time strings, but not 100%
- * compliant with the standard. It focuses on the most common formats used in GPX files
- * whilst being performant.
+ * compliant with the standard.
  *
  * @note If the data string doesn't have a timezone indicator, it assumes Zulu time
  *   instead of local time as the ISO 8601 standard suggests.
