@@ -23,6 +23,8 @@ TEST_CASE("Open file with ascii path for binary reading", "[filesystem]")
   CHECK(fclose(file) == 0);
 }
 
+#ifdef _WIN32
+
 // TODO: Test unicode path.
 //   UTF-8 encoding in C++ source files can be a pain.
 
@@ -55,3 +57,5 @@ TEST_CASE("Convert invalid UTF-8 string to UTF-16 string", "[filesystem][unicode
   const std::string utf8 = "Hello \xF5\xF6\xF7\xFF World";
   REQUIRE_THROWS_AS(fastgpx::utf8_to_utf16(utf8), std::runtime_error);
 }
+
+#endif // _WIN32
