@@ -1,13 +1,5 @@
 include(FetchContent)
 
-set(TINYXML2_BUILD_TESTING OFF CACHE BOOL "Disable tinyxml2 tests" FORCE)
-
-FetchContent_Declare(
-  tinyxml2
-  GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
-  GIT_TAG        321ea883b7190d4e85cae5512a12e5eaa8f8731f # v10.0.0
-)
-
 FetchContent_Declare(
   pugixml
   GIT_REPOSITORY https://github.com/zeux/pugixml.git
@@ -21,12 +13,12 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-    json
-    GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG v3.11.3
+  json
+  GIT_REPOSITORY https://github.com/nlohmann/json.git
+  GIT_TAG v3.11.3
 )
 
-FetchContent_MakeAvailable(tinyxml2 pugixml Catch2 json)
+FetchContent_MakeAvailable(pugixml Catch2 json)
 
 function(set_common_properties TARGET)
   if(NOT TARGET ${TARGET})
@@ -80,7 +72,7 @@ set(SOURCES
 )
 add_library(fastgpx-static ${SOURCES})
 set_common_properties(fastgpx-static)
-target_link_libraries(fastgpx-static PUBLIC tinyxml2 pugixml)
+target_link_libraries(fastgpx-static PUBLIC pugixml)
 target_include_directories(fastgpx-static PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # fastgpx python module
