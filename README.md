@@ -130,11 +130,6 @@ Once set up, you can build the C++ extension with a simple `pip install .` or `p
 pip install --editable .
 ```
 
-
-```sh
-pybind11-stubgen gpxcpp -o .
-```
-
 ```sh
 pybind11-stubgen fastgpx -o src
 

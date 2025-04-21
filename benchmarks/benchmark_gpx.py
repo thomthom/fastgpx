@@ -4,6 +4,7 @@ import time
 import timeit
 import xml.etree.ElementTree as ET
 from math import radians, sin, cos, sqrt, atan2
+from typing import Callable, TypedDict
 
 import gpxpy
 from gpxpy.geo import EARTH_RADIUS
@@ -13,7 +14,7 @@ from lxml import etree
 
 from colorama import Fore, Back, Style
 
-import gpxcpp
+import fastgpx
 
 # https://github.com/jedie/gpxpy/commit/b371de31826cfecc049a57178d168b04a7f6d0d8
 # https://github.com/jedie/gpxpy/blob/b371de31826cfecc049a57178d168b04a7f6d0d8/gpxpy/geo.py#L38
@@ -47,7 +48,7 @@ def get_gpx_files(path: str):
     return gpx_files
 
 
-GPX_PATH = 'gpx/2024 Great Roadtrip'
+GPX_PATH = '../gpx/2024 Great Roadtrip'
 
 # gpxpy
 
@@ -132,34 +133,13 @@ def read_lxml():
     return total_length
 
 
-def read_tinyxml():
-    total_length = 0.0
-    gpx_files = get_gpx_files(GPX_PATH)
-    for gpx_filepath in gpx_files:
-        fullpath = os.path.abspath(gpx_filepath)
-        length = gpxcpp.tinyxml_gpx_length2d(fullpath)
-        total_length += length
-    print('tinyxml', total_length, 'meters')
-    return total_length
-
-
-def read_pugixml():
-    total_length = 0.0
-    gpx_files = get_gpx_files(GPX_PATH)
-    for gpx_filepath in gpx_files:
-        fullpath = os.path.abspath(gpx_filepath)
-        length = gpxcpp.pugixml_gpx_length2d(fullpath)
-        total_length += length
-    print('pugixml', total_length, 'meters')
-    return total_length
-
-
 def read_fastgpx():
     total_length = 0.0
     gpx_files = get_gpx_files(GPX_PATH)
     for gpx_filepath in gpx_files:
         fullpath = os.path.abspath(gpx_filepath)
-        length = gpxcpp.fastgpx_gpx_length2d(fullpath)
+        gpx = fastgpx.parse(fullpath)
+        length = gpx.length_2d()
         total_length += length
     print('fastgpx', total_length, 'meters')
     return total_length
@@ -167,17 +147,17 @@ def read_fastgpx():
 # Benchmarks:
 
 
-benchmarks = [
-    # {'name': 'gpxpy', 'function': read_gpxpy},
+class Benchmark(TypedDict):
+    name: str
+    function: Callable[[], float]
+
+
+benchmarks: list[Benchmark] = [
+    # {'name': 'gpxpy', 'function': read_gpxpy}, # Slow!
     {'name': 'xml_etree', 'function': read_xml_etree},
     {'name': 'lxml', 'function': read_lxml},
-    {'name': 'tinyxml (C++)', 'function': read_tinyxml},
-    {'name': 'pugixml (C++)', 'function': read_pugixml},
     {'name': 'fastgpx', 'function': read_fastgpx},
 ]
-
-print(Fore.LIGHTBLACK_EX + 'Testing C extension...')
-print(Fore.LIGHTBLACK_EX + gpxcpp.process_string('Hi C Extension'))
 
 # print(f"Python script PID: {os.getpid()}")
 # print("Press Enter to continue...")

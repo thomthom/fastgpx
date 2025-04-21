@@ -97,10 +97,14 @@ target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS) # std::gmtim
 
 install(TARGETS fastgpx LIBRARY DESTINATION fastgpx)
 
+# For development purposes, copy the .pyd file to the site-packages directory.
+# This is not needed for the final installation, as the .pyd file will be copied
+# to the site-packages directory by the Python installer.
+# TODO: Use a custom VSCode command to copy the binary?
 add_custom_command(TARGET fastgpx POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:fastgpx>"  # This is the .pyd file
-        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx.cp311-win_amd64.pyd"
+        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx/fastgpx.cp311-win_amd64.pyd"
 )
 
 # fastgpx debug app
@@ -131,23 +135,3 @@ target_compile_definitions(fastgpx_test PRIVATE FASTGPX_PROJECT_DIR="${CMAKE_SOU
 include(CTest)
 include(Catch)
 catch_discover_tests(fastgpx_test)
-
-# experimental Python C Extension
-
-pybind11_add_module(gpxcpp gpxcpp.cpp gpx.hpp gpx.cpp)
-set_common_properties(gpxcpp)
-target_link_libraries(gpxcpp PRIVATE tinyxml2 pugixml fastgpx-static)
-
-install(TARGETS gpxcpp LIBRARY DESTINATION .)
-
-add_custom_command(TARGET gpxcpp POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "$<TARGET_FILE:gpxcpp>"  # This is the .pyd file
-        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/gpxcpp.cp311-win_amd64.pyd"
-)
-
-# experimantal CLI app
-
-add_executable(gpxreader main.cpp gpx.hpp gpx.cpp)
-set_common_properties(gpxreader)
-target_link_libraries(gpxreader PRIVATE tinyxml2 pugixml fastgpx-static)
