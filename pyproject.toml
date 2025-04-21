@@ -25,7 +25,7 @@ dev = [
 [tool.scikit-build]
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#customizing-the-built-wheel
 wheel.packages = ["src/fastgpx"]
-sdist.include = ["src"]
+sdist.include = ["README.md", "CMakeLists.txt", "src"]
 
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#configuring-cmake-arguments-and-defines
 # cmake.build-type = "Debug"

@@ -29,6 +29,53 @@ from my_project.module import my_function
 from . import another_module
 ```
 
+
+### Python C Extension
+
+Once set up, you can build the C++ extension with a simple `pip install .` or `pip install --editable .` for development builds.
+
+```sh
+pip install --editable .
+```
+
+```sh
+pybind11-stubgen fastgpx -o src
+
+pybind11-stubgen fastgpx --enum-class-locations "Precision:fastgpx.polyline" -o src
+```
+
+### Python Profiling
+
+https://learn.microsoft.com/en-us/visualstudio/python/profiling-python-code-in-visual-studio?view=vs-2022
+
+```sh
+snakeviz profiling/fastgpx_polyline_encode.prof
+```
+
+```sh
+snakeviz profiling/polyline_encode.prof
+```
+
+### pyproject.toml
+
+> Installing Dependencies with pyproject.toml
+>
+> You no longer need to use `pip install -r requirements.txt`. Instead, you can simply install dependencies directly using:
+>
+> ```sh
+> pip install .
+> ```
+
+> For Development Dependencies:
+>
+> To install development dependencies (like `pytest` and `pybind11-stubgen`), you can use the `--extra` option (assuming you defined them under dev):
+>
+> ```sh
+> pip install .[dev]
+> ```
+>
+> This will install both the main dependencies and the development dependencies defined in the dev section of `pyproject.toml`.
+
 ## C++
 
 ### Include order
@@ -66,4 +113,29 @@ This organization helps to ensure that your file includes what it needs directly
 ```sh
 cd src\cpp
 for /R %f in (*.cpp *.hpp) do "C:\Program Files\LLVM\bin\clang-format.exe" -i "%f"
+```
+
+### Coverage (C++ OpenCppCoverage)
+
+```sh
+coverage.bat ~[real_world]
+```
+
+### Catch2 Tests
+
+If the output prints UTF-8 characters the terminal needs to be set to UTF-8 mode on Windows:
+
+```sh
+chcp 65001
+```
+#### Running Tests
+
+```sh
+build\src\cpp\RelWithDebInfo\fastgpx_test.exe
+```
+
+#### Running Benchmarks
+
+```sh
+build\src\cpp\RelWithDebInfo\fastgpx_test.exe [!benchmark]
 ```
