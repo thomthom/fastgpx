@@ -5,15 +5,28 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../src'))
+import tomllib
+
+PROJECT_ROOT = os.path.abspath('../../')
+
+sys.path.insert(0, os.path.join(PROJECT_ROOT, 'src'))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'fastgpx'
-copyright = '2025, Thomas Thomassen'
+# Read the version from pyproject.toml
+with open(os.path.join(PROJECT_ROOT, 'pyproject.toml'), 'rb') as f:
+    pyproject = tomllib.load(f)
+    pyproject_name = pyproject['project']['name']
+    pyproject_version = pyproject['project']['version']
+
+assert pyproject['project']['name'] is not None
+assert pyproject['project']['version'] is not None
+
+project = pyproject['project']['name']
 author = 'Thomas Thomassen'
-release = '0.0.1'
+copyright = f'2024-2025, {author}'
+release = pyproject['project']['version']
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
