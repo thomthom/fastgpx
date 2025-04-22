@@ -8,7 +8,8 @@ on:
 
 jobs:
   build:
-    runs-on: 'ubuntu-latest'
+    # runs-on: 'ubuntu-latest'
+    runs-on: 'windows-latest'
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -21,7 +22,7 @@ jobs:
       - name: Build documentation
         working-directory: ./docs
         run: |
-          uv run --frozen make
+          uv run --frozen ./make.bat html
 
       - name: Upload static files as artifact
         id: deployment
