@@ -20,3 +20,5 @@ env39/
 
 /coverage/
 LastCoverageResults.log
+
+/docs/build/
