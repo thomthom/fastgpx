@@ -1,0 +1,25 @@
+{
+  "recommendations": [
+    /* For .editorconfig files */
+    "editorconfig.editorconfig",
+    /* For .toml files */
+    "tamasfe.even-better-toml",
+    /* For Python */
+    "ms-python.python",
+    "ms-python.debugpy",
+    "ms-python.vscode-pylance",
+    "ms-python.mypy-type-checker",
+    "ms-python.isort",
+    /* For XML (GPX) files */
+    "redhat.vscode-xml",
+    // CMake language syntax.
+    "twxs.cmake",
+    // CMake build tools.
+    "ms-vscode.cmake-tools",
+    // C/C++ Intellisense and debugging.
+    "ms-vscode.cpptools",
+    // Test Explorer UI and adapter
+    "hbenl.vscode-test-explorer",
+    "matepek.vscode-catch2-test-adapter"
+  ]
+}
