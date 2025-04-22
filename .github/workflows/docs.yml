@@ -1,0 +1,50 @@
+name: Publish Documentation
+
+on:
+  push:
+    tags: [v*.*.*] # Trigger on version tags
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install and setup UV with Python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: 3.11
+
+      - name: Build documentation
+        working-directory: ./docs
+        run: |
+          uv run --frozen make
+
+      - name: Upload static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
+        with:
+          path: docs/build/html
+
+  deploy:
+    needs: build
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 # or specific "vX.X.X" version tag for this action
