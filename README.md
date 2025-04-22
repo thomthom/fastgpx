@@ -2,13 +2,15 @@
 
 An experimental Python library for parsing GPX files fast.
 
-## GPX/XML Performance
+## GPX/XML Performance (Background)
 
 `gpxpy` appear to be the most popular GPX library for Python.
 
 `gpxpy` docs says that it uses `lxml` is available because it is faster than "`minidom`" (`etree`).
 When benchmarking that seemed not to be the case. It appear that the stdlib XML library has gotten
-much better since gpxpy was created. Open ticket on making `etree` default:
+much better since `gpxpy` was created.
+
+Reference: Open ticket on making `etree` default:
 https://github.com/tkrajina/gpxpy/issues/248
 
 ## Benchmarks
@@ -100,5 +102,5 @@ Running pugixml (C++) ...
 pugixml (C++): 0.381095 seconds (Average: 0.127032 seconds)
 ```
 
-For computing the length of a GPX file `pugixml` in a Python C extension was ~140
+For computing the length of a GPX file, `pugixml` in a Python C extension was ~140
 times faster than using `gpxpy`.

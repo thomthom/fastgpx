@@ -4,8 +4,31 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fastgpx"
-version = "0.0.1"
+version = "0.0.1.dev0"
 requires-python = ">=3.11"
+
+description = "An experimental Python library for parsing GPX files fast."
+readme = "README.md"
+keywords = ["gpx", "parser", "fast"]
+authors = [{ name = "Thomas Thomassen" }]
+license = "MIT"
+
+classifiers = [
+  # How mature is this project? Common values are
+  #   3 - Alpha
+  #   4 - Beta
+  #   5 - Production/Stable
+  "Development Status :: 3 - Alpha",
+
+  "Intended Audience :: Developers",
+  "Topic :: File Formats",
+
+  # "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
+  # "Operating System :: POSIX :: Linux",
+
+  "Programming Language :: Python :: 3.11",
+]
 
 dependencies = []
 
@@ -22,10 +45,13 @@ dev = [
   "lxml-stubs",
 ]
 
+# [project.urls]
+# Documentation = "https://readthedocs.org"
+
 [tool.scikit-build]
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#customizing-the-built-wheel
 wheel.packages = ["src/fastgpx"]
-sdist.include = ["README.md", "CMakeLists.txt", "src"]
+sdist.exclude = [".github", ".vscode", "gpx"]
 
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#configuring-cmake-arguments-and-defines
 # cmake.build-type = "Debug"

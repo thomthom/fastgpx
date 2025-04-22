@@ -76,6 +76,17 @@ snakeviz profiling/polyline_encode.prof
 >
 > This will install both the main dependencies and the development dependencies defined in the dev section of `pyproject.toml`.
 
+### Locally test build wheel
+
+```sh
+pip install --upgrade build twine wheel
+```
+
+```sh
+python -m build
+twine check dist/*
+```
+
 ## C++
 
 ### Include order
