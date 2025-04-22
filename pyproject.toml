@@ -47,8 +47,8 @@ dev = [
   "sphinx-rtd-theme>=3.0.2",
 ]
 
-# [project.urls]
-# Documentation = "https://readthedocs.org"
+[project.urls]
+Documentation = "https://thomthom.github.io/fastgpx/"
 
 [tool.scikit-build]
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#customizing-the-built-wheel
