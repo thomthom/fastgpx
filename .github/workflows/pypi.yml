@@ -33,11 +33,11 @@ jobs:
 
       - name: Upgrade pip and install build tools
         run: |
-          uv run --frozen pip install --upgrade pip build twine
+          uv pip install --upgrade pip build twine
 
       - name: Build package
         run: |
-          uv run --frozen build --wheel --sdist
+          uv build
 
       - name: Upload to TestPyPI
         if: inputs.repository == 'testpypi'
@@ -45,7 +45,7 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
         run: |
-          uv run --frozen twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+          uv run twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
       - name: Upload to PyPI
         if: inputs.repository == 'pypi'
@@ -53,4 +53,4 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
-          uv run --frozen twine upload dist/*
+          uv run twine upload dist/*
