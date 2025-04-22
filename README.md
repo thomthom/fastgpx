@@ -2,6 +2,32 @@
 
 An experimental Python library for parsing GPX files fast.
 
+```py
+# Get the total length of the tracks in a GPX file:
+import fastgpx
+
+gpx = fastgpx.parse("example.gpx")
+print(f'{gpx.length_2d()} m')
+```
+
+```py
+# Iterate over GPX file:
+import fastgpx
+
+gpx = fastgpx.parse("example.gpx")
+for track in gpx.tracks:
+    print(f'Track: {track.name}')
+    print(f'Distance: {track.length_2d()} m')
+    if not track.time_bounds.is_empty():
+      print(f'Time: {track.time_bounds().start_time} - {track.time_bounds().end_time}')
+    for segment in track.segments:
+        print(f'Segment: {segment.name}')
+        for point in segment.points:
+            print(f'Point: {point.latitude}, {point.longitude}')
+```
+
+[Documentation](https://thomthom.github.io/fastgpx/)
+
 ## GPX/XML Performance (Background)
 
 `gpxpy` appear to be the most popular GPX library for Python.
