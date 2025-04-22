@@ -32,17 +32,17 @@ classifiers = [
 
 dependencies = []
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
+  "colorama",
   "gpxpy",
   "lxml",
+  "lxml-stubs",
   "polyline",
-  "colorama",
   "pytest",
   "pybind11-stubgen",
   "snakeviz",
   "types-colorama",
-  "lxml-stubs",
 ]
 
 # [project.urls]

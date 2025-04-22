@@ -26,18 +26,18 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install and setup UV with Python (${{ matrix.python-version }})
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Upgrade pip and install build tools
         run: |
-          python -m pip install --upgrade pip build twine
+          uv run --frozen pip install --upgrade pip build twine
 
       - name: Build package
         run: |
-          python -m build --wheel --sdist
+          uv run --frozen build --wheel --sdist
 
       - name: Upload to TestPyPI
         if: inputs.repository == 'testpypi'
@@ -45,7 +45,7 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
         run: |
-          python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+          uv run --frozen twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
       - name: Upload to PyPI
         if: inputs.repository == 'pypi'
@@ -53,4 +53,4 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
-          python -m twine upload dist/*
+          uv run --frozen twine upload dist/*

@@ -13,10 +13,10 @@ wheels = [
 
 [[package]]
 name = "fastgpx"
-version = "0.0.1"
+version = "0.0.1.dev0"
 source = { editable = "." }
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "colorama" },
     { name = "gpxpy" },
@@ -30,18 +30,19 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "colorama", marker = "extra == 'dev'" },
-    { name = "gpxpy", marker = "extra == 'dev'" },
-    { name = "lxml", marker = "extra == 'dev'" },
-    { name = "lxml-stubs", marker = "extra == 'dev'" },
-    { name = "polyline", marker = "extra == 'dev'" },
-    { name = "pybind11-stubgen", marker = "extra == 'dev'" },
-    { name = "pytest", marker = "extra == 'dev'" },
-    { name = "snakeviz", marker = "extra == 'dev'" },
-    { name = "types-colorama", marker = "extra == 'dev'" },
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "colorama" },
+    { name = "gpxpy" },
+    { name = "lxml" },
+    { name = "lxml-stubs" },
+    { name = "polyline" },
+    { name = "pybind11-stubgen" },
+    { name = "pytest" },
+    { name = "snakeviz" },
+    { name = "types-colorama" },
 ]
-provides-extras = ["dev"]
 
 [[package]]
 name = "gpxpy"
