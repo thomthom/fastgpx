@@ -36,13 +36,22 @@ function(set_common_properties TARGET)
   set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD_REQUIRED ON)
   set_property(TARGET ${TARGET} PROPERTY CXX_EXTENSIONS OFF)
 
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC")
     # Elevate warning level.
     # Ignore unknown pragmas (mac).
     target_compile_options(${TARGET} PRIVATE
         /W4 /WX
         /wd4068
     )
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      # Clang pretending to be MSVC – add Clang-specific warnings
+      target_compile_options(${TARGET} PRIVATE
+          -Wshadow -Wconversion
+          -Wno-unknown-pragmas
+          -Wsign-conversion
+      )
+    endif()
 
     # Enable Build with Multiple Processes.
     target_compile_options(${TARGET} PRIVATE /MP)
@@ -77,10 +86,14 @@ set(SOURCES
   fastgpx/polyline.hpp
   fastgpx/polyline.cpp
 )
-add_library(fastgpx-static ${SOURCES})
+add_library(fastgpx-static STATIC ${SOURCES})
 set_common_properties(fastgpx-static)
 target_link_libraries(fastgpx-static PUBLIC pugixml)
 target_include_directories(fastgpx-static PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+# Need -fPIC for linking static library into shared library on Linux (and macOS?).
+set_target_properties(fastgpx-static PROPERTIES
+  POSITION_INDEPENDENT_CODE ON
+)
 
 # fastgpx python module
 

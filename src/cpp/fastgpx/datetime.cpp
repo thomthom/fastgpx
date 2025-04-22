@@ -262,7 +262,7 @@ struct Chunk
 struct Decimal
 {
   int integral;
-  std::optional<int> fractional;
+  std::optional<int> fractional = std::nullopt;
   size_t fractional_digits = 0;
 };
 
@@ -291,7 +291,7 @@ enum class TokenType
 struct Token
 {
   TokenType type;
-  std::optional<Decimal> decimal;
+  std::optional<Decimal> decimal = std::nullopt;
 };
 
 enum class Format
@@ -320,10 +320,10 @@ enum TimezoneSign
 struct Context
 {
   std::string_view string;
-  Parse parse;
-  Format format;
-  ChunkType last_chunk_type;
-  TokenType last_decimal_token_type;
+  Parse parse = {};
+  Format format = {};
+  ChunkType last_chunk_type = {};
+  TokenType last_decimal_token_type = {};
   TimezoneSign timezone_sign = TimezoneSign::None;
 };
 
@@ -635,6 +635,7 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       }
       }
       break;
+    }
     case iso8601::ChunkType::Plus:
     {
       if (context.parse != iso8601::Parse::Time)
@@ -668,6 +669,15 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       context.parse = iso8601::Parse::Done;
       break;
     }
+    case iso8601::ChunkType::WeekIndicator:
+    {
+      break;
+      // TODO: Handle week indicator.
+    }
+    case iso8601::ChunkType::Unknown:
+    {
+      // Satisfy the compiler. (-Wswitch)
+      break;
     }
     }
     context.last_chunk_type = chunk.type;
@@ -677,9 +687,9 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
   // https://www.gnu.org/software/libc/manual/html_node/Broken_002ddown-Time.html
   // https://man7.org/linux/man-pages/man3/tm.3type.html
   // https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/localtime-s-localtime32-s-localtime64-s?view=msvc-170
-  std::tm tm = {
-      .tm_mday = 1, // Unlike the other members, this starts at 1.
-  };
+  std::tm tm{};
+  tm.tm_mday = 1; // Unlike the other members, this starts at 1.
+
   std::chrono::milliseconds adjustment(0);
   for (const auto& token : tokens)
   {
@@ -727,6 +737,15 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
       // TODO: Over/underflow. This appear to work, but not described in the C/C++ standards.
       // TODO: Use an minute-duration to offset?
       break;
+    case iso8601::TokenType::TimeSeparator:
+    case iso8601::TokenType::DateSeparator:
+    case iso8601::TokenType::WeekIndicator:
+    case iso8601::TokenType::TimeIndicator:
+    case iso8601::TokenType::TimezoneIndicator:
+    case iso8601::TokenType::TimezoneNegative:
+    case iso8601::TokenType::TimezonePositive:
+    case iso8601::TokenType::Unknown: // TODO: Assert or throw error?
+      break;                          // Satisfy the compiler. (-Wswitch)
     }
   }
   const auto time = make_utc_time(&tm);
@@ -784,7 +803,7 @@ public:
     return *this;
   }
 
-  ParsedValue<T>& Offset(const T& offset) { return ParsedValue<T>(value + offset); }
+  ParsedValue<T>& Offset(const T& offset) { return ParsedValue<T>(value_ + offset); }
 
 private:
   T value_;
@@ -797,7 +816,7 @@ public:
 
   ParsedValue<int> ExtractInt(size_t num)
   {
-    const auto it_end = std::next(it_, num);
+    const auto it_end = std::next(it_, static_cast<std::ptrdiff_t>(num));
     const std::string_view view(it_, it_end);
     if (view.size() != num)
     {
@@ -931,9 +950,9 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
   // https://www.gnu.org/software/libc/manual/html_node/Broken_002ddown-Time.html
   // https://man7.org/linux/man-pages/man3/tm.3type.html
   // https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/localtime-s-localtime32-s-localtime64-s?view=msvc-170
-  std::tm tm = {
-      .tm_mday = 1, // Unlike the other members, this starts at 1.
-  };
+  std::tm tm{};
+  tm.tm_mday = 1; // Unlike the other members, this starts at 1.
+
   std::chrono::milliseconds adjustment(0);
 
   StringParser parser(time_str);

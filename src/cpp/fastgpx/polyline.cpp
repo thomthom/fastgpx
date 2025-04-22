@@ -1,5 +1,8 @@
 #include "fastgpx/polyline.hpp"
 
+#include <cmath>
+#include <utility>
+
 #include "fastgpx/fastgpx.hpp"
 
 namespace fastgpx {
@@ -47,7 +50,7 @@ std::vector<LatLong> decode(std::string_view encoded, Precision precision)
 {
   const int factor = (precision == Precision::Six) ? 1'000'000 : 100'000;
   std::vector<LatLong> coordinates;
-  int index = 0;
+  size_t index = 0;
   int lat = 0;
   int lng = 0;
 

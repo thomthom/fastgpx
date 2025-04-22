@@ -16,7 +16,7 @@
 using Catch::Matchers::WithinAbs;
 
 // Sufficient tolerance for comparing meters.
-constexpr double kMETERS_TOL = 1e-4;
+[[maybe_unused]] constexpr double kMETERS_TOL = 1e-4;
 
 const auto project_path = std::filesystem::path(FASTGPX_PROJECT_DIR);
 

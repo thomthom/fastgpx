@@ -27,12 +27,12 @@ std::wstring utf8_to_utf16(const std::string& utf8_str)
                           0                                  // Request size of the output buffer
       );
 
-  if (wide_char_count == 0)
+  if (wide_char_count <= 0) // 0 == error -> use GetLastError()
   {
     throw std::runtime_error("Error converting UTF-8 to UTF-16: MultiByteToWideChar failed.");
   }
 
-  std::wstring utf16_str(wide_char_count, 0);
+  std::wstring utf16_str(static_cast<size_t>(wide_char_count), 0);
   const int result =
       MultiByteToWideChar(CP_UTF8,                           // Source string is in UTF-8
                           flags,                             // Flags

@@ -24,8 +24,8 @@ private:
 
 struct TimeBounds
 {
-  std::optional<std::chrono::system_clock::time_point> start_time;
-  std::optional<std::chrono::system_clock::time_point> end_time;
+  std::optional<std::chrono::system_clock::time_point> start_time = std::nullopt;
+  std::optional<std::chrono::system_clock::time_point> end_time = std::nullopt;
 
   bool IsEmpty() const;
 
@@ -39,13 +39,13 @@ struct LatLong
   double latitude = 0.0;
   double longitude = 0.0;
   double elevation = 0.0;
-  std::optional<TimePoint> time;
+  std::optional<TimePoint> time = std::nullopt;
 };
 
 struct Bounds
 {
-  std::optional<LatLong> min;
-  std::optional<LatLong> max;
+  std::optional<LatLong> min = std::nullopt;
+  std::optional<LatLong> max = std::nullopt;
 
   bool IsEmpty() const;
 

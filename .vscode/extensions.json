@@ -12,8 +12,6 @@
     "ms-python.isort",
     /* For XML (GPX) files */
     "redhat.vscode-xml",
-    // CMake language syntax.
-    "twxs.cmake",
     // CMake build tools.
     "ms-vscode.cmake-tools",
     // C/C++ Intellisense and debugging.
