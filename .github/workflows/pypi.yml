@@ -18,7 +18,11 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # PyPI require `manylinux` compatible wheels. That's not trivial with C++23.
+        # So we only build wheels on Windows for now.
+        # https://peps.python.org/pep-0513/
+        # os: [ubuntu-latest, windows-latest]
+        os: [windows-latest]
         python-version: ["3.11"]
 
     steps:
