@@ -112,7 +112,7 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
         run: |
-          uv run twine upload --repository-url https://test.pypi.org/legacy/ dist/**/*.whl dist/*.tar.gz
+          uv run twine upload --verbose --repository-url https://test.pypi.org/legacy/ dist/**/*.whl dist/*.tar.gz
 
       - name: Upload to PyPI
         if: inputs.repository == 'pypi'
