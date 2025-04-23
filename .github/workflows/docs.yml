@@ -21,7 +21,7 @@ jobs:
       - name: Build documentation
         working-directory: ./docs
         run: |
-          uv run --frozen ./make.bat html
+          uv run --frozen make html
 
       - name: Upload static files as artifact
         id: deployment
