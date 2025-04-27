@@ -97,7 +97,7 @@ set_target_properties(fastgpx-static PROPERTIES
 
 # fastgpx python module
 
-find_package(Python3 3.11 EXACT REQUIRED COMPONENTS Interpreter Development)
+find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter Development)
 
 set(PYBIND11_NEWPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
