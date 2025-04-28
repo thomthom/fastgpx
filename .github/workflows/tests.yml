@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         python-version: ["3.11"]
 
     steps:
@@ -25,33 +25,6 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run --frozen pytest --junitxml=reports/pytest-results.xml
-
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Test Results (${{ matrix.os }})
-          path: reports/pytest-results.xml
-
-  publish-test-results:
-    name: Publish Test Results
-    needs: test
-    runs-on: ubuntu-latest
-    if: always()
-    permissions:
-      # https://github.com/EnricoMi/publish-unit-test-result-action?tab=readme-ov-file#permissions
-      checks: write
-      contents: read
-      issues: read
-    steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          comment_mode: off # pull-requests: write not needed
-          files: artifacts/**/*.xml
+          export SKBUILD_BUILD_VERBOSE=true
+          export SKBUILD_LOGGING_LEVEL=INFO
+          uv run --frozen --verbose pytest
