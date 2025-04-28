@@ -46,7 +46,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Test Results (${{ matrix.os }})
+          name: Test Results (${{ matrix.os }}, ${{ matrix.python-version }}, ${{ matrix.compiler }})
           path: reports/pytest-results.xml
 
   publish-test-results:
