@@ -150,3 +150,7 @@ build\src\cpp\RelWithDebInfo\fastgpx_test.exe
 ```sh
 build\src\cpp\RelWithDebInfo\fastgpx_test.exe [!benchmark]
 ```
+
+## VSCode / CMake
+
+Building directly with CMake require pybind11 installed. Currently this is defined as a build tool dependency in `pyproject.toml` and will therefore have to be manually installed into the `.venv` using `pip install pybind11`.
