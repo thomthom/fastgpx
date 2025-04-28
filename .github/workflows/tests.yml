@@ -13,6 +13,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.11"]
+        compiler: [default]
+
+        include:
+          # ubuntu-latest builds defaults to clang.
+          - os: ubuntu-latest
+            compiler: gcc-14
 
     steps:
       - name: Check out code
@@ -22,6 +28,15 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Set compiler if needed
+        shell: bash
+        run: |
+          if [[ "${{ matrix.compiler }}" == "gcc-14" ]]; then
+            echo "Using GCC 14"
+            export CC=gcc-14
+            export CXX=g++-14
+          fi
 
       - name: Run tests
         run: |
