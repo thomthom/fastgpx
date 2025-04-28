@@ -12,7 +12,7 @@ namespace polyline {
 std::string encode(std::span<const LatLong> locations, Precision precision)
 {
   const int factor = (precision == Precision::Six) ? 1'000'000 : 100'000;
-  std::string encoded;
+  std::string encoded_polyline;
   int last_lat = 0;
   int last_lng = 0;
 
@@ -25,25 +25,25 @@ std::string encode(std::span<const LatLong> locations, Precision precision)
     const int delta_lng = lng - last_lng;
 
     auto encode_value = [](int value) -> std::string {
-      std::string encoded;
+      std::string encoded_latlong;
       value = (value < 0) ? ~(value << 1) : (value << 1);
       while (value >= 0x20)
       {
-        encoded += static_cast<char>((0x20 | (value & 0x1f)) + 63);
+        encoded_latlong += static_cast<char>((0x20 | (value & 0x1f)) + 63);
         value >>= 5;
       }
-      encoded += static_cast<char>(value + 63);
-      return encoded;
+      encoded_latlong += static_cast<char>(value + 63);
+      return encoded_latlong;
     };
 
-    encoded += encode_value(delta_lat);
-    encoded += encode_value(delta_lng);
+    encoded_polyline += encode_value(delta_lat);
+    encoded_polyline += encode_value(delta_lng);
 
     last_lat = lat;
     last_lng = lng;
   }
 
-  return encoded;
+  return encoded_polyline;
 }
 
 std::vector<LatLong> decode(std::string_view encoded, Precision precision)
