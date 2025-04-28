@@ -12,6 +12,8 @@ endif()
 
 option(FASTGPX_WARNINGS_AS_ERRORS "Treat C++ warnings as errors" ${FASTGPX_WARNINGS_AS_ERRORS})
 
+message(STATUS "FASTGPX_WARNINGS_AS_ERRORS: ${FASTGPX_WARNINGS_AS_ERRORS}")
+
 # > The CTest module defines a BUILD_TESTING cache variable which defaults to true.
 # > It is used to decide whether the module calls enable_testing() or not, so the
 # > project does not have to make its own explicit call to enable_testing(). The
