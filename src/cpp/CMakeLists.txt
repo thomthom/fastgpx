@@ -40,12 +40,16 @@ function(set_common_properties TARGET)
     # Elevate warning level.
     # Ignore unknown pragmas (mac).
     target_compile_options(${TARGET} PRIVATE
-        /W4 /WX
+        /W4
         /wd4068
     )
+    if(FASTGPX_WARNINGS_AS_ERRORS)
+      target_compile_options(${TARGET} PRIVATE /WX)
+    endif()
 
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      # Clang pretending to be MSVC – add Clang-specific warnings
+      # Clang pretending to be MSVC – add Clang-specific warnings what /W4 does
+      # not cover.
       target_compile_options(${TARGET} PRIVATE
           -Wshadow -Wconversion
           -Wno-unknown-pragmas
@@ -59,14 +63,18 @@ function(set_common_properties TARGET)
     # Ensure MSVC report up to date version for __cplusplus macro.
     # https://docs.microsoft.com/en-us/cpp/build/reference/zc-cplusplus?view=msvc-160
     target_compile_options(${TARGET} PRIVATE /Zc:__cplusplus)
+
   else()
     # Elevate warning level.
     # Ignore unknown pragmas (win).
     target_compile_options(${TARGET} PRIVATE
-        -Wall -Wextra -pedantic -Werror
+        -Wall -Wextra -pedantic
         -Wshadow -Wconversion
         -Wno-unknown-pragmas
     )
+    if(FASTGPX_WARNINGS_AS_ERRORS)
+      target_compile_options(${TARGET} PRIVATE -Werror)
+    endif()
   endif()
 endfunction()
 

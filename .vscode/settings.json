@@ -119,7 +119,8 @@
   // "cmake.sourceDirectory": "${workspaceFolder}/cpp",
   "cmake.configureArgs": [
     "-DCMAKE_PREFIX_PATH=${workspaceFolder}/.venv/Lib/site-packages/pybind11/share/cmake/pybind11",
-    "-DPYTHON_EXECUTABLE=.venv/Scripts/python.exe"
+    "-DPYTHON_EXECUTABLE=.venv/Scripts/python.exe",
+    "-DFASTGPX_WARNINGS_AS_ERRORS=ON"
   ],
   "python.testing.pytestArgs": [
     "tests"

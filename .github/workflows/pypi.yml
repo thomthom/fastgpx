@@ -25,6 +25,9 @@ jobs:
         os: [windows-latest]
         python-version: ["3.11"]
 
+    env:
+      FASTGPX_WARNINGS_AS_ERRORS: ON
+
     steps:
       - name: Check out code
         uses: actions/checkout@v4
