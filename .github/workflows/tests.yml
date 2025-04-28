@@ -34,8 +34,8 @@ jobs:
         run: |
           if [[ "${{ matrix.compiler }}" == "gcc-14" ]]; then
             echo "Using GCC 14"
-            export CC=gcc-14
-            export CXX=g++-14
+            echo "CC=gcc-14" >> $GITHUB_ENV
+            echo "CXX=g++-14" >> $GITHUB_ENV
           fi
 
       - name: Run tests
