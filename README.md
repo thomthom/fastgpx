@@ -28,6 +28,19 @@ for track in gpx.tracks:
 
 [Documentation](https://thomthom.github.io/fastgpx/)
 
+## Requirements
+
+* Python 3.11+ (Tested with 3.11, 3.12)
+* C++23 Compiler
+
+### Windows
+
+* Tested with MSVC 17.12.4+ and Clang-cl 19+.
+
+### Linux (Tested on Ubuntu)
+
+* C++23 compatible runtime (GCC libstdc++ 14+ or Clang libc++ 18.1+)
+
 ## GPX/XML Performance (Background)
 
 `gpxpy` appear to be the most popular GPX library for Python.
