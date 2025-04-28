@@ -25,7 +25,7 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run --frozen pytest --junitxml=reports/pytest-results.xml
+          uv run --frozen --verbose pytest --junitxml=reports/pytest-results.xml
 
       - name: Upload Test Results
         if: always()
