@@ -43,7 +43,7 @@ function(set_common_properties TARGET)
         /W4
         /wd4068
     )
-    if(NOT FASTGPX_PRODUCTION_BUILD)
+    if(FASTGPX_WARNINGS_AS_ERRORS)
       target_compile_options(${TARGET} PRIVATE /WX)
     endif()
 
@@ -72,7 +72,7 @@ function(set_common_properties TARGET)
         -Wshadow -Wconversion
         -Wno-unknown-pragmas
     )
-    if(NOT FASTGPX_PRODUCTION_BUILD)
+    if(FASTGPX_WARNINGS_AS_ERRORS)
       target_compile_options(${TARGET} PRIVATE -Werror)
     endif()
   endif()

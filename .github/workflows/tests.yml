@@ -20,6 +20,9 @@ jobs:
           - os: ubuntu-latest
             compiler: gcc-14
 
+    env:
+      FASTGPX_WARNINGS_AS_ERRORS: ON
+
     steps:
       - name: Check out code
         uses: actions/checkout@v4

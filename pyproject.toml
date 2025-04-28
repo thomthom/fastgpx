@@ -63,4 +63,4 @@ cmake.build-type = "RelWithDebInfo"
 [tool.scikit-build.cmake.define]
 # No need to build the tests in the wheel.
 BUILD_TESTING = false
-FASTGPX_PRODUCTION_BUILD = true
+FASTGPX_WARNINGS_AS_ERRORS = false
