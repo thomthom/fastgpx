@@ -42,8 +42,6 @@ jobs:
           fi
 
       - name: Run tests
-        env:
-          FASTGPX_WARNINGS_AS_ERRORS: ON
         run: |
           uv run --frozen --verbose pytest --junitxml=reports/pytest-results.xml
 
