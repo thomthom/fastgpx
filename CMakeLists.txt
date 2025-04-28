@@ -2,7 +2,15 @@ cmake_minimum_required(VERSION 3.30.2)
 
 project(fastgpx)
 
-option(FASTGPX_WARNINGS_AS_ERRORS "Treat C++ warnings as errors" OFF)
+if(NOT DEFINED FASTGPX_WARNINGS_AS_ERRORS)
+  if(DEFINED ENV{FASTGPX_WARNINGS_AS_ERRORS})
+    set(FASTGPX_WARNINGS_AS_ERRORS ON)
+  else()
+    set(FASTGPX_WARNINGS_AS_ERRORS OFF)
+  endif()
+endif()
+
+option(FASTGPX_WARNINGS_AS_ERRORS "Treat C++ warnings as errors" ${FASTGPX_WARNINGS_AS_ERRORS})
 
 # > The CTest module defines a BUILD_TESTING cache variable which defaults to true.
 # > It is used to decide whether the module calls enable_testing() or not, so the
