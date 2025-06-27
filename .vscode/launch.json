@@ -55,7 +55,7 @@
       "args": [
         "${file}",
         "-k",
-        "test_gpx_time_bounds"
+        "test_init_with_start_time"
       ],
       "purpose": [
         "debug-test"
