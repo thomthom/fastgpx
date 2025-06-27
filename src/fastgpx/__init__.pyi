@@ -9,4 +9,4 @@ from fastgpx.fastgpx import geo
 from fastgpx.fastgpx import parse
 from fastgpx.fastgpx import polyline
 from . import fastgpx
-__all__ = ['Bounds', 'Gpx', 'LatLong', 'Segment', 'TimeBounds', 'Track', 'fastgpx', 'geo', 'parse', 'polyline']
+__all__: list = ['Bounds', 'Gpx', 'LatLong', 'Segment', 'TimeBounds', 'Track', 'geo', 'parse', 'polyline']

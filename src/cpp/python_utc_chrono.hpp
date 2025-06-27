@@ -27,6 +27,15 @@
 namespace PYBIND11_NAMESPACE {
 namespace detail {
 
+inline std::time_t to_utc_time_t(std::tm* tm)
+{
+#if defined(_WIN32)
+  return _mkgmtime(tm);
+#else
+  return timegm(tm);
+#endif
+}
+
 template<typename type>
 class duration_caster
 {
@@ -195,7 +204,10 @@ public:
       return false;
     }
 
-    value = time_point_cast<Duration>(system_clock::from_time_t(std::mktime(&cal)) + msecs);
+    // HACK: Assume datetime.datetime objects are in UTC, so we use timegm instead of mktime.
+    // value = time_point_cast<Duration>(system_clock::from_time_t(std::mktime(&cal)) + msecs);
+    std::time_t tt = to_utc_time_t(&cal);
+    value = time_point_cast<Duration>(system_clock::from_time_t(tt) + msecs);
     return true;
   }
 
