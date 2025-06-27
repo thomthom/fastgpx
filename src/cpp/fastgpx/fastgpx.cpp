@@ -43,8 +43,12 @@ std::chrono::system_clock::time_point TimePoint::value() const
 
 bool TimeBounds::IsEmpty() const
 {
-  assert(start_time.has_value() == end_time.has_value());
   return !start_time.has_value() && !end_time.has_value();
+}
+
+bool TimeBounds::IsRange() const
+{
+  return start_time.has_value() && end_time.has_value();
 }
 
 void TimeBounds::Add(const std::chrono::system_clock::time_point time_point)

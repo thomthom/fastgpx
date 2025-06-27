@@ -28,6 +28,7 @@ struct TimeBounds
   std::optional<std::chrono::system_clock::time_point> end_time = std::nullopt;
 
   bool IsEmpty() const;
+  bool IsRange() const;
 
   void Add(std::chrono::system_clock::time_point time_point);
   void Add(const TimeBounds& time_bounds);

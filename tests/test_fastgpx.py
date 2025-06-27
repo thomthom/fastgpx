@@ -1,7 +1,6 @@
 import datetime
 
 import gpxpy
-import gpxpy.gpx
 import pytest
 
 import fastgpx
