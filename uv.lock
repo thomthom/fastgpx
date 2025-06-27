@@ -97,7 +97,7 @@ wheels = [
 
 [[package]]
 name = "fastgpx"
-version = "0.0.1.dev0"
+version = "0.2.2"
 source = { editable = "." }
 
 [package.dev-dependencies]
