@@ -384,6 +384,16 @@ Gpx ParseGpx(const std::filesystem::path& path)
   pugi::xml_node root = doc.child("gpx");
   Gpx gpx;
 
+  const auto metadata = root.child("metadata");
+  if (metadata)
+  {
+    const auto name = metadata.child("name");
+    if (name)
+    {
+      gpx.name.emplace(name.text().as_string());
+    }
+  }
+
   // Iterate over each <trk> element
   for (pugi::xml_node track = root.child("trk"); track; track = track.next_sibling("trk"))
   {

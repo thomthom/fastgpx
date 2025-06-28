@@ -203,6 +203,7 @@ PYBIND11_MODULE(fastgpx, m)
   py::class_<fastgpx::Gpx>(m, "Gpx")
       .def(py::init<>()) // Default constructor
       .def_readwrite("tracks", &fastgpx::Gpx::tracks)
+      .def_readwrite("name", &fastgpx::Gpx::name)
       .def("bounds", &fastgpx::Gpx::GetBounds)
       .def("get_bounds", &fastgpx::Gpx::GetBounds) // gpxpy compatiblity
       .def("time_bounds", &fastgpx::Gpx::GetTimeBounds)

@@ -52,6 +52,25 @@ def test_segment_length2d(gpx_path: str):
     distance = gpx.tracks[0].segments[0].length_2d()
     assert distance == pytest.approx(17809.2701, abs=METERS_TOL)
 
+# fastgpx.Gpx.name
+
+
+def test_gpx_name_missing():
+    path = 'gpx/test/debug-segment.gpx'
+    gpx = fastgpx.parse(path)
+    assert gpx.name is None
+
+
+def test_gpx_name_empty_string(gpx_path: str):
+    gpx = fastgpx.parse(gpx_path)
+    assert gpx.name == ''
+
+
+def test_gpx_name():
+    path = 'gpx/test/two-points.gpx'
+    gpx = fastgpx.parse(path)
+    assert gpx.name == 'Two Point Segment'
+
 # fastgpx.Gpx.bounds
 
 

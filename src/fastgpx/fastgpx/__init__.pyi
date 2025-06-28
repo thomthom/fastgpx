@@ -51,6 +51,7 @@ class Bounds:
     def min_longitude(self, arg1: float) -> None:
         ...
 class Gpx:
+    name: str | None
     tracks: list[Track]
     def __init__(self) -> None:
         ...

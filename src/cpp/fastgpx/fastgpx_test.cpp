@@ -33,6 +33,8 @@ TEST_CASE("Parse two-point single segment track", "[parse][simple]")
   REQUIRE(gpx.tracks.size() == 1);
   REQUIRE(gpx.tracks[0].segments.size() == 1);
 
+  CHECK(!gpx.name.has_value());
+
   CHECK_THAT(gpx.tracks[0].segments[0].GetLength2D(), WithinAbs(1.3839, kMETERS_TOL));
   CHECK_THAT(gpx.tracks[0].GetLength2D(), WithinAbs(1.3839, kMETERS_TOL));
   CHECK_THAT(gpx.GetLength2D(), WithinAbs(1.3839, kMETERS_TOL));
@@ -74,6 +76,8 @@ TEST_CASE("Parse time bounds of real world GPX file", "[parse][simple]")
       "gpx/2024 TopCamp/Connected_20240529_091916_Harald_Bothners_Veg_36_7052_Trondheim.gpx";
   const auto gpx = fastgpx::ParseGpx(path);
 
+  CHECK(gpx.name.value() == "Harald Bothners Veg 36, 7052 Trondheim");
+
   REQUIRE(gpx.tracks.size() == 1);
 
   // TimeBounds
@@ -96,6 +100,8 @@ TEST_CASE("Parse bounds of real world GPX file", "[parse][simple]")
       project_path /
       "gpx/2024 TopCamp/Connected_20240529_091916_Harald_Bothners_Veg_36_7052_Trondheim.gpx";
   const auto gpx = fastgpx::ParseGpx(path);
+
+  CHECK(gpx.name.value() == "Harald Bothners Veg 36, 7052 Trondheim");
 
   REQUIRE(gpx.tracks.size() == 1);
 

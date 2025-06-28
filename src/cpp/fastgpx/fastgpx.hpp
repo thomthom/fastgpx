@@ -112,6 +112,8 @@ private:
 struct Gpx
 {
   // <metadata>
+  std::optional<std::string> name; // <name>
+
   // <wpt>
   // <tre>
   std::vector<Track> tracks; // <trk>
