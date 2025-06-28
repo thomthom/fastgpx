@@ -54,7 +54,12 @@ PYBIND11_MODULE(fastgpx, m)
       .def_readwrite("start_time", &fastgpx::TimeBounds::start_time)
       .def_readwrite("end_time", &fastgpx::TimeBounds::end_time)
       .def("is_empty", &fastgpx::TimeBounds::IsEmpty)
-      .def("is_range", &fastgpx::TimeBounds::IsRange);
+      .def("is_range", &fastgpx::TimeBounds::IsRange)
+      .def("add",
+           py::overload_cast<std::chrono::system_clock::time_point>(&fastgpx::TimeBounds::Add),
+           py::arg("datetime"))
+      .def("add", py::overload_cast<const fastgpx::TimeBounds&>(&fastgpx::TimeBounds::Add),
+           py::arg("timebounds"));
 
   py::class_<fastgpx::LatLong>(m, "LatLong")
       .def(py::init<>())
