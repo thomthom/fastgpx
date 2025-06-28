@@ -14,12 +14,18 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.11"]
-        compiler: [default]
-
-        include:
-          # ubuntu-latest builds defaults to clang.
-          - os: ubuntu-latest
+        compiler: [gcc-14, clang, default]
+        exclude:
+          # gcc and clang for Linux-only.
+          # They are faster than the Windows jobs. So skipping clang on Windows.
+          - os: windows-latest
             compiler: gcc-14
+          - os: windows-latest
+            compiler: clang
+          # Skip default compiler on Ubuntu (you want minimum gcc-14 or clang).
+          # At the moment the default compiler on Ubuntu is gcc-13.
+          - os: ubuntu-latest
+            compiler: default
 
     env:
       FASTGPX_WARNINGS_AS_ERRORS: ON
@@ -40,6 +46,10 @@ jobs:
             echo "Using GCC 14"
             echo "CC=gcc-14" >> $GITHUB_ENV
             echo "CXX=g++-14" >> $GITHUB_ENV
+          elif [[ "${{ matrix.compiler }}" == "clang" ]]; then
+            echo "Using Clang"
+            echo "CC=clang" >> $GITHUB_ENV
+            echo "CXX=clang++" >> $GITHUB_ENV
           fi
 
       - name: Run tests
