@@ -48,6 +48,8 @@ dev = [
 ]
 
 [project.urls]
+Homepage = "https://github.com/thomthom/fastgpx"
+Repository = "https://github.com/thomthom/fastgpx.git"
 Documentation = "https://thomthom.github.io/fastgpx/"
 
 [tool.scikit-build]
