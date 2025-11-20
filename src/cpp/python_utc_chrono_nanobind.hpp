@@ -237,6 +237,13 @@ public:
         ch::system_clock::to_time_t(ch::time_point_cast<ch::system_clock::duration>(src - us));
     std::tm gmtm = *std::gmtime(&tt);
 
+    if (!PyDateTimeAPI)
+    {
+      PyDateTime_IMPORT;
+      if (!PyDateTimeAPI)
+        raise_python_error();
+    }
+
     return PyDateTimeAPI->DateTime_FromDateAndTime(
         gmtm.tm_year + 1900, gmtm.tm_mon + 1, gmtm.tm_mday, gmtm.tm_hour, gmtm.tm_min, gmtm.tm_sec,
         static_cast<int>(us.count()), PyDateTime_TimeZone_UTC, PyDateTimeAPI->DateTimeType);
