@@ -54,8 +54,8 @@ NB_MODULE(fastgpx, m)
 {
   nb::class_<fastgpx::TimeBounds>(m, "TimeBounds")
       .def(nb::init<>())
-      .def(nb::init<OptionalTimePoint, OptionalTimePoint>(), nb::arg("start_time"),
-           nb::arg("end_time"))
+      .def(nb::init<OptionalTimePoint, OptionalTimePoint>(), nb::arg("start_time").none(),
+           nb::arg("end_time").none())
       .def_rw("start_time", &fastgpx::TimeBounds::start_time)
       .def_rw("end_time", &fastgpx::TimeBounds::end_time)
       .def("is_empty", &fastgpx::TimeBounds::IsEmpty)
