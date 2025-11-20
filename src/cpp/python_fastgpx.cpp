@@ -10,7 +10,7 @@
 // #include <pybind11/stl_bind.h>
 
 #include <nanobind/nanobind.h>
-#include <nanobind/stl/chrono.h>
+// #include <nanobind/stl/chrono.h>
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
@@ -22,7 +22,7 @@
 #include "fastgpx/geom.hpp"
 #include "fastgpx/polyline.hpp"
 
-// #include "python_utc_chrono.hpp"
+#include "python_utc_chrono_nanobind.hpp"
 
 namespace nb = nanobind;
 

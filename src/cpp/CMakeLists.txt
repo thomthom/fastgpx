@@ -128,7 +128,7 @@ nanobind_add_module(
 
   # Sources:
   python_fastgpx.cpp
-  # python_utc_chrono.hpp
+  python_utc_chrono_nanobind.hpp
 )
 set_common_properties(fastgpx)
 target_link_libraries(fastgpx PRIVATE fastgpx-static)
