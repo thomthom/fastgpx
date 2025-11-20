@@ -52,11 +52,11 @@
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/.venv/Scripts/pytest.exe",
-      "args": [
-        "${file}",
-        "-k",
-        "test_init_with_start_time"
-      ],
+      // "args": [
+      //   "${file}",
+      //   "-k",
+      //   "test_gpx_time_bounds"
+      // ],
       "purpose": [
         "debug-test"
       ],
