@@ -1,3 +1,6 @@
+// HACK: Modified from pybind11/chrono.h to avoid converting system_clock to local time.
+//       This allows us to use system_clock for UTC times.
+
 /*
     nanobind/stl/chrono.h: conversion between std::chrono and python's datetime
 
@@ -23,6 +26,22 @@
 #include <limits>
 
 #include <nanobind/stl/detail/chrono.h>
+
+// HACK: (Begin)
+namespace {
+
+inline std::time_t to_utc_time_t(std::tm* tm)
+{
+#if defined(_WIN32)
+  return _mkgmtime(tm);
+#else
+  return timegm(tm);
+#endif
+}
+
+} // namespace
+
+// HACK: (End)
 
 // Casts a std::chrono type (either a duration or a time_point) to/from
 // Python timedelta objects, or from a Python float representing seconds.
@@ -185,7 +204,12 @@ public:
     cal.tm_year = yy - 1900;
     cal.tm_isdst = -1;
     msecs = ch::microseconds(uu);
-    value = ch::time_point_cast<Duration>(ch::system_clock::from_time_t(std::mktime(&cal)) + msecs);
+    // HACK: (Begin)
+    // value = ch::time_point_cast<Duration>(ch::system_clock::from_time_t(std::mktime(&cal)) +
+    // msecs);
+    std::time_t tt = to_utc_time_t(&cal);
+    value = ch::time_point_cast<Duration>(ch::system_clock::from_time_t(tt) + msecs);
+    // HACK: (End)
     return true;
   }
 
@@ -207,6 +231,17 @@ public:
     if (us.count() < 0)
       us += ch::seconds(1);
 
+    // HACK: (Begin)
+    //  Don't convert to local time, because the time/date is UTC.
+    std::time_t tt =
+        ch::system_clock::to_time_t(ch::time_point_cast<ch::system_clock::duration>(src - us));
+    std::tm gmtm = *std::gmtime(&tt);
+
+    return PyDateTimeAPI->DateTime_FromDateAndTime(
+        gmtm.tm_year + 1900, gmtm.tm_mon + 1, gmtm.tm_mday, gmtm.tm_hour, gmtm.tm_min, gmtm.tm_sec,
+        static_cast<int>(us.count()), PyDateTime_TimeZone_UTC, PyDateTimeAPI->DateTimeType);
+
+    /*
     // Subtract microseconds BEFORE `system_clock::to_time_t`, because:
     // > If std::time_t has lower precision, it is implementation-defined
     //   whether the value is rounded or truncated.
@@ -225,6 +260,9 @@ public:
     }
     return pack_datetime(localtime.tm_year + 1900, localtime.tm_mon + 1, localtime.tm_mday,
                          localtime.tm_hour, localtime.tm_min, localtime.tm_sec, (int)us.count());
+
+                         */
+    // HACK: (End)
   }
 #if PY_VERSION_HEX < 0x03090000
   NB_TYPE_CASTER(type, io_name("typing.Union[datetime.datetime, datetime.date, datetime.time]",
@@ -251,5 +289,9 @@ class type_caster<std::chrono::duration<Rep, Period>>
 {
 };
 
-NAMESPACE_END(detail)
-NAMESPACE_END(NB_NAMESPACE)
+// HACK: (Begin)
+// NAMESPACE_END(detail)
+// NAMESPACE_END(NB_NAMESPACE)
+} // namespace detail
+} // namespace NB_NAMESPACE
+// HACK: (End)
