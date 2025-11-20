@@ -71,3 +71,43 @@ class TestTimeBounds:
         assert bounds1.is_range()
         assert bounds1.start_time == bounds1.start_time
         assert bounds1.end_time == bounds2.end_time
+
+    def test_start_time_set_new_time(self):
+        bounds = fastgpx.TimeBounds()
+        new_start_time = datetime.fromisoformat("2025-06-20 08:07:28+00:00")
+        bounds.start_time = new_start_time
+        assert not bounds.is_empty()
+        assert not bounds.is_range()
+        assert bounds.start_time == new_start_time
+        assert bounds.end_time is None
+
+    def test_start_time_set_none(self):
+        bounds = fastgpx.TimeBounds(
+            start_time=datetime.fromisoformat("2025-06-20 08:07:28+00:00"),
+            end_time=datetime.fromisoformat("2025-06-27 13:37:00+00:00")
+        )
+        bounds.start_time = None
+        assert not bounds.is_empty()
+        assert not bounds.is_range()
+        assert bounds.start_time is None
+        assert bounds.end_time == datetime.fromisoformat("2025-06-27 13:37:00+00:00")
+
+    def test_end_time_set_new_time(self):
+        bounds = fastgpx.TimeBounds()
+        new_end_time = datetime.fromisoformat("2025-06-27 13:37:00+00:00")
+        bounds.end_time = new_end_time
+        assert not bounds.is_empty()
+        assert not bounds.is_range()
+        assert bounds.start_time is None
+        assert bounds.end_time == new_end_time
+
+    def test_end_time_set_none(self):
+        bounds = fastgpx.TimeBounds(
+            start_time=datetime.fromisoformat("2025-06-20 08:07:28+00:00"),
+            end_time=datetime.fromisoformat("2025-06-27 13:37:00+00:00")
+        )
+        bounds.end_time = None
+        assert not bounds.is_empty()
+        assert not bounds.is_range()
+        assert bounds.start_time == datetime.fromisoformat("2025-06-20 08:07:28+00:00")
+        assert bounds.end_time is None
