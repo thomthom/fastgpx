@@ -1,11 +1,11 @@
 [build-system]
-requires = ["scikit-build-core", "pybind11"]
+requires = ["scikit-build-core", "nanobind"]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "fastgpx"
-version = "0.4.0"
-requires-python = ">=3.11"
+version = "0.5.0"
+requires-python = ">=3.12"
 
 description = "An experimental Python library for parsing GPX files fast."
 readme = "README.md"
@@ -27,10 +27,8 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
   "Operating System :: POSIX :: Linux",
 
-  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
 ]
-
-dependencies = []
 
 [dependency-groups]
 dev = [
@@ -38,9 +36,9 @@ dev = [
   "gpxpy",
   "lxml",
   "lxml-stubs",
+  "nanobind>=2.9.2",
   "polyline",
   "pytest",
-  "pybind11-stubgen",
   "snakeviz",
   "types-colorama",
   "sphinx>=8.2.3",
@@ -56,6 +54,17 @@ Documentation = "https://thomthom.github.io/fastgpx/"
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#customizing-the-built-wheel
 wheel.packages = ["src/fastgpx"]
 sdist.exclude = [".github", ".vscode", "gpx"]
+
+# https://nanobind.readthedocs.io/en/latest/packaging.html
+
+# Protect the configuration against future changes in scikit-build-core
+minimum-version = "0.4"
+
+# Setuptools-style build caching in a local directory
+build-dir = "build/{wheel_tag}"
+
+# Build stable ABI wheels for CPython 3.12+
+wheel.py-api = "cp312"
 
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#configuring-cmake-arguments-and-defines
 # cmake.build-type = "Debug"

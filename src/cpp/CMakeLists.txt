@@ -105,12 +105,31 @@ set_target_properties(fastgpx-static PROPERTIES
 
 # fastgpx python module
 
-find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter Development)
+# https://nanobind.readthedocs.io/en/latest/building.html#preliminaries
+set(DEV_MODULE Development.Module)
+find_package(Python 3.12 REQUIRED COMPONENTS Interpreter ${DEV_MODULE})
 
-set(PYBIND11_NEWPYTHON ON)
-find_package(pybind11 CONFIG REQUIRED)
+# Detect the installed nanobind package and import it into CMake
+message(STATUS "Python executable: ${Python_EXECUTABLE}")
+execute_process(
+  COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+  OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
+find_package(nanobind CONFIG REQUIRED)
 
-pybind11_add_module(fastgpx python_fastgpx.cpp python_utc_chrono.hpp)
+nanobind_add_module(
+  # Name of the extension:
+  fastgpx
+  # _fastgpx_impl
+
+  # Target the stable ABI for Python 3.12+, which reduces
+  # the number of binary wheels that must be built. This
+  # does nothing on older Python versions.
+  STABLE_ABI
+
+  # Sources:
+  python_fastgpx.cpp
+  # python_utc_chrono.hpp
+)
 set_common_properties(fastgpx)
 target_link_libraries(fastgpx PRIVATE fastgpx-static)
 target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS) # std::gmtime on MSVC
@@ -124,7 +143,7 @@ install(TARGETS fastgpx LIBRARY DESTINATION fastgpx)
 add_custom_command(TARGET fastgpx POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:fastgpx>"  # This is the .pyd file
-        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx/fastgpx.cp311-win_amd64.pyd"
+        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx/fastgpx.cp312-win_amd64.pyd"
 )
 
 if(BUILD_TESTING)
