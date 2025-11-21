@@ -96,7 +96,7 @@ set(SOURCES
 )
 add_library(fastgpx-static STATIC ${SOURCES})
 set_common_properties(fastgpx-static)
-target_link_libraries(fastgpx-static PUBLIC pugixml)
+target_link_libraries(fastgpx-static PRIVATE pugixml)
 target_include_directories(fastgpx-static PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 # Need -fPIC for linking static library into shared library on Linux (and macOS?).
 set_target_properties(fastgpx-static PROPERTIES
@@ -135,6 +135,22 @@ target_link_libraries(fastgpx PRIVATE fastgpx-static)
 target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS) # std::gmtime on MSVC
 
 install(TARGETS fastgpx LIBRARY DESTINATION fastgpx)
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/py.typed
+  ${CMAKE_CURRENT_BINARY_DIR}/fastgpx.pyi
+  DESTINATION "fastgpx_stubs"
+)
+
+# https://nanobind.readthedocs.io/en/latest/typing.html
+nanobind_add_stub(
+  fastgpx_stub
+  MARKER_FILE py.typed
+  MODULE fastgpx
+  OUTPUT fastgpx.pyi
+  # PYTHON_PATH "."
+  PYTHON_PATH $<TARGET_FILE_DIR:fastgpx>
+  DEPENDS fastgpx
+)
 
 # For development purposes, copy the .pyd file to the site-packages directory.
 # This is not needed for the final installation, as the .pyd file will be copied

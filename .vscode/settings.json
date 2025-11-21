@@ -23,6 +23,7 @@
   },
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
   "cmake.configureSettings": {
+    "CMAKE_INSTALL_PREFIX": "${workspaceFolder}/install",
     "Python_EXECUTABLE": "${workspaceFolder}/.venv/Scripts/python.exe",
     "Python_ROOT_DIR": "${workspaceFolder}/.venv"
   },
