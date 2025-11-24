@@ -39,9 +39,28 @@ pip install --editable .
 ```
 
 ```sh
-pybind11-stubgen fastgpx -o src
+uv run python -m nanobind.stubgen fastgpx -o src -r -M typed.py
+```
 
-pybind11-stubgen fastgpx --enum-class-locations "Precision:fastgpx.polyline" -o src
+### Sphinx Documentation
+
+```sh
+.venv\Scripts\activate
+cd docs
+make.bat html
+```
+
+```sh
+# Force documentation rebuild:
+set SPHINXOPTS=--fresh-env
+```
+
+```sh
+set SPHINXOPTS=--verbose
+```
+
+```sh
+set SPHINXOPTS=--fresh-env --verbose
 ```
 
 ### Python Profiling

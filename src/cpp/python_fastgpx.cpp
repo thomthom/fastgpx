@@ -237,8 +237,8 @@ NB_MODULE(fastgpx, m)
             return fastgpx::haversine(ll1, ll2);
           },
           nb::arg("latitude_1"), nb::arg("longitude_1"), nb::arg("latitude_2"),
-          nb::arg("longitude_2"))
-      .doc() = "Compatibility with `gpxpy.geo.haversine_distance`";
+          nb::arg("longitude_2"), "Compatibility with `gpxpy.geo.haversine_distance`")
+      .doc() = "Algorithms for geographic calculations.";
 
   // fastgpx.polyline
 

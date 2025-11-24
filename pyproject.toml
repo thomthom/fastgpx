@@ -43,6 +43,7 @@ dev = [
   "types-colorama",
   "sphinx>=8.2.3",
   "sphinx-rtd-theme>=3.0.2",
+  "sphinx-autodoc-typehints>=3.5.2",
 ]
 
 [project.urls]
@@ -53,6 +54,9 @@ Documentation = "https://thomthom.github.io/fastgpx/"
 [tool.scikit-build]
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#customizing-the-built-wheel
 wheel.packages = ["src/fastgpx"]
+
+# Build stable ABI wheels for CPython 3.12+
+wheel.py-api = "cp312"
 sdist.exclude = [".github", ".vscode", "gpx"]
 
 # https://nanobind.readthedocs.io/en/latest/packaging.html
@@ -62,9 +66,6 @@ minimum-version = "0.4"
 
 # Setuptools-style build caching in a local directory
 build-dir = "build/{wheel_tag}"
-
-# Build stable ABI wheels for CPython 3.12+
-wheel.py-api = "cp312"
 
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#configuring-cmake-arguments-and-defines
 # cmake.build-type = "Debug"

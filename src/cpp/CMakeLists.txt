@@ -134,23 +134,40 @@ set_common_properties(fastgpx)
 target_link_libraries(fastgpx PRIVATE fastgpx-static)
 target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS) # std::gmtime on MSVC
 
-install(TARGETS fastgpx LIBRARY DESTINATION fastgpx)
-install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/py.typed
-  ${CMAKE_CURRENT_BINARY_DIR}/fastgpx.pyi
-  DESTINATION "fastgpx_stubs"
-)
-
 # https://nanobind.readthedocs.io/en/latest/typing.html
 nanobind_add_stub(
   fastgpx_stub
-  MARKER_FILE py.typed
   MODULE fastgpx
-  OUTPUT fastgpx.pyi
+
   # PYTHON_PATH "."
   PYTHON_PATH $<TARGET_FILE_DIR:fastgpx>
   DEPENDS fastgpx
+
+  MARKER_FILE py.typed
+  RECURSIVE
+
+  OUTPUT_PATH stubs
+  # The OUTPUT parameter now accepts multiple values that should list each
+  # generated .pyi file.
+  # Note that these are not actually passed to the stub generator and purely
+  # used for dependency management within CMake (e.g., to remove files when
+  # executing the clean target, or to track dependencies when stub files are
+  # subsequently consumed by other targets). This is necessary because CMake is
+  # not able to automatically discover the generated stub paths at configuration
+  # time.
+  OUTPUT
+    fastgpx/__init__.pyi
+    fastgpx/geo.pyi
+    fastgpx/polyline.pyi
+    py.typed
 )
+
+install(TARGETS fastgpx LIBRARY DESTINATION fastgpx)
+# install(FILES
+#   ${CMAKE_CURRENT_BINARY_DIR}/py.typed
+#   ${CMAKE_CURRENT_BINARY_DIR}/fastgpx.pyi
+#   DESTINATION "fastgpx_stubs"
+# )
 
 # For development purposes, copy the .pyd file to the site-packages directory.
 # This is not needed for the final installation, as the .pyd file will be copied
