@@ -106,8 +106,12 @@ set_target_properties(fastgpx-static PROPERTIES
 # fastgpx python module
 
 # https://nanobind.readthedocs.io/en/latest/building.html#preliminaries
-set(DEV_MODULE Development.Module)
-find_package(Python 3.12 REQUIRED COMPONENTS Interpreter ${DEV_MODULE})
+find_package(Python 3.12
+  REQUIRED COMPONENTS
+    Interpreter
+    Development.Module
+    Development.SABIModule
+)
 
 # Detect the installed nanobind package and import it into CMake
 message(STATUS "Python executable: ${Python_EXECUTABLE}")
@@ -121,17 +125,19 @@ nanobind_add_module(
   fastgpx
   # _fastgpx_impl
 
+  NB_STATIC
+
+  # Marks the nanobind include directories as SYSTEM to suppress warnings.
+  NB_SUPPRESS_WARNINGS
+
   # Target the stable ABI for Python 3.12+, which reduces
   # the number of binary wheels that must be built. This
   # does nothing on older Python versions.
   STABLE_ABI
 
-  # Marks the nanobind include directories as SYSTEM to suppress warnings.
-  NB_SUPPRESS_WARNINGS
-
   # Sources:
   python_fastgpx.cpp
-  python_utc_chrono_nanobind.hpp
+  # python_utc_chrono_nanobind.hpp
 )
 # Treat nanobind includes as system headers to silence warnings from nanobind
 target_include_directories(fastgpx SYSTEM PRIVATE ${nanobind_INCLUDE_DIR})
@@ -144,10 +150,21 @@ message(STATUS "nanobind root dir: ${nanobind_ROOT}")
 
 message(STATUS "SKBUILD_SOABI: ${SKBUILD_SOABI}")
 message(STATUS "Python_SOABI: ${Python_SOABI}")
+message(STATUS "Python_SOSABI: ${Python_SOSABI}")
+message(STATUS "Python Version: ${Python_VERSION}")
+message(STATUS "Python Interpreter ID: ${Python_INTERPRETER_ID}")
 
 message(STATUS "NB_SUFFIX: ${NB_SUFFIX}")
 message(STATUS "NB_SUFFIX_S: ${NB_SUFFIX_S}")
 message(STATUS "NB_ABI: ${NB_ABI}")
+message(STATUS "NB_SOABI: ${NB_SOABI}")
+message(STATUS "NB_SOSABI: ${NB_SOSABI}")
+
+if (NOT TARGET Python::SABIModule)
+  message(STATUS "Python::SABIModule target not found")
+else()
+  message(STATUS "Python::SABIModule target found")
+endif()
 
 # https://nanobind.readthedocs.io/en/latest/typing.html
 nanobind_add_stub(
