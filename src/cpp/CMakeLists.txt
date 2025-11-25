@@ -130,6 +130,8 @@ nanobind_add_module(
   python_fastgpx.cpp
   python_utc_chrono_nanobind.hpp
 )
+# Treat nanobind includes as system headers to silence warnings from nanobind
+target_include_directories(fastgpx SYSTEM PRIVATE ${nanobind_INCLUDE_DIR})
 set_common_properties(fastgpx)
 target_link_libraries(fastgpx PRIVATE fastgpx-static)
 target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS) # std::gmtime on MSVC
