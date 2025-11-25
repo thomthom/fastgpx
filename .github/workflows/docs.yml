@@ -15,7 +15,7 @@ jobs:
       - name: Install and setup UV with Python
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: 3.11
+          python-version: 3.14
 
       # Current ubuntu-latest has GCC 13 as default compiler.
       # Need a C++23 compiler to build the library.

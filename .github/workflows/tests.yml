@@ -7,13 +7,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
-      # fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ["3.11"]
+        build-python-version: ["3.14"]
         compiler: [gcc-14, clang, default]
         exclude:
           # gcc and clang for Linux-only.
@@ -34,10 +33,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Install and setup UV with Python (${{ matrix.python-version }})
+      - name: Install and setup UV with Python (${{ matrix.build-python-version }})
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.build-python-version }}
 
       - name: Set compiler if needed
         shell: bash
@@ -51,6 +50,53 @@ jobs:
             echo "CC=clang" >> $GITHUB_ENV
             echo "CXX=clang++" >> $GITHUB_ENV
           fi
+
+      - name: Build wheel
+        run: |
+          uv build --wheel
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}-${{ matrix.compiler }}
+          path: dist/*.whl
+
+  test:
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.12", "3.13", "3.14"]
+        compiler: [gcc-14, clang, default]
+        exclude:
+          # Match the build exclusions - only test the wheels that were built
+          - os: windows-latest
+            compiler: gcc-14
+          - os: windows-latest
+            compiler: clang
+          - os: ubuntu-latest
+            compiler: default
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install and setup UV with Python (${{ matrix.python-version }})
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}-${{ matrix.compiler }}
+          path: dist
+
+      - name: Install wheel and test dependencies
+        run: |
+          uv pip install dist/*.whl
+          uv pip install pytest
 
       - name: Run tests
         run: |

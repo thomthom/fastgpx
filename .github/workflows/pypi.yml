@@ -23,7 +23,7 @@ jobs:
         # https://peps.python.org/pep-0513/
         # os: [ubuntu-latest, windows-latest]
         os: [windows-latest]
-        python-version: ["3.11"]
+        python-version: ["3.12"]
 
     env:
       FASTGPX_WARNINGS_AS_ERRORS: ON
@@ -54,6 +54,10 @@ jobs:
   build_sdist:
     runs-on: 'ubuntu-latest'
 
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -61,7 +65,7 @@ jobs:
       - name: Install and setup UV with Python
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: 3.11
+          python-version: ${{ matrix.python-version }}
 
       - name: Upgrade pip and install build tools
         run: |
@@ -86,7 +90,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.11"]
+        python-version: ["3.12"]
 
     steps:
       - name: Download wheel artifacts
@@ -107,7 +111,7 @@ jobs:
       - name: Install and setup UV with Python
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: 3.11
+          python-version: ${{ matrix.python-version }}
 
       - name: Install Twine
         run: |
