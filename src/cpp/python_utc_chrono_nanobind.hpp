@@ -55,7 +55,6 @@ inline nanobind::object make_utc_datetime(PyObject* dt_raw)
   nb::object aware = naive.attr("replace")("tzinfo"_a = utc);
 
   return aware;
-  // return aware.release().ptr();
 }
 
 } // namespace
