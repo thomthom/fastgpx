@@ -137,7 +137,7 @@ nanobind_add_module(
 
   # Sources:
   python_fastgpx.cpp
-  # python_utc_chrono_nanobind.hpp
+  python_utc_chrono_nanobind.hpp
 )
 # Treat nanobind includes as system headers to silence warnings from nanobind
 target_include_directories(fastgpx SYSTEM PRIVATE ${nanobind_INCLUDE_DIR})

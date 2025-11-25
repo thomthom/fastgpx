@@ -39,6 +39,25 @@ inline std::time_t to_utc_time_t(std::tm* tm)
 #endif
 }
 
+inline nanobind::object make_utc_datetime(PyObject* dt_raw)
+{
+  namespace nb = nanobind;
+  using namespace nb::literals;
+
+  nb::object naive = nb::steal<nb::object>(dt_raw);
+
+  // Import timezone.utc dynamically (ABI3-safe)
+  nb::object datetime_mod = nb::module_::import_("datetime");
+  nb::object timezone = datetime_mod.attr("timezone");
+  nb::object utc = timezone.attr("utc");
+
+  // Attach tzinfo=utc
+  nb::object aware = naive.attr("replace")("tzinfo"_a = utc);
+
+  return aware;
+  // return aware.release().ptr();
+}
+
 } // namespace
 
 // HACK: (End)
@@ -237,6 +256,8 @@ public:
         ch::system_clock::to_time_t(ch::time_point_cast<ch::system_clock::duration>(src - us));
     std::tm gmtm = *std::gmtime(&tt);
 
+    // Cannot use PyDateTime_FromDateAndTime with limited ABI.
+    /*
     if (!PyDateTimeAPI)
     {
       PyDateTime_IMPORT;
@@ -247,6 +268,12 @@ public:
     return PyDateTimeAPI->DateTime_FromDateAndTime(
         gmtm.tm_year + 1900, gmtm.tm_mon + 1, gmtm.tm_mday, gmtm.tm_hour, gmtm.tm_min, gmtm.tm_sec,
         static_cast<int>(us.count()), PyDateTime_TimeZone_UTC, PyDateTimeAPI->DateTimeType);
+      */
+
+    PyObject* dt_raw = pack_datetime(gmtm.tm_year + 1900, gmtm.tm_mon + 1, gmtm.tm_mday,
+                                     gmtm.tm_hour, gmtm.tm_min, gmtm.tm_sec, (int)us.count());
+    // Somewhat of a kludge, recreate a timezone-aware datetime in UTC.
+    return make_utc_datetime(dt_raw).release().ptr();
 
     /*
     // Subtract microseconds BEFORE `system_clock::to_time_t`, because:
