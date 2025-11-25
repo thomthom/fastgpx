@@ -145,27 +145,6 @@ set_common_properties(fastgpx)
 target_link_libraries(fastgpx PRIVATE fastgpx-static)
 target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS) # std::gmtime on MSVC
 
-message(STATUS "nanobind include dir: ${nanobind_INCLUDE_DIR}")
-message(STATUS "nanobind root dir: ${nanobind_ROOT}")
-
-message(STATUS "SKBUILD_SOABI: ${SKBUILD_SOABI}")
-message(STATUS "Python_SOABI: ${Python_SOABI}")
-message(STATUS "Python_SOSABI: ${Python_SOSABI}")
-message(STATUS "Python Version: ${Python_VERSION}")
-message(STATUS "Python Interpreter ID: ${Python_INTERPRETER_ID}")
-
-message(STATUS "NB_SUFFIX: ${NB_SUFFIX}")
-message(STATUS "NB_SUFFIX_S: ${NB_SUFFIX_S}")
-message(STATUS "NB_ABI: ${NB_ABI}")
-message(STATUS "NB_SOABI: ${NB_SOABI}")
-message(STATUS "NB_SOSABI: ${NB_SOSABI}")
-
-if (NOT TARGET Python::SABIModule)
-  message(STATUS "Python::SABIModule target not found")
-else()
-  message(STATUS "Python::SABIModule target found")
-endif()
-
 # https://nanobind.readthedocs.io/en/latest/typing.html
 nanobind_add_stub(
   fastgpx_stub
