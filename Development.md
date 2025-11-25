@@ -45,6 +45,8 @@ uv run python -m nanobind.stubgen fastgpx -o src -r -M typed.py
 ### Sphinx Documentation
 
 ```sh
+uv sync --all-groups
+uv sync --group docs
 .venv\Scripts\activate
 cd docs
 make.bat html

@@ -33,16 +33,24 @@ classifiers = [
 ]
 
 [dependency-groups]
-dev = [
-  "colorama",
+dev = [ # Tests and build
   "gpxpy",
-  "lxml",
-  "lxml-stubs",
   "nanobind>=2.9.2",
   "polyline",
   "pytest",
-  "snakeviz",
+]
+benchmarks = [ #
+  "colorama",
   "types-colorama",
+  "lxml",
+  "lxml-stubs",
+]
+profiling = [ #
+  "colorama",
+  "types-colorama",
+  "snakeviz",
+]
+docs = [ #
   "sphinx>=8.2.3",
   "sphinx-rtd-theme>=3.0.2",
   "sphinx-autodoc-typehints>=3.5.2",

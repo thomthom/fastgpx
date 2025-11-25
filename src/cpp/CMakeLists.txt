@@ -126,6 +126,9 @@ nanobind_add_module(
   # does nothing on older Python versions.
   STABLE_ABI
 
+  # Marks the nanobind include directories as SYSTEM to suppress warnings.
+  NB_SUPPRESS_WARNINGS
+
   # Sources:
   python_fastgpx.cpp
   python_utc_chrono_nanobind.hpp
@@ -135,6 +138,16 @@ target_include_directories(fastgpx SYSTEM PRIVATE ${nanobind_INCLUDE_DIR})
 set_common_properties(fastgpx)
 target_link_libraries(fastgpx PRIVATE fastgpx-static)
 target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS) # std::gmtime on MSVC
+
+message(STATUS "nanobind include dir: ${nanobind_INCLUDE_DIR}")
+message(STATUS "nanobind root dir: ${nanobind_ROOT}")
+
+message(STATUS "SKBUILD_SOABI: ${SKBUILD_SOABI}")
+message(STATUS "Python_SOABI: ${Python_SOABI}")
+
+message(STATUS "NB_SUFFIX: ${NB_SUFFIX}")
+message(STATUS "NB_SUFFIX_S: ${NB_SUFFIX_S}")
+message(STATUS "NB_ABI: ${NB_ABI}")
 
 # https://nanobind.readthedocs.io/en/latest/typing.html
 nanobind_add_stub(

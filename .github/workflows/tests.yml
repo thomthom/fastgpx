@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        build-python-version: ["3.14"]
+        build-python-version: ["3.12"]
         compiler: [gcc-14, clang, default]
         exclude:
           # gcc and clang for Linux-only.
@@ -65,6 +65,7 @@ jobs:
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.12", "3.13", "3.14"]
@@ -93,14 +94,19 @@ jobs:
           name: wheel-${{ matrix.os }}-${{ matrix.compiler }}
           path: dist
 
+      - name: Create virtual environment
+        run: uv venv --clear
+
       - name: Install wheel and test dependencies
+        shell: bash
         run: |
+          uv sync --only-dev
           uv pip install dist/*.whl
-          uv pip install pytest
 
       - name: Run tests
+        shell: bash
         run: |
-          uv run --frozen --verbose pytest --junitxml=reports/pytest-results.xml
+          uv run --no-sync --frozen pytest --junitxml=reports/pytest-results.xml
 
       - name: Upload Test Results
         if: always()
