@@ -4,7 +4,6 @@ from typing import overload
 
 from . import geo as geo, polyline as polyline
 
-__all__ = ['Bounds', 'Gpx', 'LatLong', 'Segment', 'TimeBounds', 'Track', 'geo', 'parse', 'polyline']
 
 class TimeBounds:
     @overload
@@ -68,7 +67,7 @@ class Bounds:
     def __init__(self, min: LatLong, max: LatLong) -> None: ...
 
     @overload
-    def __init__(self, min: tuple[float, float], max: tuple[float, float]) -> None: ...
+    def __init__(self, min: tuple[float, float], max: tuple[float, float]) -> Bounds: ...
 
     @property
     def min(self) -> LatLong | None: ...

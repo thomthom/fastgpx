@@ -139,14 +139,13 @@ nanobind_add_stub(
   fastgpx_stub
   MODULE fastgpx
 
-  # PYTHON_PATH "."
   PYTHON_PATH $<TARGET_FILE_DIR:fastgpx>
   DEPENDS fastgpx
 
   MARKER_FILE py.typed
   RECURSIVE
 
-  OUTPUT_PATH stubs
+  OUTPUT_PATH ${CMAKE_SOURCE_DIR}/src/fastgpx
   # The OUTPUT parameter now accepts multiple values that should list each
   # generated .pyi file.
   # Note that these are not actually passed to the stub generator and purely
@@ -156,17 +155,18 @@ nanobind_add_stub(
   # not able to automatically discover the generated stub paths at configuration
   # time.
   OUTPUT
-    fastgpx/__init__.pyi
-    fastgpx/geo.pyi
-    fastgpx/polyline.pyi
-    py.typed
+    ${CMAKE_SOURCE_DIR}/src/fastgpx/fastgpx/__init__.pyi
+    ${CMAKE_SOURCE_DIR}/src/fastgpx/fastgpx/geo.pyi
+    ${CMAKE_SOURCE_DIR}/src/fastgpx/fastgpx/polyline.pyi
 )
 
 install(TARGETS fastgpx LIBRARY DESTINATION fastgpx)
 # install(FILES
 #   ${CMAKE_CURRENT_BINARY_DIR}/py.typed
-#   ${CMAKE_CURRENT_BINARY_DIR}/fastgpx.pyi
-#   DESTINATION "fastgpx_stubs"
+#   ${CMAKE_CURRENT_BINARY_DIR}/fastgpx/__init__.pyi
+#   ${CMAKE_CURRENT_BINARY_DIR}/fastgpx/geo.pyi
+#   ${CMAKE_CURRENT_BINARY_DIR}/fastgpx/polyline.pyi
+#   DESTINATION "${CMAKE_SOURCE_DIR}/src/fastgpx"
 # )
 
 # For development purposes, copy the .pyd file to the site-packages directory.
