@@ -553,7 +553,6 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string_view time_
   };
 
   auto chunks = time_str | std::views::chunk_by(is_digit_chuck) | std::views::transform(make_chunk);
-  auto data = chunks | std::ranges::to<std::vector>(); // TODO: Debug. Remove.
 
   iso8601::Context context{.string = time_str};
   std::vector<iso8601::Token> tokens;
