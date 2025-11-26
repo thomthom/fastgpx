@@ -3,6 +3,7 @@ import os
 import polyline
 from colorama import Fore, Back
 
+from docs.source.conf import PROJECT_ROOT
 import fastgpx
 
 
@@ -16,7 +17,8 @@ def get_gpx_files(path: str):
     return gpx_files
 
 
-GPX_PATH = 'gpx/2024 Great Roadtrip'
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+GPX_PATH = os.path.join(PROJECT_ROOT, 'gpx/2024 Great Roadtrip')
 
 
 def benchmark_fastgpx():

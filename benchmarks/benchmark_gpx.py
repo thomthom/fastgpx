@@ -3,7 +3,6 @@ import os
 import time
 import timeit
 import xml.etree.ElementTree as ET
-from math import radians, sin, cos, sqrt, atan2
 from typing import Callable, TypedDict
 
 import gpxpy
@@ -12,7 +11,7 @@ from gpxpy.geo import length_2d, length_3d, Location
 
 from lxml import etree
 
-from colorama import Fore, Back, Style
+from colorama import Fore, Back
 
 import fastgpx
 
@@ -48,7 +47,8 @@ def get_gpx_files(path: str):
     return gpx_files
 
 
-GPX_PATH = '../gpx/2024 Great Roadtrip'
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+GPX_PATH = os.path.join(PROJECT_ROOT, 'gpx/2024 Great Roadtrip')
 
 # gpxpy
 
