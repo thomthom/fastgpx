@@ -65,6 +65,16 @@ set SPHINXOPTS=--verbose
 set SPHINXOPTS=--fresh-env --verbose
 ```
 
+### Python Benchmarking
+
+```sh
+uv run benchmarks/benchmark_gpx.py
+```
+
+```sh
+uv run benchmarks/benchmark_polyline.py
+```
+
 ### Python Profiling
 
 https://learn.microsoft.com/en-us/visualstudio/python/profiling-python-code-in-visual-studio?view=vs-2022
