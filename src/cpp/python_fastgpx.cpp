@@ -85,12 +85,9 @@ NB_MODULE(fastgpx, m)
              std::tuple<double, double> max_tuple) {
             fastgpx::LatLong min{std::get<0>(min_tuple), std::get<1>(min_tuple)};
             fastgpx::LatLong max{std::get<0>(max_tuple), std::get<1>(max_tuple)};
-            return new (obj) fastgpx::Bounds(min, max);
+            new (obj) fastgpx::Bounds(min, max);
           },
-          nb::arg("min"), nb::arg("max"),
-          // The stub generator puts `Bounds` as the return type, but for __init__
-          // it should always be `None`.
-          nb::sig("def __init__(self, min: tuple[float, float], max: tuple[float, float]) -> None"))
+          nb::arg("min"), nb::arg("max"))
       .def_rw("min", &fastgpx::Bounds::min)
       .def_rw("max", &fastgpx::Bounds::max)
       .def("is_empty", &fastgpx::Bounds::IsEmpty)
