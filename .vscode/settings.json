@@ -99,7 +99,9 @@
     "Roadtrip",
     "tinyxml",
     "trkpt",
-    "trkseg"
+    "trkseg",
+    "pybind11",
+    "nanobind"
   ]
   // "python.autoComplete.extraPaths": [
   //   "${workspaceFolder}/.venv/lib/site-packages"
