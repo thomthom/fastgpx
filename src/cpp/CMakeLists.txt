@@ -187,7 +187,7 @@ install(TARGETS fastgpx LIBRARY DESTINATION fastgpx)
 add_custom_command(TARGET fastgpx POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:fastgpx>"  # This is the .pyd file
-        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx/fastgpx.cp312-win_amd64.pyd"
+        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx/"
 )
 
 if(BUILD_TESTING)
