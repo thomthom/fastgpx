@@ -185,6 +185,8 @@ install(TARGETS fastgpx LIBRARY DESTINATION fastgpx)
 # to the site-packages directory by the Python installer.
 # TODO: Use a custom VSCode command to copy the binary?
 add_custom_command(TARGET fastgpx POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx/"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:fastgpx>"  # This is the .pyd file
         "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx/"
