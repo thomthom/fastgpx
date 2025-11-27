@@ -1,0 +1,118 @@
+name: fastgpx CI Build Wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: "Choose where to publish"
+        required: true
+        default: none
+        type: choice
+        options:
+          - none
+          - testpypi
+          - pypi
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # XCode 16.4 doesn't support all C++23 features needed yet.
+        os: [
+              ubuntu-latest,
+              ubuntu-24.04-arm,
+              windows-latest,
+              windows-11-arm,
+            ]
+
+    env:
+        FASTGPX_WARNINGS_AS_ERRORS: ON
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v3.3.0
+        # env:
+        #   CIBW_SOME_OPTION: value
+        #   ...
+        # with:
+        #   package-dir: .
+        #   output-dir: wheelhouse
+        #   config-file: "{package}/pyproject.toml"
+        with:
+          extras: "uv"
+        env:
+          CIBW_BUILD_FRONTEND: "build[uv]"
+          CIBW_BUILD: cp314-*
+          # CIBW_SKIP: cp39-* cp310-* cp311-*
+          CIBW_SKIP: "*-musllinux*"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          CIBW_ENVIRONMENT: FASTGPX_WARNINGS_AS_ERRORS=ON
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+
+  make_sdist:
+    name: Make SDist
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+      # with:
+        # fetch-depth: 0  # Optional, use if you use setuptools_scm
+        # submodules: true  # Optional, use if you have submodules
+
+    - name: Install and setup UV with Python
+      uses: astral-sh/setup-uv@v5
+      with:
+        python-version: 3.14
+
+    - name: Build SDist
+      run: uv run build --sdist
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: cibw-sdist
+        path: dist/*.tar.gz
+
+  publish-to-pypi:
+    if: inputs.repository == 'pypi'
+    needs: [build_wheels, make_sdist]
+    environment:
+      name: pypi
+      url: https://pypi.org/project/fastgpx/
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v5
+      with:
+        pattern: cibw-*
+        path: dist
+        merge-multiple: true
+
+    - uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-to-testpypi:
+    if: inputs.repository == 'testpypi'
+    needs: [build_wheels, make_sdist]
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/fastgpx/
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v5
+      with:
+        pattern: cibw-*
+        path: dist
+        merge-multiple: true
+
+    - uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
