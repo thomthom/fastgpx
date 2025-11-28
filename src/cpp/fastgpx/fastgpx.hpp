@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <compare>
 #include <filesystem>
 #include <optional>
 #include <span>
@@ -16,6 +17,8 @@ public:
   TimePoint(const std::string& time_string) : data_(time_string) {}
   TimePoint(const std::chrono::system_clock::time_point time_point) : data_(time_point) {}
 
+  auto operator<=>(const TimePoint&) const = default;
+
   std::chrono::system_clock::time_point value() const;
 
 private:
@@ -26,6 +29,8 @@ struct TimeBounds
 {
   std::optional<std::chrono::system_clock::time_point> start_time = std::nullopt;
   std::optional<std::chrono::system_clock::time_point> end_time = std::nullopt;
+
+  auto operator<=>(const TimeBounds&) const = default;
 
   bool IsEmpty() const;
   bool IsRange() const;
@@ -41,12 +46,16 @@ struct LatLong
   double longitude = 0.0;
   double elevation = 0.0;
   std::optional<TimePoint> time = std::nullopt;
+
+  auto operator<=>(const LatLong&) const = default;
 };
 
 struct Bounds
 {
   std::optional<LatLong> min = std::nullopt;
   std::optional<LatLong> max = std::nullopt;
+
+  auto operator<=>(const Bounds&) const = default;
 
   bool IsEmpty() const;
 

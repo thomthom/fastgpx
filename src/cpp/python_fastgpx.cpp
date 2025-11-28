@@ -1,15 +1,10 @@
 #include <filesystem>
+#include <format>
 #include <limits>
 #include <stdexcept>
 
-// #include <pybind11/chrono.h>
-// #include <pybind11/functional.h>
-// #include <pybind11/pybind11.h>
-// #include <pybind11/stl.h>
-// #include <pybind11/stl/filesystem.h>
-// #include <pybind11/stl_bind.h>
-
 #include <nanobind/nanobind.h>
+#include <nanobind/operators.h>
 // #include <nanobind/stl/chrono.h>
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/optional.h>
@@ -48,6 +43,16 @@ fastgpx::polyline::Precision IntToPrecision(const int value)
 
 using OptionalTimePoint = std::optional<std::chrono::system_clock::time_point>;
 
+std::string FormatLatLongAsTuples(const fastgpx::LatLong& ll)
+{
+  return std::format("({}, {}, {})", ll.latitude, ll.longitude, ll.elevation);
+}
+
+std::string FormatLatLongAsTuples(const std::optional<fastgpx::LatLong>& ll)
+{
+  return ll.has_value() ? FormatLatLongAsTuples(*ll) : "None";
+}
+
 } // namespace
 
 NB_MODULE(fastgpx, m)
@@ -72,7 +77,16 @@ NB_MODULE(fastgpx, m)
            nb::arg("elevation") = 0.0)
       .def_rw("latitude", &fastgpx::LatLong::latitude)
       .def_rw("longitude", &fastgpx::LatLong::longitude)
-      .def_rw("elevation", &fastgpx::LatLong::elevation);
+      .def_rw("elevation", &fastgpx::LatLong::elevation)
+      .def(nb::self == nb::self)
+      .def("__repr__",
+           [](const fastgpx::LatLong& ll) {
+             return std::format("fastgpx.LatLong(latitude={}, longitude={}, elevation={})",
+                                ll.latitude, ll.longitude, ll.elevation);
+           })
+      .def("__str__", [](const fastgpx::LatLong& ll) {
+        return std::format("LatLong({}, {}, {})", ll.latitude, ll.longitude, ll.elevation);
+      });
 
   nb::class_<fastgpx::Bounds>(m, "Bounds")
       .def(nb::init<>())
@@ -85,6 +99,17 @@ NB_MODULE(fastgpx, m)
              std::tuple<double, double> max_tuple) {
             fastgpx::LatLong min{std::get<0>(min_tuple), std::get<1>(min_tuple)};
             fastgpx::LatLong max{std::get<0>(max_tuple), std::get<1>(max_tuple)};
+            new (obj) fastgpx::Bounds(min, max);
+          },
+          nb::arg("min"), nb::arg("max"))
+      .def(
+          "__init__",
+          [](fastgpx::Bounds* obj, std::tuple<double, double, double> min_tuple,
+             std::tuple<double, double, double> max_tuple) {
+            fastgpx::LatLong min{std::get<0>(min_tuple), std::get<1>(min_tuple),
+                                 std::get<2>(min_tuple)};
+            fastgpx::LatLong max{std::get<0>(max_tuple), std::get<1>(max_tuple),
+                                 std::get<2>(max_tuple)};
             new (obj) fastgpx::Bounds(min, max);
           },
           nb::arg("min"), nb::arg("max"))
@@ -160,7 +185,6 @@ NB_MODULE(fastgpx, m)
             }
             self.max->latitude = value;
           })
-
       .def_prop_rw(
           "max_longitude",
           [](const fastgpx::Bounds& self) -> std::optional<double> {
@@ -181,7 +205,19 @@ NB_MODULE(fastgpx, m)
                           .longitude = std::numeric_limits<double>::min()};
             }
             self.max->longitude = value;
-          });
+          })
+      .def(nb::self == nb::self)
+      .def("__repr__",
+           [](const fastgpx::Bounds& ll) {
+             const auto min = FormatLatLongAsTuples(ll.min);
+             const auto max = FormatLatLongAsTuples(ll.max);
+             return std::format("fastgpx.Bounds(min={}, max={})", min, max);
+           })
+      .def("__str__", [](const fastgpx::Bounds& ll) {
+        const auto min = FormatLatLongAsTuples(ll.min);
+        const auto max = FormatLatLongAsTuples(ll.max);
+        return std::format("Bounds(min={}, max={})", min, max);
+      });
 
   nb::class_<fastgpx::Segment>(m, "Segment")
       .def(nb::init<>()) // Default constructor
