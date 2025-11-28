@@ -53,6 +53,30 @@ std::string FormatLatLongAsTuples(const std::optional<fastgpx::LatLong>& ll)
   return ll.has_value() ? FormatLatLongAsTuples(*ll) : "None";
 }
 
+std::string FormatTimePointAsISO8601(const std::chrono::system_clock::time_point& tp)
+{
+  const auto tp_seconds = std::chrono::floor<std::chrono::seconds>(tp);
+  return std::format("{:%Y-%m-%dT%H:%M:%SZ}", tp_seconds);
+}
+
+std::string FormatTimePointAsISO8601(const std::optional<std::chrono::system_clock::time_point>& tp)
+{
+  return tp.has_value() ? FormatTimePointAsISO8601(*tp) : "None";
+}
+
+// Format as a python datetime string
+std::string FormatTimePointAsDateTime(const std::chrono::system_clock::time_point& tp)
+{
+  nb::object py = nb::cast(tp);
+  return nb::repr(py).c_str();
+}
+
+std::string FormatTimePointAsDateTime(
+    const std::optional<std::chrono::system_clock::time_point>& tp)
+{
+  return tp.has_value() ? FormatTimePointAsDateTime(*tp) : "None";
+}
+
 } // namespace
 
 NB_MODULE(fastgpx, m)
@@ -69,7 +93,20 @@ NB_MODULE(fastgpx, m)
            nb::overload_cast<std::chrono::system_clock::time_point>(&fastgpx::TimeBounds::Add),
            nb::arg("datetime"))
       .def("add", nb::overload_cast<const fastgpx::TimeBounds&>(&fastgpx::TimeBounds::Add),
-           nb::arg("timebounds"));
+           nb::arg("timebounds"))
+      .def(nb::self == nb::self)
+      .def("__repr__",
+           [](const fastgpx::TimeBounds& tb) {
+             const auto start_time = FormatTimePointAsDateTime(tb.start_time);
+             const auto end_time = FormatTimePointAsDateTime(tb.end_time);
+             return std::format("fastgpx.TimeBounds(start_time={}, end_time={})", start_time,
+                                end_time);
+           })
+      .def("__str__", [](const fastgpx::TimeBounds& tb) {
+        const auto start_time = FormatTimePointAsISO8601(tb.start_time);
+        const auto end_time = FormatTimePointAsISO8601(tb.end_time);
+        return std::format("TimeBounds({} to {})", start_time, end_time);
+      });
 
   nb::class_<fastgpx::LatLong>(m, "LatLong")
       .def(nb::init<>())
