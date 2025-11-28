@@ -81,6 +81,7 @@ jobs:
         path: dist/*.tar.gz
 
   publish-to-pypi:
+    name: Publish to PyPI
     if: inputs.repository == 'pypi'
     needs: [build_wheels, make_sdist]
     environment:
@@ -99,6 +100,7 @@ jobs:
     - uses: pypa/gh-action-pypi-publish@release/v1
 
   publish-to-testpypi:
+    name: Publish to TestPyPI
     if: inputs.repository == 'testpypi'
     needs: [build_wheels, make_sdist]
     environment:
