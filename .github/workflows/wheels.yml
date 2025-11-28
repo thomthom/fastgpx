@@ -66,13 +66,14 @@ jobs:
         # fetch-depth: 0  # Optional, use if you use setuptools_scm
         # submodules: true  # Optional, use if you have submodules
 
-    - name: Install and setup UV with Python
-      uses: astral-sh/setup-uv@v5
-      with:
-        python-version: 3.14
+    # - name: Install and setup UV with Python
+    #   uses: astral-sh/setup-uv@v5
+    #   with:
+    #     python-version: 3.14
 
     - name: Build SDist
-      run: uv run build --sdist
+      # run: uv run build --sdist
+      run: pipx run build --sdist
 
     - uses: actions/upload-artifact@v4
       with:
