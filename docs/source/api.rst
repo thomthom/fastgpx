@@ -7,8 +7,8 @@ API Reference
    :special-members: __init__
    :imported-members:
 
-`geo` module
-------------
+``geo`` module
+--------------
 
 .. automodule:: fastgpx.geo
    :members:
@@ -16,8 +16,8 @@ API Reference
    :special-members: __init__
    :imported-members:
 
-`polyline` module
------------------
+``polyline`` module
+-------------------
 .. automodule:: fastgpx.polyline
    :members:
    :undoc-members:
