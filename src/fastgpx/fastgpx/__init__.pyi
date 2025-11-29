@@ -34,13 +34,15 @@ class TimeBounds:
     @overload
     def add(self, timebounds: TimeBounds) -> None: ...
 
-    def __eq__(self, arg: TimeBounds, /) -> bool: ...
+    def __eq__(self, arg: object, /) -> bool: ...
 
     def __repr__(self) -> str: ...
 
     def __str__(self) -> str: ...
 
 class LatLong:
+    """Represent ``<trkpt>`` data in GPX files."""
+
     @overload
     def __init__(self) -> None: ...
 
@@ -48,24 +50,27 @@ class LatLong:
     def __init__(self, latitude: float, longitude: float, elevation: float = 0.0) -> None: ...
 
     @property
-    def latitude(self) -> float: ...
+    def latitude(self) -> float:
+        """The latitude of the point. Decimal degrees, WGS84 datum."""
 
     @latitude.setter
     def latitude(self, arg: float, /) -> None: ...
 
     @property
-    def longitude(self) -> float: ...
+    def longitude(self) -> float:
+        """The longitude of the point. Decimal degrees, WGS84 datum."""
 
     @longitude.setter
     def longitude(self, arg: float, /) -> None: ...
 
     @property
-    def elevation(self) -> float: ...
+    def elevation(self) -> float:
+        """The elevation of the point in meters."""
 
     @elevation.setter
     def elevation(self, arg: float, /) -> None: ...
 
-    def __eq__(self, arg: LatLong, /) -> bool: ...
+    def __eq__(self, arg: object, /) -> bool: ...
 
     def __repr__(self) -> str: ...
 
@@ -107,30 +112,54 @@ class Bounds:
     def max_bounds(self, bounds: Bounds) -> Bounds: ...
 
     @property
-    def min_latitude(self) -> float | None: ...
+    def min_latitude(self) -> float | None:
+        """
+        .. warning::
+
+           Compatibility with ``gpxpy.GPXBounds.min_latitude``.
+           Prefer ``min.latitude`` instead. :func:`min`
+        """
 
     @min_latitude.setter
     def min_latitude(self, arg: float, /) -> None: ...
 
     @property
-    def min_longitude(self) -> float | None: ...
+    def min_longitude(self) -> float | None:
+        """
+        .. warning::
+
+           Compatibility with ``gpxpy.GPXBounds.min_longitude``.
+           Prefer ``min.longitude`` instead. :func:`min`
+        """
 
     @min_longitude.setter
     def min_longitude(self, arg: float, /) -> None: ...
 
     @property
-    def max_latitude(self) -> float | None: ...
+    def max_latitude(self) -> float | None:
+        """
+        .. warning::
+
+           Compatibility with ``gpxpy.GPXBounds.max_latitude``.
+           Prefer ``max.latitude`` instead. :func:`max`
+        """
 
     @max_latitude.setter
     def max_latitude(self, arg: float, /) -> None: ...
 
     @property
-    def max_longitude(self) -> float | None: ...
+    def max_longitude(self) -> float | None:
+        """
+        .. warning::
+
+           Compatibility with ``gpxpy.GPXBounds.max_longitude``.
+           Prefer ``max.longitude`` instead. :func:`max`
+        """
 
     @max_longitude.setter
     def max_longitude(self, arg: float, /) -> None: ...
 
-    def __eq__(self, arg: Bounds, /) -> bool: ...
+    def __eq__(self, arg: object, /) -> bool: ...
 
     def __repr__(self) -> str: ...
 
@@ -147,11 +176,23 @@ class Segment:
 
     def bounds(self) -> Bounds: ...
 
-    def get_bounds(self) -> Bounds: ...
+    def get_bounds(self) -> Bounds:
+        """
+        .. warning::
+
+           Compatibility with ``gpxpy.GPXTrackSegment.get_bounds``.
+           Prefer :func:`bounds` instead.
+        """
 
     def time_bounds(self) -> TimeBounds: ...
 
-    def get_time_bounds(self) -> TimeBounds: ...
+    def get_time_bounds(self) -> TimeBounds:
+        """
+        .. warning::
+
+           Compatibility with ``gpxpy.GPXTrackSegment.get_time_bounds``.
+           Prefer :func:`time_bounds` instead.
+        """
 
     def length_2d(self) -> float: ...
 
@@ -198,11 +239,23 @@ class Track:
 
     def bounds(self) -> Bounds: ...
 
-    def get_bounds(self) -> Bounds: ...
+    def get_bounds(self) -> Bounds:
+        """
+        .. warning::
+
+           Compatibility with ``gpxpy.GPXTrack.get_bounds``.
+           Prefer :func:`bounds` instead.
+        """
 
     def time_bounds(self) -> TimeBounds: ...
 
-    def get_time_bounds(self) -> TimeBounds: ...
+    def get_time_bounds(self) -> TimeBounds:
+        """
+        .. warning::
+
+           Compatibility with ``gpxpy.GPXTrack.get_time_bounds``.
+           Prefer :func:`time_bounds` instead.
+        """
 
     def length_2d(self) -> float: ...
 
@@ -225,11 +278,23 @@ class Gpx:
 
     def bounds(self) -> Bounds: ...
 
-    def get_bounds(self) -> Bounds: ...
+    def get_bounds(self) -> Bounds:
+        """
+        .. warning::
+
+           Compatibility with ``gpxpy.GPX.get_bounds``.
+           Prefer :func:`bounds` instead.
+        """
 
     def time_bounds(self) -> TimeBounds: ...
 
-    def get_time_bounds(self) -> TimeBounds: ...
+    def get_time_bounds(self) -> TimeBounds:
+        """
+        .. warning::
+
+           Compatibility with ``gpxpy.GPX.get_time_bounds``.
+           Prefer :func:`time_bounds` instead.
+        """
 
     def length_2d(self) -> float: ...
 

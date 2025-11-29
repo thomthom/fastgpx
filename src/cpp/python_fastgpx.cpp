@@ -118,7 +118,7 @@ NB_MODULE(fastgpx, m)
       .def("is_range", &TimeBounds::IsRange)
       .def("add", nb::overload_cast<chrono_timepoint>(&TimeBounds::Add), "datetime"_a)
       .def("add", nb::overload_cast<const TimeBounds&>(&TimeBounds::Add), "timebounds"_a)
-      .def(nb::self == nb::self)
+      .def(nb::self == nb::self, nb::sig("def __eq__(self, arg: object, /) -> bool"))
       .def("__repr__",
            [](const TimeBounds& tb) {
              const auto start_time = FormatTimePointAsDateTime(tb.start_time);
@@ -135,18 +135,27 @@ NB_MODULE(fastgpx, m)
   nb::class_<LatLong>(m, "LatLong")
       .def(nb::init<>())
       .def(nb::init<double, double, double>(), "latitude"_a, "longitude"_a, "elevation"_a = 0.0)
-      .def_rw("latitude", &LatLong::latitude)
-      .def_rw("longitude", &LatLong::longitude)
-      .def_rw("elevation", &LatLong::elevation)
-      .def(nb::self == nb::self)
+      .def_rw("latitude", &LatLong::latitude,
+              "The latitude of the point. Decimal degrees, WGS84 datum.")
+      .def_rw("longitude", &LatLong::longitude,
+              "The longitude of the point. Decimal degrees, WGS84 datum.")
+      .def_rw("elevation", &LatLong::elevation, "The elevation of the point in meters.")
+      // .def_rw("time", &LatLong::time,
+      //         "Creation/modification timestamp for element. Date and time in are in Univeral "
+      //         "Coordinated Time (UTC), not local time! Conforms to ISO 8601 specification for "
+      //         "date/time representation. Fractional seconds are allowed for millisecond timing "
+      //         "in tracklogs.")
+      .def(nb::self == nb::self, nb::sig("def __eq__(self, arg: object, /) -> bool"))
       .def("__repr__",
            [](const LatLong& ll) {
              return std::format("fastgpx.LatLong(latitude={}, longitude={}, elevation={})",
                                 ll.latitude, ll.longitude, ll.elevation);
            })
-      .def("__str__", [](const LatLong& ll) {
-        return std::format("LatLong({}, {}, {})", ll.latitude, ll.longitude, ll.elevation);
-      });
+      .def("__str__",
+           [](const LatLong& ll) {
+             return std::format("LatLong({}, {}, {})", ll.latitude, ll.longitude, ll.elevation);
+           })
+      .doc() = "Represent ``<trkpt>`` data in GPX files.";
 
   nb::class_<Bounds>(m, "Bounds")
       .def(nb::init<>())
@@ -185,7 +194,10 @@ NB_MODULE(fastgpx, m)
           [](Bounds& self, double value) {
             SetBoundsMember<&LatLong::latitude>(self, &Bounds::min, value,
                                                 std::numeric_limits<double>::max());
-          })
+          },
+          ".. warning::\n\n"
+          "   Compatibility with ``gpxpy.GPXBounds.min_latitude``.\n"
+          "   Prefer ``min.latitude`` instead. :func:`min`\n")
       .def_prop_rw(
           "min_longitude",
           [](const Bounds& self) {
@@ -194,7 +206,10 @@ NB_MODULE(fastgpx, m)
           [](Bounds& self, double value) {
             SetBoundsMember<&LatLong::longitude>(self, &Bounds::min, value,
                                                  std::numeric_limits<double>::max());
-          })
+          },
+          ".. warning::\n\n"
+          "   Compatibility with ``gpxpy.GPXBounds.min_longitude``.\n"
+          "   Prefer ``min.longitude`` instead. :func:`min`\n")
       .def_prop_rw(
           "max_latitude",
           [](const Bounds& self) {
@@ -203,7 +218,10 @@ NB_MODULE(fastgpx, m)
           [](Bounds& self, double value) {
             SetBoundsMember<&LatLong::latitude>(self, &Bounds::max, value,
                                                 std::numeric_limits<double>::min());
-          })
+          },
+          ".. warning::\n\n"
+          "   Compatibility with ``gpxpy.GPXBounds.max_latitude``.\n"
+          "   Prefer ``max.latitude`` instead. :func:`max`\n")
       .def_prop_rw(
           "max_longitude",
           [](const Bounds& self) {
@@ -212,8 +230,11 @@ NB_MODULE(fastgpx, m)
           [](Bounds& self, double value) {
             SetBoundsMember<&LatLong::longitude>(self, &Bounds::max, value,
                                                  std::numeric_limits<double>::min());
-          })
-      .def(nb::self == nb::self)
+          },
+          ".. warning::\n\n"
+          "   Compatibility with ``gpxpy.GPXBounds.max_longitude``.\n"
+          "   Prefer ``max.longitude`` instead. :func:`max`\n")
+      .def(nb::self == nb::self, nb::sig("def __eq__(self, arg: object, /) -> bool"))
       .def("__repr__",
            [](const Bounds& ll) {
              const auto min = FormatLatLongAsTuples(ll.min);
@@ -230,9 +251,15 @@ NB_MODULE(fastgpx, m)
       .def(nb::init<>()) // Default constructor
       .def_rw("points", &Segment::points)
       .def("bounds", &Segment::GetBounds)
-      .def("get_bounds", &Segment::GetBounds) // gpxpy compatiblity
+      .def("get_bounds", &Segment::GetBounds,
+           ".. warning::\n\n"
+           "   Compatibility with ``gpxpy.GPXTrackSegment.get_bounds``.\n"
+           "   Prefer :func:`bounds` instead.\n") // gpxpy compatiblity
       .def("time_bounds", &Segment::GetTimeBounds)
-      .def("get_time_bounds", &Segment::GetTimeBounds) // gpxpy compatiblity
+      .def("get_time_bounds", &Segment::GetTimeBounds,
+           ".. warning::\n\n"
+           "   Compatibility with ``gpxpy.GPXTrackSegment.get_time_bounds``.\n"
+           "   Prefer :func:`time_bounds` instead.\n") // gpxpy compatiblity
       .def("length_2d", &Segment::GetLength2D)
       .def("length_3d", &Segment::GetLength3D);
 
@@ -245,9 +272,15 @@ NB_MODULE(fastgpx, m)
       .def_rw("type", &Track::type)
       .def_rw("segments", &Track::segments)
       .def("bounds", &Track::GetBounds)
-      .def("get_bounds", &Track::GetBounds) // gpxpy compatiblity
+      .def("get_bounds", &Track::GetBounds,
+           ".. warning::\n\n"
+           "   Compatibility with ``gpxpy.GPXTrack.get_bounds``.\n"
+           "   Prefer :func:`bounds` instead.\n") // gpxpy compatiblity
       .def("time_bounds", &Track::GetTimeBounds)
-      .def("get_time_bounds", &Track::GetTimeBounds) // gpxpy compatiblity
+      .def("get_time_bounds", &Track::GetTimeBounds,
+           ".. warning::\n\n"
+           "   Compatibility with ``gpxpy.GPXTrack.get_time_bounds``.\n"
+           "   Prefer :func:`time_bounds` instead.\n") // gpxpy compatiblity
       .def("length_2d", &Track::GetLength2D)
       .def("length_3d", &Track::GetLength3D);
 
@@ -256,9 +289,15 @@ NB_MODULE(fastgpx, m)
       .def_rw("tracks", &Gpx::tracks)
       .def_rw("name", &Gpx::name)
       .def("bounds", &Gpx::GetBounds)
-      .def("get_bounds", &Gpx::GetBounds) // gpxpy compatiblity
+      .def("get_bounds", &Gpx::GetBounds,
+           ".. warning::\n\n"
+           "   Compatibility with ``gpxpy.GPX.get_bounds``.\n"
+           "   Prefer :func:`bounds` instead.\n") // gpxpy compatiblity
       .def("time_bounds", &Gpx::GetTimeBounds)
-      .def("get_time_bounds", &Gpx::GetTimeBounds) // gpxpy compatiblity
+      .def("get_time_bounds", &Gpx::GetTimeBounds,
+           ".. warning::\n\n"
+           "   Compatibility with ``gpxpy.GPX.get_time_bounds``.\n"
+           "   Prefer :func:`time_bounds` instead.\n") // gpxpy compatiblity
       .def("length_2d", &Gpx::GetLength2D)
       .def("length_3d", &Gpx::GetLength3D);
 
@@ -280,7 +319,9 @@ NB_MODULE(fastgpx, m)
             return haversine(ll1, ll2);
           },
           "latitude_1"_a, "longitude_1"_a, "latitude_2"_a, "longitude_2"_a,
-          "Compatibility with `gpxpy.geo.haversine_distance`")
+          ".. warning::\n\n"
+          "   Compatibility with ``gpxpy.geo.haversine_distance``.\n"
+          "   Prefer :func:`haversine` instead.\n")
       .doc() = "Algorithms for geographic calculations.";
 
   // fastgpx.polyline
