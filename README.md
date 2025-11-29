@@ -30,8 +30,8 @@ for track in gpx.tracks:
 
 ## Requirements
 
-* Python 3.11+ (Tested with 3.11, 3.12)
-* C++23 Compiler
+* Python 3.12+ (Tested with 3.12, 3.13, 3.14)
+* C++23 Compiler (For building `fastgpx`)
 
 ### Windows
 
@@ -43,11 +43,17 @@ for track in gpx.tracks:
 
 ## GPX/XML Performance (Background)
 
-`gpxpy` appear to be the most popular GPX library for Python.
+This library came out of the need to extract information from many GPX files fast.
 
-`gpxpy` docs says that it uses `lxml` is available because it is faster than "`minidom`" (`etree`).
-When benchmarking that seemed not to be the case. It appear that the stdlib XML library has gotten
-much better since `gpxpy` was created.
+`gpxpy` is the most popular GPX library for Python. It is very versatile in manipulating GPX files.
+
+However in benchmarking it doesn't perform well.
+
+`gpxpy` docs says (at time of writing) that it uses `lxml` is available because it is faster than
+"`minidom`" (`etree`).
+
+When benchmarking that was not the case. It appear that the stdlib XML library has gotten much
+better since `gpxpy` was created.
 
 Reference: Open ticket on making `etree` default:
 https://github.com/tkrajina/gpxpy/issues/248
