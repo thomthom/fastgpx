@@ -196,9 +196,13 @@ class Segment:
            Prefer :func:`time_bounds` instead.
         """
 
-    def length_2d(self) -> float: ...
+    def length_2d(self) -> float:
+        """Distance in meters."""
 
-    def length_3d(self) -> float: ...
+    def length_3d(self) -> float:
+        """Distance in meters."""
+
+    def __repr__(self) -> str: ...
 
 class Track:
     """Represent ``<trk>`` data in GPX files."""
@@ -261,9 +265,13 @@ class Track:
            Prefer :func:`time_bounds` instead.
         """
 
-    def length_2d(self) -> float: ...
+    def length_2d(self) -> float:
+        """Distance in meters."""
 
-    def length_3d(self) -> float: ...
+    def length_3d(self) -> float:
+        """Distance in meters."""
+
+    def __repr__(self) -> str: ...
 
 class Gpx:
     """Represent ``<gpx>`` data in GPX files."""
@@ -302,8 +310,12 @@ class Gpx:
            Prefer :func:`time_bounds` instead.
         """
 
-    def length_2d(self) -> float: ...
+    def length_2d(self) -> float:
+        """Distance in meters."""
 
-    def length_3d(self) -> float: ...
+    def length_3d(self) -> float:
+        """Distance in meters."""
+
+    def __repr__(self) -> str: ...
 
 def parse(path: str) -> Gpx: ...

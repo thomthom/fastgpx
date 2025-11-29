@@ -48,7 +48,7 @@ class TestGpx:
 
     # fastgpx.Gpx.bounds
 
-    def test_bounds(self,   gpx_path: str):
+    def test_bounds(self, gpx_path: str):
         gpx = fastgpx.parse(gpx_path)
         bounds = gpx.bounds()
         assert not bounds.is_empty()
@@ -82,6 +82,18 @@ class TestGpx:
         assert time_bounds.end_time.isoformat() == '2024-05-18T16:46:18+00:00'
         assert time_bounds.end_time.timestamp() == 1716050778
 
+    # fastgpx.Gpx.__repr__
+
+    def test_repr(self):
+        gpx = fastgpx.parse("gpx/test/two-points.gpx")
+        repr_str = repr(gpx)
+        assert repr_str == "<fastgpx.Gpx(tracks: 1, name: 'Two Point Segment')>"
+
+    def test_repr_no_filename(self):
+        gpx = fastgpx.parse("gpx/test/debug-segment.gpx")
+        repr_str = repr(gpx)
+        assert repr_str == "<fastgpx.Gpx(tracks: 1)>"
+
 
 class TestTrack:
 
@@ -101,6 +113,14 @@ class TestTrack:
         track = gpx.tracks[0]
         distance = track.length_2d()
         assert distance == pytest.approx(382952.7193, abs=METERS_TOL)
+
+    # fastgpx.Track.__repr__
+
+    def test_repr(self, gpx_path: str):
+        gpx = fastgpx.parse(gpx_path)
+        track = gpx.tracks[0]
+        repr_str = repr(track)
+        assert repr_str == "<fastgpx.Track(segments: 9)>"
 
 
 class TestSegment:
@@ -124,3 +144,11 @@ class TestSegment:
         segment = track.segments[0]
         distance = segment.length_2d()
         assert distance == pytest.approx(17809.2701, abs=METERS_TOL)
+
+    # fastgpx.Segment.__repr__
+
+    def test_repr(self, gpx_path: str):
+        gpx = fastgpx.parse(gpx_path)
+        segment = gpx.tracks[0].segments[0]
+        repr_str = repr(segment)
+        assert repr_str == "<fastgpx.Segment(points: 1326)>"

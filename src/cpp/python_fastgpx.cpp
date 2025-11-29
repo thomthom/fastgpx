@@ -258,8 +258,12 @@ NB_MODULE(fastgpx, m)
            ".. warning::\n\n"
            "   Compatibility with ``gpxpy.GPXTrackSegment.get_time_bounds``.\n"
            "   Prefer :func:`time_bounds` instead.\n") // gpxpy compatiblity
-      .def("length_2d", &Segment::GetLength2D)
-      .def("length_3d", &Segment::GetLength3D)
+      .def("length_2d", &Segment::GetLength2D, "Distance in meters.")
+      .def("length_3d", &Segment::GetLength3D, "Distance in meters.")
+      .def("__repr__",
+           [](const Segment& s) {
+             return std::format("<fastgpx.Segment(points: {})>", s.points.size());
+           })
       .doc() = "Represent ``<trkseg>`` data in GPX files.";
 
   nb::class_<Track>(m, "Track")
@@ -280,8 +284,12 @@ NB_MODULE(fastgpx, m)
            ".. warning::\n\n"
            "   Compatibility with ``gpxpy.GPXTrack.get_time_bounds``.\n"
            "   Prefer :func:`time_bounds` instead.\n") // gpxpy compatiblity
-      .def("length_2d", &Track::GetLength2D)
-      .def("length_3d", &Track::GetLength3D)
+      .def("length_2d", &Track::GetLength2D, "Distance in meters.")
+      .def("length_3d", &Track::GetLength3D, "Distance in meters.")
+      .def("__repr__",
+           [](const Track& t) {
+             return std::format("<fastgpx.Track(segments: {})>", t.segments.size());
+           })
       .doc() = "Represent ``<trk>`` data in GPX files.";
 
   nb::class_<Gpx>(m, "Gpx")
@@ -298,8 +306,17 @@ NB_MODULE(fastgpx, m)
            ".. warning::\n\n"
            "   Compatibility with ``gpxpy.GPX.get_time_bounds``.\n"
            "   Prefer :func:`time_bounds` instead.\n") // gpxpy compatiblity
-      .def("length_2d", &Gpx::GetLength2D)
-      .def("length_3d", &Gpx::GetLength3D)
+      .def("length_2d", &Gpx::GetLength2D, "Distance in meters.")
+      .def("length_3d", &Gpx::GetLength3D, "Distance in meters.")
+      .def("__repr__",
+           [](const Gpx& g) {
+             if (g.name.has_value())
+             {
+               return std::format("<fastgpx.Gpx(tracks: {}, name: '{}')>", //
+                                  g.tracks.size(), *g.name);
+             }
+             return std::format("<fastgpx.Gpx(tracks: {})>", g.tracks.size());
+           })
       .doc() = "Represent ``<gpx>`` data in GPX files.";
 
   m.def("parse", nb::overload_cast<const std::string&>(&ParseGpx), "path"_a);
