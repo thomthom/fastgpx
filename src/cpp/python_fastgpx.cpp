@@ -259,7 +259,8 @@ NB_MODULE(fastgpx, m)
            "   Compatibility with ``gpxpy.GPXTrackSegment.get_time_bounds``.\n"
            "   Prefer :func:`time_bounds` instead.\n") // gpxpy compatiblity
       .def("length_2d", &Segment::GetLength2D)
-      .def("length_3d", &Segment::GetLength3D);
+      .def("length_3d", &Segment::GetLength3D)
+      .doc() = "Represent ``<trkseg>`` data in GPX files.";
 
   nb::class_<Track>(m, "Track")
       .def(nb::init<>()) // Default constructor
@@ -280,7 +281,8 @@ NB_MODULE(fastgpx, m)
            "   Compatibility with ``gpxpy.GPXTrack.get_time_bounds``.\n"
            "   Prefer :func:`time_bounds` instead.\n") // gpxpy compatiblity
       .def("length_2d", &Track::GetLength2D)
-      .def("length_3d", &Track::GetLength3D);
+      .def("length_3d", &Track::GetLength3D)
+      .doc() = "Represent ``<trk>`` data in GPX files.";
 
   nb::class_<Gpx>(m, "Gpx")
       .def(nb::init<>()) // Default constructor
@@ -297,7 +299,8 @@ NB_MODULE(fastgpx, m)
            "   Compatibility with ``gpxpy.GPX.get_time_bounds``.\n"
            "   Prefer :func:`time_bounds` instead.\n") // gpxpy compatiblity
       .def("length_2d", &Gpx::GetLength2D)
-      .def("length_3d", &Gpx::GetLength3D);
+      .def("length_3d", &Gpx::GetLength3D)
+      .doc() = "Represent ``<gpx>`` data in GPX files.";
 
   m.def("parse", nb::overload_cast<const std::string&>(&ParseGpx), "path"_a);
 
@@ -305,9 +308,10 @@ NB_MODULE(fastgpx, m)
 
   nb::module_ geo_mod = m.def_submodule("geo");
 
-  geo_mod.def("haversine", &haversine, "latlong1"_a, "latlong2"_a);
+  geo_mod.def("haversine", &haversine, "latlong1"_a, "latlong2"_a,
+              "Haversine distance returned in meters using ``osmium`` logic.");
 
-  // Compatibility with gpxpy.geo.haversine_distance
+  // Signature compatibility with gpxpy.geo.haversine_distance
   geo_mod
       .def(
           "haversine_distance",
@@ -318,8 +322,12 @@ NB_MODULE(fastgpx, m)
           },
           "latitude_1"_a, "longitude_1"_a, "latitude_2"_a, "longitude_2"_a,
           ".. warning::\n\n"
-          "   Compatibility with ``gpxpy.geo.haversine_distance``.\n"
-          "   Prefer :func:`haversine` instead.\n")
+          "   Signature compatibility with ``gpxpy.geo.haversine_distance``.\n"
+          "   Prefer :func:`haversine` instead.\n\n"
+          ".. important::\n\n"
+          "   While the signature matches ``gpxpy``, the implementation uses ``osmium`` logic "
+          "   which may lead to slightly different results.")
+
       .doc() = "Algorithms for geographic calculations.";
 
   // fastgpx.polyline

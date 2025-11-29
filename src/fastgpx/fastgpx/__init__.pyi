@@ -166,6 +166,8 @@ class Bounds:
     def __str__(self) -> str: ...
 
 class Segment:
+    """Represent ``<trkseg>`` data in GPX files."""
+
     def __init__(self) -> None: ...
 
     @property
@@ -199,6 +201,8 @@ class Segment:
     def length_3d(self) -> float: ...
 
 class Track:
+    """Represent ``<trk>`` data in GPX files."""
+
     def __init__(self) -> None: ...
 
     @property
@@ -262,6 +266,8 @@ class Track:
     def length_3d(self) -> float: ...
 
 class Gpx:
+    """Represent ``<gpx>`` data in GPX files."""
+
     def __init__(self) -> None: ...
 
     @property
