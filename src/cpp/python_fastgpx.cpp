@@ -77,6 +77,33 @@ std::string FormatTimePointAsDateTime(
   return tp.has_value() ? FormatTimePointAsDateTime(*tp) : "None";
 }
 
+template<double fastgpx::LatLong::* Member>
+std::optional<double> GetBoundsMember(const fastgpx::Bounds& self,
+                                      std::optional<fastgpx::LatLong> fastgpx::Bounds::* field)
+{
+  if ((self.*field).has_value())
+  {
+    return (self.*field).value().*Member;
+  }
+  else
+  {
+    return std::nullopt;
+  }
+}
+
+template<double fastgpx::LatLong::* Member>
+void SetBoundsMember(fastgpx::Bounds& self,
+                     std::optional<fastgpx::LatLong> fastgpx::Bounds::* field, double value,
+                     double default_value)
+{
+  if (!(self.*field).has_value())
+  {
+    // Kludge: Setting only one member is not ideal.
+    self.*field = {.latitude = default_value, .longitude = default_value};
+  }
+  (self.*field).value().*Member = value;
+}
+
 } // namespace
 
 NB_MODULE(fastgpx, m)
@@ -161,87 +188,39 @@ NB_MODULE(fastgpx, m)
       // gpxpy compatibility:
       .def_prop_rw(
           "min_latitude",
-          [](const fastgpx::Bounds& self) -> std::optional<double> {
-            if (self.min.has_value())
-            {
-              return self.min->latitude;
-            }
-            else
-            {
-              return std::nullopt;
-            }
+          [](const fastgpx::Bounds& self) {
+            return GetBoundsMember<&fastgpx::LatLong::latitude>(self, &fastgpx::Bounds::min);
           },
           [](fastgpx::Bounds& self, double value) {
-            if (!self.min.has_value())
-            {
-              // Kludge: Setting only one member is not ideal.
-              self.min = {.latitude = std::numeric_limits<double>::max(),
-                          .longitude = std::numeric_limits<double>::max()};
-            }
-            self.min->latitude = value;
+            SetBoundsMember<&fastgpx::LatLong::latitude>(self, &fastgpx::Bounds::min, value,
+                                                         std::numeric_limits<double>::max());
           })
       .def_prop_rw(
           "min_longitude",
-          [](const fastgpx::Bounds& self) -> std::optional<double> {
-            if (self.min.has_value())
-            {
-              return self.min->longitude;
-            }
-            else
-            {
-              return std::nullopt;
-            }
+          [](const fastgpx::Bounds& self) {
+            return GetBoundsMember<&fastgpx::LatLong::longitude>(self, &fastgpx::Bounds::min);
           },
           [](fastgpx::Bounds& self, double value) {
-            if (!self.min.has_value())
-            {
-              // Kludge: Setting only one member is not ideal.
-              self.min = {.latitude = std::numeric_limits<double>::max(),
-                          .longitude = std::numeric_limits<double>::max()};
-            }
-            self.min->longitude = value;
+            SetBoundsMember<&fastgpx::LatLong::longitude>(self, &fastgpx::Bounds::min, value,
+                                                          std::numeric_limits<double>::max());
           })
       .def_prop_rw(
           "max_latitude",
-          [](const fastgpx::Bounds& self) -> std::optional<double> {
-            if (self.max.has_value())
-            {
-              return self.max->latitude;
-            }
-            else
-            {
-              return std::nullopt;
-            }
+          [](const fastgpx::Bounds& self) {
+            return GetBoundsMember<&fastgpx::LatLong::latitude>(self, &fastgpx::Bounds::max);
           },
           [](fastgpx::Bounds& self, double value) {
-            if (!self.max.has_value())
-            {
-              // Kludge: Setting only one member is not ideal.
-              self.max = {.latitude = std::numeric_limits<double>::min(),
-                          .longitude = std::numeric_limits<double>::min()};
-            }
-            self.max->latitude = value;
+            SetBoundsMember<&fastgpx::LatLong::latitude>(self, &fastgpx::Bounds::max, value,
+                                                         std::numeric_limits<double>::min());
           })
       .def_prop_rw(
           "max_longitude",
-          [](const fastgpx::Bounds& self) -> std::optional<double> {
-            if (self.max.has_value())
-            {
-              return self.max->longitude;
-            }
-            else
-            {
-              return std::nullopt;
-            }
+          [](const fastgpx::Bounds& self) {
+            return GetBoundsMember<&fastgpx::LatLong::longitude>(self, &fastgpx::Bounds::max);
           },
           [](fastgpx::Bounds& self, double value) {
-            if (!self.max.has_value())
-            {
-              // Kludge: Setting only one member is not ideal.
-              self.max = {.latitude = std::numeric_limits<double>::min(),
-                          .longitude = std::numeric_limits<double>::min()};
-            }
-            self.max->longitude = value;
+            SetBoundsMember<&fastgpx::LatLong::longitude>(self, &fastgpx::Bounds::max, value,
+                                                          std::numeric_limits<double>::min());
           })
       .def(nb::self == nb::self)
       .def("__repr__",
