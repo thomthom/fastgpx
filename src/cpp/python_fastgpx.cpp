@@ -19,20 +19,23 @@
 
 #include "python_utc_chrono_nanobind.hpp"
 
+using chrono_timepoint = std::chrono::system_clock::time_point;
+using namespace fastgpx;
 namespace nb = nanobind;
+using namespace nb::literals;
 
 namespace {
 
-fastgpx::polyline::Precision IntToPrecision(const int value)
+polyline::Precision IntToPrecision(const int value)
 {
-  fastgpx::polyline::Precision precision;
+  polyline::Precision precision;
   if (value == 6)
   {
-    precision = fastgpx::polyline::Precision::Six;
+    precision = polyline::Precision::Six;
   }
   else if (value == 5)
   {
-    precision = fastgpx::polyline::Precision::Five;
+    precision = polyline::Precision::Five;
   }
   else
   {
@@ -41,45 +44,43 @@ fastgpx::polyline::Precision IntToPrecision(const int value)
   return precision;
 }
 
-using OptionalTimePoint = std::optional<std::chrono::system_clock::time_point>;
+using OptionalTimePoint = std::optional<chrono_timepoint>;
 
-std::string FormatLatLongAsTuples(const fastgpx::LatLong& ll)
+std::string FormatLatLongAsTuples(const LatLong& ll)
 {
   return std::format("({}, {}, {})", ll.latitude, ll.longitude, ll.elevation);
 }
 
-std::string FormatLatLongAsTuples(const std::optional<fastgpx::LatLong>& ll)
+std::string FormatLatLongAsTuples(const std::optional<LatLong>& ll)
 {
   return ll.has_value() ? FormatLatLongAsTuples(*ll) : "None";
 }
 
-std::string FormatTimePointAsISO8601(const std::chrono::system_clock::time_point& tp)
+std::string FormatTimePointAsISO8601(const chrono_timepoint& tp)
 {
   const auto tp_seconds = std::chrono::floor<std::chrono::seconds>(tp);
   return std::format("{:%Y-%m-%dT%H:%M:%SZ}", tp_seconds);
 }
 
-std::string FormatTimePointAsISO8601(const std::optional<std::chrono::system_clock::time_point>& tp)
+std::string FormatTimePointAsISO8601(const std::optional<chrono_timepoint>& tp)
 {
   return tp.has_value() ? FormatTimePointAsISO8601(*tp) : "None";
 }
 
 // Format as a python datetime string
-std::string FormatTimePointAsDateTime(const std::chrono::system_clock::time_point& tp)
+std::string FormatTimePointAsDateTime(const chrono_timepoint& tp)
 {
   nb::object py = nb::cast(tp);
   return nb::repr(py).c_str();
 }
 
-std::string FormatTimePointAsDateTime(
-    const std::optional<std::chrono::system_clock::time_point>& tp)
+std::string FormatTimePointAsDateTime(const std::optional<chrono_timepoint>& tp)
 {
   return tp.has_value() ? FormatTimePointAsDateTime(*tp) : "None";
 }
 
-template<double fastgpx::LatLong::* Member>
-std::optional<double> GetBoundsMember(const fastgpx::Bounds& self,
-                                      std::optional<fastgpx::LatLong> fastgpx::Bounds::* field)
+template<double LatLong::* Member>
+std::optional<double> GetBoundsMember(const Bounds& self, std::optional<LatLong> Bounds::* field)
 {
   if ((self.*field).has_value())
   {
@@ -91,9 +92,8 @@ std::optional<double> GetBoundsMember(const fastgpx::Bounds& self,
   }
 }
 
-template<double fastgpx::LatLong::* Member>
-void SetBoundsMember(fastgpx::Bounds& self,
-                     std::optional<fastgpx::LatLong> fastgpx::Bounds::* field, double value,
+template<double LatLong::* Member>
+void SetBoundsMember(Bounds& self, std::optional<LatLong> Bounds::* field, double value,
                      double default_value)
 {
   if (!(self.*field).has_value())
@@ -108,220 +108,211 @@ void SetBoundsMember(fastgpx::Bounds& self,
 
 NB_MODULE(fastgpx, m)
 {
-  nb::class_<fastgpx::TimeBounds>(m, "TimeBounds")
+  nb::class_<TimeBounds>(m, "TimeBounds")
       .def(nb::init<>())
-      .def(nb::init<OptionalTimePoint, OptionalTimePoint>(), nb::arg("start_time").none(),
-           nb::arg("end_time").none())
-      .def_rw("start_time", &fastgpx::TimeBounds::start_time, nb::arg("start_time").none())
-      .def_rw("end_time", &fastgpx::TimeBounds::end_time, nb::arg("end_time").none())
-      .def("is_empty", &fastgpx::TimeBounds::IsEmpty)
-      .def("is_range", &fastgpx::TimeBounds::IsRange)
-      .def("add",
-           nb::overload_cast<std::chrono::system_clock::time_point>(&fastgpx::TimeBounds::Add),
-           nb::arg("datetime"))
-      .def("add", nb::overload_cast<const fastgpx::TimeBounds&>(&fastgpx::TimeBounds::Add),
-           nb::arg("timebounds"))
+      .def(nb::init<OptionalTimePoint, OptionalTimePoint>(), "start_time"_a.none(),
+           "end_time"_a.none())
+      .def_rw("start_time", &TimeBounds::start_time, "start_time"_a.none())
+      .def_rw("end_time", &TimeBounds::end_time, "end_time"_a.none())
+      .def("is_empty", &TimeBounds::IsEmpty)
+      .def("is_range", &TimeBounds::IsRange)
+      .def("add", nb::overload_cast<chrono_timepoint>(&TimeBounds::Add), "datetime"_a)
+      .def("add", nb::overload_cast<const TimeBounds&>(&TimeBounds::Add), "timebounds"_a)
       .def(nb::self == nb::self)
       .def("__repr__",
-           [](const fastgpx::TimeBounds& tb) {
+           [](const TimeBounds& tb) {
              const auto start_time = FormatTimePointAsDateTime(tb.start_time);
              const auto end_time = FormatTimePointAsDateTime(tb.end_time);
              return std::format("fastgpx.TimeBounds(start_time={}, end_time={})", start_time,
                                 end_time);
            })
-      .def("__str__", [](const fastgpx::TimeBounds& tb) {
+      .def("__str__", [](const TimeBounds& tb) {
         const auto start_time = FormatTimePointAsISO8601(tb.start_time);
         const auto end_time = FormatTimePointAsISO8601(tb.end_time);
         return std::format("TimeBounds({} to {})", start_time, end_time);
       });
 
-  nb::class_<fastgpx::LatLong>(m, "LatLong")
+  nb::class_<LatLong>(m, "LatLong")
       .def(nb::init<>())
-      .def(nb::init<double, double, double>(), nb::arg("latitude"), nb::arg("longitude"),
-           nb::arg("elevation") = 0.0)
-      .def_rw("latitude", &fastgpx::LatLong::latitude)
-      .def_rw("longitude", &fastgpx::LatLong::longitude)
-      .def_rw("elevation", &fastgpx::LatLong::elevation)
+      .def(nb::init<double, double, double>(), "latitude"_a, "longitude"_a, "elevation"_a = 0.0)
+      .def_rw("latitude", &LatLong::latitude)
+      .def_rw("longitude", &LatLong::longitude)
+      .def_rw("elevation", &LatLong::elevation)
       .def(nb::self == nb::self)
       .def("__repr__",
-           [](const fastgpx::LatLong& ll) {
+           [](const LatLong& ll) {
              return std::format("fastgpx.LatLong(latitude={}, longitude={}, elevation={})",
                                 ll.latitude, ll.longitude, ll.elevation);
            })
-      .def("__str__", [](const fastgpx::LatLong& ll) {
+      .def("__str__", [](const LatLong& ll) {
         return std::format("LatLong({}, {}, {})", ll.latitude, ll.longitude, ll.elevation);
       });
 
-  nb::class_<fastgpx::Bounds>(m, "Bounds")
+  nb::class_<Bounds>(m, "Bounds")
       .def(nb::init<>())
-      .def(nb::init<const fastgpx::LatLong&, const fastgpx::LatLong&>(), nb::arg("min"),
-           nb::arg("max"))
+      .def(nb::init<const LatLong&, const LatLong&>(), "min"_a, "max"_a)
       // Allow tuples instead of explicit LatLong objects.
       .def(
           "__init__",
-          [](fastgpx::Bounds* obj, std::tuple<double, double> min_tuple,
+          [](Bounds* obj, std::tuple<double, double> min_tuple,
              std::tuple<double, double> max_tuple) {
-            fastgpx::LatLong min{std::get<0>(min_tuple), std::get<1>(min_tuple)};
-            fastgpx::LatLong max{std::get<0>(max_tuple), std::get<1>(max_tuple)};
-            new (obj) fastgpx::Bounds(min, max);
+            LatLong min{std::get<0>(min_tuple), std::get<1>(min_tuple)};
+            LatLong max{std::get<0>(max_tuple), std::get<1>(max_tuple)};
+            new (obj) Bounds(min, max);
           },
-          nb::arg("min"), nb::arg("max"))
+          "min"_a, "max"_a)
       .def(
           "__init__",
-          [](fastgpx::Bounds* obj, std::tuple<double, double, double> min_tuple,
+          [](Bounds* obj, std::tuple<double, double, double> min_tuple,
              std::tuple<double, double, double> max_tuple) {
-            fastgpx::LatLong min{std::get<0>(min_tuple), std::get<1>(min_tuple),
-                                 std::get<2>(min_tuple)};
-            fastgpx::LatLong max{std::get<0>(max_tuple), std::get<1>(max_tuple),
-                                 std::get<2>(max_tuple)};
-            new (obj) fastgpx::Bounds(min, max);
+            LatLong min{std::get<0>(min_tuple), std::get<1>(min_tuple), std::get<2>(min_tuple)};
+            LatLong max{std::get<0>(max_tuple), std::get<1>(max_tuple), std::get<2>(max_tuple)};
+            new (obj) Bounds(min, max);
           },
-          nb::arg("min"), nb::arg("max"))
-      .def_rw("min", &fastgpx::Bounds::min)
-      .def_rw("max", &fastgpx::Bounds::max)
-      .def("is_empty", &fastgpx::Bounds::IsEmpty)
-      .def("add", nb::overload_cast<const fastgpx::LatLong&>(&fastgpx::Bounds::Add),
-           nb::arg("location"))
-      .def("add", nb::overload_cast<const fastgpx::Bounds&>(&fastgpx::Bounds::Add),
-           nb::arg("bounds"))
-      .def("max_bounds", &fastgpx::Bounds::MaxBounds, nb::arg("bounds"))
+          "min"_a, "max"_a)
+      .def_rw("min", &Bounds::min)
+      .def_rw("max", &Bounds::max)
+      .def("is_empty", &Bounds::IsEmpty)
+      .def("add", nb::overload_cast<const LatLong&>(&Bounds::Add), "location"_a)
+      .def("add", nb::overload_cast<const Bounds&>(&Bounds::Add), "bounds"_a)
+      .def("max_bounds", &Bounds::MaxBounds, "bounds"_a)
       // gpxpy compatibility:
       .def_prop_rw(
           "min_latitude",
-          [](const fastgpx::Bounds& self) {
-            return GetBoundsMember<&fastgpx::LatLong::latitude>(self, &fastgpx::Bounds::min);
+          [](const Bounds& self) {
+            return GetBoundsMember<&LatLong::latitude>(self, &Bounds::min);
           },
-          [](fastgpx::Bounds& self, double value) {
-            SetBoundsMember<&fastgpx::LatLong::latitude>(self, &fastgpx::Bounds::min, value,
-                                                         std::numeric_limits<double>::max());
+          [](Bounds& self, double value) {
+            SetBoundsMember<&LatLong::latitude>(self, &Bounds::min, value,
+                                                std::numeric_limits<double>::max());
           })
       .def_prop_rw(
           "min_longitude",
-          [](const fastgpx::Bounds& self) {
-            return GetBoundsMember<&fastgpx::LatLong::longitude>(self, &fastgpx::Bounds::min);
+          [](const Bounds& self) {
+            return GetBoundsMember<&LatLong::longitude>(self, &Bounds::min);
           },
-          [](fastgpx::Bounds& self, double value) {
-            SetBoundsMember<&fastgpx::LatLong::longitude>(self, &fastgpx::Bounds::min, value,
-                                                          std::numeric_limits<double>::max());
+          [](Bounds& self, double value) {
+            SetBoundsMember<&LatLong::longitude>(self, &Bounds::min, value,
+                                                 std::numeric_limits<double>::max());
           })
       .def_prop_rw(
           "max_latitude",
-          [](const fastgpx::Bounds& self) {
-            return GetBoundsMember<&fastgpx::LatLong::latitude>(self, &fastgpx::Bounds::max);
+          [](const Bounds& self) {
+            return GetBoundsMember<&LatLong::latitude>(self, &Bounds::max);
           },
-          [](fastgpx::Bounds& self, double value) {
-            SetBoundsMember<&fastgpx::LatLong::latitude>(self, &fastgpx::Bounds::max, value,
-                                                         std::numeric_limits<double>::min());
+          [](Bounds& self, double value) {
+            SetBoundsMember<&LatLong::latitude>(self, &Bounds::max, value,
+                                                std::numeric_limits<double>::min());
           })
       .def_prop_rw(
           "max_longitude",
-          [](const fastgpx::Bounds& self) {
-            return GetBoundsMember<&fastgpx::LatLong::longitude>(self, &fastgpx::Bounds::max);
+          [](const Bounds& self) {
+            return GetBoundsMember<&LatLong::longitude>(self, &Bounds::max);
           },
-          [](fastgpx::Bounds& self, double value) {
-            SetBoundsMember<&fastgpx::LatLong::longitude>(self, &fastgpx::Bounds::max, value,
-                                                          std::numeric_limits<double>::min());
+          [](Bounds& self, double value) {
+            SetBoundsMember<&LatLong::longitude>(self, &Bounds::max, value,
+                                                 std::numeric_limits<double>::min());
           })
       .def(nb::self == nb::self)
       .def("__repr__",
-           [](const fastgpx::Bounds& ll) {
+           [](const Bounds& ll) {
              const auto min = FormatLatLongAsTuples(ll.min);
              const auto max = FormatLatLongAsTuples(ll.max);
              return std::format("fastgpx.Bounds(min={}, max={})", min, max);
            })
-      .def("__str__", [](const fastgpx::Bounds& ll) {
+      .def("__str__", [](const Bounds& ll) {
         const auto min = FormatLatLongAsTuples(ll.min);
         const auto max = FormatLatLongAsTuples(ll.max);
         return std::format("Bounds(min={}, max={})", min, max);
       });
 
-  nb::class_<fastgpx::Segment>(m, "Segment")
+  nb::class_<Segment>(m, "Segment")
       .def(nb::init<>()) // Default constructor
-      .def_rw("points", &fastgpx::Segment::points)
-      .def("bounds", &fastgpx::Segment::GetBounds)
-      .def("get_bounds", &fastgpx::Segment::GetBounds) // gpxpy compatiblity
-      .def("time_bounds", &fastgpx::Segment::GetTimeBounds)
-      .def("get_time_bounds", &fastgpx::Segment::GetTimeBounds) // gpxpy compatiblity
-      .def("length_2d", &fastgpx::Segment::GetLength2D)
-      .def("length_3d", &fastgpx::Segment::GetLength3D);
+      .def_rw("points", &Segment::points)
+      .def("bounds", &Segment::GetBounds)
+      .def("get_bounds", &Segment::GetBounds) // gpxpy compatiblity
+      .def("time_bounds", &Segment::GetTimeBounds)
+      .def("get_time_bounds", &Segment::GetTimeBounds) // gpxpy compatiblity
+      .def("length_2d", &Segment::GetLength2D)
+      .def("length_3d", &Segment::GetLength3D);
 
-  nb::class_<fastgpx::Track>(m, "Track")
+  nb::class_<Track>(m, "Track")
       .def(nb::init<>()) // Default constructor
-      .def_rw("name", &fastgpx::Track::name)
-      .def_rw("comment", &fastgpx::Track::comment)
-      .def_rw("description", &fastgpx::Track::description)
-      .def_rw("number", &fastgpx::Track::number)
-      .def_rw("type", &fastgpx::Track::type)
-      .def_rw("segments", &fastgpx::Track::segments)
-      .def("bounds", &fastgpx::Track::GetBounds)
-      .def("get_bounds", &fastgpx::Track::GetBounds) // gpxpy compatiblity
-      .def("time_bounds", &fastgpx::Track::GetTimeBounds)
-      .def("get_time_bounds", &fastgpx::Track::GetTimeBounds) // gpxpy compatiblity
-      .def("length_2d", &fastgpx::Track::GetLength2D)
-      .def("length_3d", &fastgpx::Track::GetLength3D);
+      .def_rw("name", &Track::name)
+      .def_rw("comment", &Track::comment)
+      .def_rw("description", &Track::description)
+      .def_rw("number", &Track::number)
+      .def_rw("type", &Track::type)
+      .def_rw("segments", &Track::segments)
+      .def("bounds", &Track::GetBounds)
+      .def("get_bounds", &Track::GetBounds) // gpxpy compatiblity
+      .def("time_bounds", &Track::GetTimeBounds)
+      .def("get_time_bounds", &Track::GetTimeBounds) // gpxpy compatiblity
+      .def("length_2d", &Track::GetLength2D)
+      .def("length_3d", &Track::GetLength3D);
 
-  nb::class_<fastgpx::Gpx>(m, "Gpx")
+  nb::class_<Gpx>(m, "Gpx")
       .def(nb::init<>()) // Default constructor
-      .def_rw("tracks", &fastgpx::Gpx::tracks)
-      .def_rw("name", &fastgpx::Gpx::name)
-      .def("bounds", &fastgpx::Gpx::GetBounds)
-      .def("get_bounds", &fastgpx::Gpx::GetBounds) // gpxpy compatiblity
-      .def("time_bounds", &fastgpx::Gpx::GetTimeBounds)
-      .def("get_time_bounds", &fastgpx::Gpx::GetTimeBounds) // gpxpy compatiblity
-      .def("length_2d", &fastgpx::Gpx::GetLength2D)
-      .def("length_3d", &fastgpx::Gpx::GetLength3D);
+      .def_rw("tracks", &Gpx::tracks)
+      .def_rw("name", &Gpx::name)
+      .def("bounds", &Gpx::GetBounds)
+      .def("get_bounds", &Gpx::GetBounds) // gpxpy compatiblity
+      .def("time_bounds", &Gpx::GetTimeBounds)
+      .def("get_time_bounds", &Gpx::GetTimeBounds) // gpxpy compatiblity
+      .def("length_2d", &Gpx::GetLength2D)
+      .def("length_3d", &Gpx::GetLength3D);
 
-  m.def("parse", nb::overload_cast<const std::string&>(&fastgpx::ParseGpx), nb::arg("path"));
+  m.def("parse", nb::overload_cast<const std::string&>(&ParseGpx), "path"_a);
 
   // fastgpx geo
 
   nb::module_ geo_mod = m.def_submodule("geo");
 
-  geo_mod.def("haversine", &fastgpx::haversine, nb::arg("latlong1"), nb::arg("latlong2"));
+  geo_mod.def("haversine", &haversine, "latlong1"_a, "latlong2"_a);
 
   // Compatibility with gpxpy.geo.haversine_distance
   geo_mod
       .def(
           "haversine_distance",
           [](double latitude1, double longitude1, double latitude2, double longitude2) {
-            const fastgpx::LatLong ll1(latitude1, longitude1);
-            const fastgpx::LatLong ll2(latitude2, longitude2);
-            return fastgpx::haversine(ll1, ll2);
+            const LatLong ll1(latitude1, longitude1);
+            const LatLong ll2(latitude2, longitude2);
+            return haversine(ll1, ll2);
           },
-          nb::arg("latitude_1"), nb::arg("longitude_1"), nb::arg("latitude_2"),
-          nb::arg("longitude_2"), "Compatibility with `gpxpy.geo.haversine_distance`")
+          "latitude_1"_a, "longitude_1"_a, "latitude_2"_a, "longitude_2"_a,
+          "Compatibility with `gpxpy.geo.haversine_distance`")
       .doc() = "Algorithms for geographic calculations.";
 
   // fastgpx.polyline
 
   nb::module_ polyline_mod = m.def_submodule("polyline");
 
-  nb::enum_<fastgpx::polyline::Precision>(polyline_mod, "Precision")
-      .value("Five", fastgpx::polyline::Precision::Five)
-      .value("Six", fastgpx::polyline::Precision::Six);
+  nb::enum_<polyline::Precision>(polyline_mod, "Precision")
+      .value("Five", polyline::Precision::Five)
+      .value("Six", polyline::Precision::Six);
 
   polyline_mod.def(
       "encode",
       // Wrapping in std::vector because std::span doesn't work out of the box.
-      [](const std::vector<fastgpx::LatLong>& points, fastgpx::polyline::Precision precision) {
-        return fastgpx::polyline::encode(points, precision);
+      [](const std::vector<LatLong>& points, polyline::Precision precision) {
+        return polyline::encode(points, precision);
       },
-      nb::arg("locations"), nb::arg("precision") = fastgpx::polyline::Precision::Five);
+      "locations"_a, "precision"_a = polyline::Precision::Five);
 
   polyline_mod.def(
       "encode",
-      [](const std::vector<fastgpx::LatLong>& points, int precision) {
-        return fastgpx::polyline::encode(points, IntToPrecision(precision));
+      [](const std::vector<LatLong>& points, int precision) {
+        return polyline::encode(points, IntToPrecision(precision));
       },
-      nb::arg("locations"), nb::arg("precision") = 5);
+      "locations"_a, "precision"_a = 5);
 
-  polyline_mod.def("decode", &fastgpx::polyline::decode, nb::arg("encoded"),
-                   nb::arg("precision") = fastgpx::polyline::Precision::Five);
+  polyline_mod.def("decode", &polyline::decode, "encoded"_a,
+                   "precision"_a = polyline::Precision::Five);
 
   polyline_mod.def(
       "decode",
       [](const std::string_view encoded, int precision) {
-        return fastgpx::polyline::decode(encoded, IntToPrecision(precision));
+        return polyline::decode(encoded, IntToPrecision(precision));
       },
-      nb::arg("locations"), nb::arg("precision") = 5);
+      "locations"_a, "precision"_a = 5);
 }
