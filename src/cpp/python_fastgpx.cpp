@@ -44,8 +44,6 @@ polyline::Precision IntToPrecision(const int value)
   return precision;
 }
 
-using OptionalTimePoint = std::optional<chrono_timepoint>;
-
 std::string FormatLatLongAsTuples(const LatLong& ll)
 {
   return std::format("({}, {}, {})", ll.latitude, ll.longitude, ll.elevation);
@@ -110,8 +108,8 @@ NB_MODULE(fastgpx, m)
 {
   nb::class_<TimeBounds>(m, "TimeBounds")
       .def(nb::init<>())
-      .def(nb::init<OptionalTimePoint, OptionalTimePoint>(), "start_time"_a.none(),
-           "end_time"_a.none())
+      .def(nb::init<std::optional<chrono_timepoint>, std::optional<chrono_timepoint>>(),
+           "start_time"_a.none(), "end_time"_a.none())
       .def_rw("start_time", &TimeBounds::start_time, "start_time"_a.none())
       .def_rw("end_time", &TimeBounds::end_time, "end_time"_a.none())
       .def("is_empty", &TimeBounds::IsEmpty)
