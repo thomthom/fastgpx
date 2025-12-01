@@ -26,6 +26,19 @@ for track in gpx.tracks:
             print(f'Point: {point.latitude}, {point.longitude}')
 ```
 
+```py
+import fastgpx.polyline
+from fastgpx.polyline import Precision
+
+locations = [
+  fastgpx.LatLong(64, 10),
+  fastgpx.LatLong(66, 11),
+]
+encoded = fastgpx.polyline.encode(locations, precision=Precision.Six)
+
+decoded = fastgpx.polyline.decode(encoded, precision=Precision.Six)
+```
+
 [Documentation](https://thomthom.github.io/fastgpx/)
 
 ## Requirements
@@ -57,6 +70,10 @@ better since `gpxpy` was created.
 
 Reference: Open ticket on making `etree` default:
 https://github.com/tkrajina/gpxpy/issues/248
+
+`fastgpx` is not intended as a replacement for `gpxpy`. It mainly focuses on extracting GPX data
+fast for performance critical tasks. For the few functionalities that does overlap with `gpxpy`
+compatible method calls has been added so that one can quickly swap between `fastgpx` and `gpxy`.
 
 ## Benchmarks
 
@@ -149,3 +166,20 @@ pugixml (C++): 0.381095 seconds (Average: 0.127032 seconds)
 
 For computing the length of a GPX file, `pugixml` in a Python C extension was ~140
 times faster than using `gpxpy`.
+
+## Encoding/decoding polylines
+
+`fastgpx` also provide faster alternatives to `polyline.encode` and `polyline.decode`:
+
+```
+> uv run benchmark_polyline.py
+GPX path: ../gpx/2024 Great Roadtrip
+GPX files: 24
+Iterations: 10
+
+benchmarking fastgpx.polyline.encode
+2.988260000005539
+
+benchmarking polyline.encode
+7.145514600000752
+```
