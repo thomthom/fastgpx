@@ -36,7 +36,7 @@ classifiers = [
 dev = [ # Tests and build
   "gpxpy",
   "nanobind>=2.9.2",
-  "polyline",
+  "polyline>=2.0.4",
   "pytest",
 ]
 benchmarks = [ #
