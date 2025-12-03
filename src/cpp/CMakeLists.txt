@@ -171,7 +171,7 @@ nanobind_add_stub(
     ${CMAKE_SOURCE_DIR}/src/fastgpx/polyline.pyi
 )
 
-install(TARGETS fastgpx LIBRARY DESTINATION fastgpx)
+install(TARGETS fastgpx LIBRARY DESTINATION .)
 
 # For development purposes, copy the .pyd file to the site-packages directory.
 # This is not needed for the final installation, as the .pyd file will be copied
@@ -179,10 +179,10 @@ install(TARGETS fastgpx LIBRARY DESTINATION fastgpx)
 # TODO: Use a custom VSCode command to copy the binary?
 add_custom_command(TARGET fastgpx POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory
-        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx/"
+        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:fastgpx>"  # This is the .pyd file
-        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/fastgpx/"
+        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/"
 )
 
 if(BUILD_TESTING)
