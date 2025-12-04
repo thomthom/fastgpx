@@ -1,3 +1,5 @@
+# This script updates the expected GPX data used in C++ tests.
+
 import json
 from pathlib import Path
 
