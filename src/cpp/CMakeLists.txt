@@ -1,6 +1,6 @@
 include(FetchContent)
 
-# Prevent pugixml from adding it's headers and libs to the install targets.
+# Prevent pugixml from adding its headers and libs to the install targets.
 # Requires v1.15+.
 set(PUGIXML_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
