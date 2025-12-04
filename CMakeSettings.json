@@ -7,7 +7,7 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
-      "cmakeCommandArgs": "-DPYTHON_EXECUTABLE=.venv/Scripts/python.exe -DCMAKE_PREFIX_PATH=${projectDir}/.venv/Lib/site-packages/pybind11/share/cmake/pybind11",
+      "cmakeCommandArgs": "-DPYTHON_EXECUTABLE=.venv/Scripts/python.exe -DCMAKE_PREFIX_PATH=${projectDir}/.venv/Lib/site-packages/nanobind11/cmake",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "cmakeExecutable": "C:/Program Files/CMake/bin/cmake.exe"
@@ -19,7 +19,7 @@
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeExecutable": "C:/Program Files/CMake/bin/cmake.exe",
-      "cmakeCommandArgs": "-DPYTHON_EXECUTABLE=.venv/Scripts/python.exe -DCMAKE_PREFIX_PATH=${projectDir}/.venv/Lib/site-packages/pybind11/share/cmake/pybind11",
+      "cmakeCommandArgs": "-DPYTHON_EXECUTABLE=.venv/Scripts/python.exe -DCMAKE_PREFIX_PATH=${projectDir}/.venv/Lib/site-packages/nanobind11/cmake",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "msvc_x64_x64" ],
