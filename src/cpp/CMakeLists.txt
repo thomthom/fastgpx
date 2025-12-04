@@ -35,9 +35,11 @@ function(set_common_properties TARGET)
     message(FATAL_ERROR "Target ${TARGET} does not exist!")
   endif()
 
-  set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD 23)
-  set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD_REQUIRED ON)
-  set_property(TARGET ${TARGET} PROPERTY CXX_EXTENSIONS OFF)
+  set_target_properties(${TARGET} PROPERTIES
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+  )
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC")
     # Elevate warning level.
@@ -83,27 +85,31 @@ endfunction()
 
 # fastgpx static library
 
-set(SOURCES
-  fastgpx/datetime.hpp
-  fastgpx/datetime.cpp
-  fastgpx/errors.hpp
-  fastgpx/errors.cpp
-  fastgpx/fastgpx.hpp
-  fastgpx/fastgpx.cpp
-  fastgpx/filesystem.hpp
-  fastgpx/filesystem.cpp
-  fastgpx/geom.hpp
-  fastgpx/geom.cpp
-  fastgpx/polyline.hpp
-  fastgpx/polyline.cpp
-)
-add_library(fastgpx-static STATIC ${SOURCES})
+add_library(fastgpx-static STATIC)
 set_common_properties(fastgpx-static)
 target_link_libraries(fastgpx-static PRIVATE pugixml)
-target_include_directories(fastgpx-static PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-# Need -fPIC for linking static library into shared library on Linux (and macOS?).
 set_target_properties(fastgpx-static PROPERTIES
+  # Need -fPIC for linking static library into shared library on Linux (and macOS?).
   POSITION_INDEPENDENT_CODE ON
+)
+target_sources(fastgpx-static
+  PUBLIC
+    FILE_SET fastgpx_static_headers
+    TYPE HEADERS
+    FILES
+      fastgpx/datetime.hpp
+      fastgpx/errors.hpp
+      fastgpx/fastgpx.hpp
+      fastgpx/filesystem.hpp
+      fastgpx/geom.hpp
+      fastgpx/polyline.hpp
+    PRIVATE
+      fastgpx/datetime.cpp
+      fastgpx/errors.cpp
+      fastgpx/fastgpx.cpp
+      fastgpx/filesystem.cpp
+      fastgpx/geom.cpp
+      fastgpx/polyline.cpp
 )
 
 # fastgpx python module
@@ -126,7 +132,6 @@ find_package(nanobind CONFIG REQUIRED)
 nanobind_add_module(
   # Name of the extension:
   fastgpx
-  # _fastgpx_impl
 
   NB_STATIC
 
