@@ -53,7 +53,7 @@ TEST_CASE("Compute 2D distance", "[distance]")
 {
   // ~380km route
   const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
-  const auto gpx = fastgpx::ParseGpx(path);
+  const auto gpx = fastgpx::LoadGpx(path);
   // Reference lengths are based on the gpxpy implementations:
   const auto expected_haversine = GpxLength(gpx, fastgpx::v1::haversine);
   const auto expected_length2d = GpxLength(gpx, fastgpx_distance2d);
@@ -94,7 +94,7 @@ TEST_CASE("Compute haversine distance", "[distance]")
 {
   // ~380km route
   const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
-  const auto gpx = fastgpx::ParseGpx(path);
+  const auto gpx = fastgpx::LoadGpx(path);
 
   const auto expected_haversine_2d = GpxLength(gpx, fastgpx::v2::haversine);
   const auto expected_haversine_3d = GpxLength(gpx, fastgpx::v2::haversine);
@@ -118,7 +118,7 @@ TEST_CASE("Benchmark distance", "[!benchmark][distance]")
 {
   // ~380km route
   const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
-  const auto gpx = fastgpx::ParseGpx(path);
+  const auto gpx = fastgpx::LoadGpx(path);
 
   BENCHMARK("gpxpy haversine")
   {

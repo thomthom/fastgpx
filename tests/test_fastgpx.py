@@ -26,7 +26,7 @@ class TestGpx:
     # fastgpx.Gpx.length_2d
 
     def test_length2d(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         distance = gpx.length_2d()
         assert distance == pytest.approx(382952.7193, abs=METERS_TOL)
 
@@ -34,22 +34,22 @@ class TestGpx:
 
     def test_gpx_name_missing(self):
         path = 'gpx/test/debug-segment.gpx'
-        gpx = fastgpx.parse(path)
+        gpx = fastgpx.load(path)
         assert gpx.name is None
 
     def test_gpx_name_empty_string(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         assert gpx.name == ''
 
     def test_gpx_name(self):
         path = 'gpx/test/two-points.gpx'
-        gpx = fastgpx.parse(path)
+        gpx = fastgpx.load(path)
         assert gpx.name == 'Two Point Segment'
 
     # fastgpx.Gpx.bounds
 
     def test_bounds(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         bounds = gpx.bounds()
         assert not bounds.is_empty()
         assert bounds.min is not None
@@ -62,7 +62,7 @@ class TestGpx:
     # fastgpx.Gpx.time_bounds
 
     def test_time_bounds(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         time_bounds = gpx.time_bounds()
         assert not time_bounds.is_empty()
 
@@ -85,14 +85,23 @@ class TestGpx:
     # fastgpx.Gpx.__repr__
 
     def test_repr(self):
-        gpx = fastgpx.parse("gpx/test/two-points.gpx")
+        gpx = fastgpx.load("gpx/test/two-points.gpx")
         repr_str = repr(gpx)
         assert repr_str == "<fastgpx.Gpx(tracks: 1, name: 'Two Point Segment')>"
 
     def test_repr_no_filename(self):
-        gpx = fastgpx.parse("gpx/test/debug-segment.gpx")
+        gpx = fastgpx.load("gpx/test/debug-segment.gpx")
         repr_str = repr(gpx)
         assert repr_str == "<fastgpx.Gpx(tracks: 1)>"
+
+    # fastgpx.parse
+
+    def test_parse(self, gpx_path: str):
+        with open(gpx_path, 'r', encoding='utf-8') as gpx_file:
+            gpx_data = gpx_file.read()
+        gpx = fastgpx.parse(gpx_data)
+        distance = gpx.length_2d()
+        assert distance == pytest.approx(382952.7193, abs=METERS_TOL)
 
 
 class TestTrack:
@@ -101,7 +110,7 @@ class TestTrack:
 
     def test_simple_track_length2d(self):
         path = 'gpx/test/debug-segment.gpx'
-        gpx = fastgpx.parse(path)
+        gpx = fastgpx.load(path)
         # Assigning intermediate values for easier debug inspection.
         tracks = gpx.tracks
         track = tracks[0]
@@ -109,7 +118,7 @@ class TestTrack:
         assert distance == pytest.approx(1.3839, abs=METERS_TOL)
 
     def test_length2d(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         track = gpx.tracks[0]
         distance = track.length_2d()
         assert distance == pytest.approx(382952.7193, abs=METERS_TOL)
@@ -117,7 +126,7 @@ class TestTrack:
     # fastgpx.Track.__repr__
 
     def test_repr(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         track = gpx.tracks[0]
         repr_str = repr(track)
         assert repr_str == "<fastgpx.Track(segments: 9)>"
@@ -129,7 +138,7 @@ class TestSegment:
 
     def test_simple_segment_length2d(self):
         path = 'gpx/test/debug-segment.gpx'
-        gpx = fastgpx.parse(path)
+        gpx = fastgpx.load(path)
         # Assigning intermediate values for easier debug inspection.
         tracks = gpx.tracks
         track = tracks[0]
@@ -139,7 +148,7 @@ class TestSegment:
         assert distance == pytest.approx(1.3839, abs=METERS_TOL)
 
     def test_length2d(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         track = gpx.tracks[0]
         segment = track.segments[0]
         distance = segment.length_2d()
@@ -148,7 +157,7 @@ class TestSegment:
     # fastgpx.Segment.__repr__
 
     def test_repr(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         segment = gpx.tracks[0].segments[0]
         repr_str = repr(segment)
         assert repr_str == "<fastgpx.Segment(points: 1326)>"

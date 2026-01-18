@@ -144,9 +144,8 @@ private:
   mutable std::optional<TimeBounds> time_bounds;
 };
 
-Gpx ParseGpx(const std::filesystem::path& path);
-// pybind11 appear to mangle the unicode string when binding directly to
-// std::filesystem::path. But going via a std::string works.
+Gpx LoadGpx(const std::filesystem::path& path);
+
 Gpx ParseGpx(const std::string& path);
 
 } // namespace fastgpx

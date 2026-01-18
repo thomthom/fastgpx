@@ -11,7 +11,7 @@ class TestGeo:
 
     def test_haversine(self):
         path = 'gpx/test/debug-segment.gpx'
-        gpx = fastgpx.parse(path)
+        gpx = fastgpx.load(path)
         points = gpx.tracks[0].segments[0].points
         assert len(points) == 2
         point1 = points[0]
@@ -21,7 +21,7 @@ class TestGeo:
 
     def test_haversine_distance(self):
         path = 'gpx/test/debug-segment.gpx'
-        gpx = fastgpx.parse(path)
+        gpx = fastgpx.load(path)
         points = gpx.tracks[0].segments[0].points
         assert len(points) == 2
         point1 = points[0]

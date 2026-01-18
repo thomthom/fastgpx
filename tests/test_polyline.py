@@ -22,7 +22,7 @@ class TestPolyline:
     # fastgpx.polyline.encode
 
     def test_encode_p5_segment(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         points = [(point.latitude, point.longitude)
                   for point in gpx.tracks[0].segments[0].points]
 
@@ -33,7 +33,7 @@ class TestPolyline:
         assert actual == expected
 
     def test_encode_p6_segment(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         points = [(point.latitude, point.longitude)
                   for point in gpx.tracks[0].segments[0].points]
 
@@ -44,7 +44,7 @@ class TestPolyline:
         assert actual == expected
 
     def test_encode_p5_segment_int_overload(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         points = [(point.latitude, point.longitude)
                   for point in gpx.tracks[0].segments[0].points]
 
@@ -54,7 +54,7 @@ class TestPolyline:
         assert actual == expected
 
     def test_encode_p6_segment_int_overload(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         points = [(point.latitude, point.longitude)
                   for point in gpx.tracks[0].segments[0].points]
 
@@ -64,7 +64,7 @@ class TestPolyline:
         assert actual == expected
 
     def test_encode_segment_int_overload_invalid_arguments(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         points = gpx.tracks[0].segments[0].points
 
         with pytest.raises(ValueError):
@@ -76,7 +76,7 @@ class TestPolyline:
     # fastgpx.polyline.decode
 
     def test_decode_p5_segment(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         points = [(point.latitude, point.longitude)
                   for point in gpx.tracks[0].segments[0].points]
         polyline6 = polyline.encode(points, precision=5)
@@ -88,7 +88,7 @@ class TestPolyline:
         assert actual == expected
 
     def test_decode_p6_segment(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         points = [(point.latitude, point.longitude)
                   for point in gpx.tracks[0].segments[0].points]
         polyline6 = polyline.encode(points, precision=6)
@@ -100,7 +100,7 @@ class TestPolyline:
         assert actual == expected
 
     def test_decode_p5_segment_int_overload(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         points = [(point.latitude, point.longitude)
                   for point in gpx.tracks[0].segments[0].points]
         polyline6 = polyline.encode(points, precision=5)
@@ -111,7 +111,7 @@ class TestPolyline:
         assert actual == expected
 
     def test_decode_p6_segment_int_overload(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         points = [(point.latitude, point.longitude)
                   for point in gpx.tracks[0].segments[0].points]
         polyline6 = polyline.encode(points, precision=6)
@@ -122,7 +122,7 @@ class TestPolyline:
         assert actual == expected
 
     def test_decode_segment_int_overload_invalid_arguments(self, gpx_path: str):
-        gpx = fastgpx.parse(gpx_path)
+        gpx = fastgpx.load(gpx_path)
         points = [(point.latitude, point.longitude)
                   for point in gpx.tracks[0].segments[0].points]
         polyline6 = polyline.encode(points, precision=6)

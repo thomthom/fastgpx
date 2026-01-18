@@ -361,28 +361,13 @@ TimeBounds Gpx::ComputeTimeBounds() const
   return computed_bounds;
 }
 
-Gpx ParseGpx(const std::filesystem::path& path)
+namespace {
+
+Gpx ReadGpxXml(const pugi::xml_node& doc)
 {
-  pugi::xml_document doc;
-
-#ifdef _WIN32
-  // On Windows, convert the path to UTF-16 for compatibility in order to load files
-  // with non-ASCII characters in the path.
-  const auto path16 = utf8_to_utf16(path.string());
-  pugi::xml_parse_result result = doc.load_file(path16.c_str());
-#else
-  pugi::xml_parse_result result = doc.load_file(path.string().c_str());
-#endif
-
-  if (!result)
-  {
-    const auto message =
-        std::format("Failed to load GPX file: {} - {}", result.description(), path.string());
-    throw parse_error(message);
-  }
+  Gpx gpx;
 
   pugi::xml_node root = doc.child("gpx");
-  Gpx gpx;
 
   const auto metadata = root.child("metadata");
   if (metadata)
@@ -449,9 +434,43 @@ Gpx ParseGpx(const std::filesystem::path& path)
   return gpx;
 }
 
-Gpx ParseGpx(const std::string& path)
+} // namespace
+
+Gpx LoadGpx(const std::filesystem::path& path)
 {
-  return ParseGpx(std::filesystem::path(path));
+  pugi::xml_document doc;
+
+#ifdef _WIN32
+  // On Windows, convert the path to UTF-16 for compatibility in order to load files
+  // with non-ASCII characters in the path.
+  const auto path16 = utf8_to_utf16(path.string());
+  pugi::xml_parse_result result = doc.load_file(path16.c_str());
+#else
+  pugi::xml_parse_result result = doc.load_file(path.string().c_str());
+#endif
+
+  if (!result)
+  {
+    const auto message =
+        std::format("Failed to load GPX file: {} - {}", result.description(), path.string());
+    throw parse_error(message);
+  }
+
+  return ReadGpxXml(doc);
+}
+
+Gpx ParseGpx(const std::string& data)
+{
+  pugi::xml_document doc;
+  pugi::xml_parse_result result = doc.load_string(data.c_str());
+
+  if (!result)
+  {
+    const auto message = std::format("Failed to parse GPX data: {}", result.description());
+    throw parse_error(message);
+  }
+
+  return ReadGpxXml(doc);
 }
 
 } // namespace fastgpx

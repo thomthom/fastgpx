@@ -1,4 +1,6 @@
 #include <filesystem>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -28,7 +30,7 @@ const auto project_path = std::filesystem::path(FASTGPX_PROJECT_DIR);
 TEST_CASE("Parse two-point single segment track", "[parse][simple]")
 {
   const auto path = project_path / "gpx/test/debug-segment.gpx";
-  const auto gpx = fastgpx::ParseGpx(path);
+  const auto gpx = fastgpx::LoadGpx(path);
 
   REQUIRE(gpx.tracks.size() == 1);
   REQUIRE(gpx.tracks[0].segments.size() == 1);
@@ -74,7 +76,7 @@ TEST_CASE("Parse time bounds of real world GPX file", "[parse][simple]")
   const auto path =
       project_path /
       "gpx/2024 TopCamp/Connected_20240529_091916_Harald_Bothners_Veg_36_7052_Trondheim.gpx";
-  const auto gpx = fastgpx::ParseGpx(path);
+  const auto gpx = fastgpx::LoadGpx(path);
 
   CHECK(gpx.name.value() == "Harald Bothners Veg 36, 7052 Trondheim");
 
@@ -99,7 +101,7 @@ TEST_CASE("Parse bounds of real world GPX file", "[parse][simple]")
   const auto path =
       project_path /
       "gpx/2024 TopCamp/Connected_20240529_091916_Harald_Bothners_Veg_36_7052_Trondheim.gpx";
-  const auto gpx = fastgpx::ParseGpx(path);
+  const auto gpx = fastgpx::LoadGpx(path);
 
   CHECK(gpx.name.value() == "Harald Bothners Veg 36, 7052 Trondheim");
 
@@ -128,7 +130,7 @@ TEST_CASE("Parse real world GPX files", "[parse][real_world]")
     CAPTURE(expected_gpx.path);
 
     const auto path = project_path / expected_gpx.path;
-    const auto gpx = fastgpx::ParseGpx(path);
+    const auto gpx = fastgpx::LoadGpx(path);
 
     REQUIRE(gpx.tracks.size() == expected_gpx.tracks.size());
     for (size_t track_index = 0; track_index < gpx.tracks.size(); track_index++)
@@ -188,7 +190,7 @@ TEST_CASE("Benchmark GPX Parsing", "[!benchmark][parse]")
   const auto path1 = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
   BENCHMARK("Connected_20240518_094959_.gpx")
   {
-    return fastgpx::ParseGpx(path1);
+    return fastgpx::LoadGpx(path1);
   };
 
   const auto path2 =
@@ -196,24 +198,53 @@ TEST_CASE("Benchmark GPX Parsing", "[!benchmark][parse]")
       "gpx/2024 TopCamp/Connected_20240520_103549_Lagerbergsgatan_35_45131_Uddevalla_Sweden.gpx";
   BENCHMARK("Connected_20240520_103549_Lagerbergsgatan_35_45131_Uddevalla_Sweden.gpx")
   {
-    return fastgpx::ParseGpx(path2);
+    return fastgpx::LoadGpx(path2);
   };
 }
 
 TEST_CASE("Parse string file path", "[parse][simple]")
 {
   const auto path = project_path / "gpx/not-a-real-path/fake.gpx";
-  REQUIRE_THROWS_AS(fastgpx::ParseGpx(path), fastgpx::parse_error);
+  REQUIRE_THROWS_AS(fastgpx::LoadGpx(path), fastgpx::parse_error);
 }
 
 TEST_CASE("Parse non-existing file path", "[parse][simple]")
 {
   const auto path = project_path / "gpx/test/debug-segment.gpx";
   const auto path_string = path.string();
-  const auto gpx = fastgpx::ParseGpx(path_string);
+  const auto gpx = fastgpx::LoadGpx(path_string);
 
   REQUIRE(gpx.tracks.size() == 1);
   REQUIRE(gpx.tracks[0].segments.size() == 1);
+}
+
+TEST_CASE("Parse GPX from XML string", "[parse][simple]")
+{
+  const auto path = project_path / "gpx/test/debug-segment.gpx";
+
+  std::ifstream file(path);
+  if (!file)
+  {
+    throw std::runtime_error("Cannot open file: " + path.string());
+  }
+  std::stringstream buffer;
+  buffer << file.rdbuf();
+  const auto data = buffer.str();
+
+  const auto gpx = fastgpx::LoadGpx(data);
+
+  REQUIRE(gpx.tracks.size() == 1);
+  REQUIRE(gpx.tracks[0].segments.size() == 1);
+
+  CHECK(!gpx.name.has_value());
+
+  CHECK_THAT(gpx.tracks[0].segments[0].GetLength2D(), WithinAbs(1.3839, kMETERS_TOL));
+  CHECK_THAT(gpx.tracks[0].GetLength2D(), WithinAbs(1.3839, kMETERS_TOL));
+  CHECK_THAT(gpx.GetLength2D(), WithinAbs(1.3839, kMETERS_TOL));
+
+  CHECK_THAT(gpx.tracks[0].segments[0].GetLength3D(), WithinAbs(1.7074, kMETERS_TOL));
+  CHECK_THAT(gpx.tracks[0].GetLength3D(), WithinAbs(1.7074, kMETERS_TOL));
+  CHECK_THAT(gpx.GetLength3D(), WithinAbs(1.7074, kMETERS_TOL));
 }
 
 // Bounds

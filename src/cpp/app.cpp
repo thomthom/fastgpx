@@ -23,7 +23,7 @@ int main()
   }
 
   std::println("");
-  const auto gpx = fastgpx::ParseGpx(path);
+  const auto gpx = fastgpx::LoadGpx(path);
   const auto distance = gpx.GetLength2D();
   std::println("Distance 2D: {}", distance);
 
