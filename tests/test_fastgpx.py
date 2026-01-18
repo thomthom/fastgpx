@@ -1,4 +1,5 @@
 import datetime
+from pathlib import Path
 
 import gpxpy
 import pytest
@@ -9,6 +10,16 @@ import fastgpx
 @pytest.fixture
 def gpx_path():
     return "gpx/2024 TopCamp/Connected_20240518_094959_.gpx"
+
+
+@pytest.fixture
+def gpx_unicode_path():
+    return "gpx/2024 Great Roadtrip/Connected_20240731_113605_Näsåker_Sollefteå.gpx"
+
+
+@pytest.fixture
+def gpx_japanese_unicode_path():
+    return "gpx/test/テスト.gpx"
 
 
 @pytest.fixture
@@ -93,6 +104,26 @@ class TestGpx:
         gpx = fastgpx.load("gpx/test/debug-segment.gpx")
         repr_str = repr(gpx)
         assert repr_str == "<fastgpx.Gpx(tracks: 1)>"
+
+    # fastgpx.load
+
+    def test_load_pathlib_path(self, gpx_path: str):
+        path = Path(gpx_path)
+        gpx = fastgpx.load(path)
+        distance = gpx.length_2d()
+        assert distance == pytest.approx(382952.7193, abs=METERS_TOL)
+
+    def test_load_pathlib_path_unicode(self, gpx_unicode_path: str):
+        path = Path(gpx_unicode_path)
+        gpx = fastgpx.load(path)
+        distance = gpx.length_2d()
+        assert distance == pytest.approx(407621.5043, abs=METERS_TOL)
+
+    def test_load_pathlib_path_japanese_unicode(self, gpx_japanese_unicode_path: str):
+        path = Path(gpx_japanese_unicode_path)
+        gpx = fastgpx.load(path)
+        distance = gpx.length_2d()
+        assert distance == pytest.approx(17809.2701, abs=METERS_TOL)
 
     # fastgpx.parse
 

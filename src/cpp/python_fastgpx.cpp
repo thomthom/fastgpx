@@ -319,11 +319,7 @@ NB_MODULE(fastgpx, m)
            })
       .doc() = "Represent ``<gpx>`` data in GPX files.";
 
-  // pybind11 appear to mangle the unicode string when binding directly to
-  // std::filesystem::path. But going via a std::string works.
-  m.def(
-      "load", [](const std::string& path) { return LoadGpx(std::filesystem::path(path)); },
-      "path"_a);
+  m.def("load", &LoadGpx, "path"_a);
   m.def("parse", &ParseGpx, "data"_a);
 
   // fastgpx geo

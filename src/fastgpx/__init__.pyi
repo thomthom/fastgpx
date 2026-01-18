@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 import datetime
+import os
 from typing import overload
 
 from . import geo as geo, polyline as polyline
@@ -318,6 +319,6 @@ class Gpx:
 
     def __repr__(self) -> str: ...
 
-def load(path: str) -> Gpx: ...
+def load(path: str | os.PathLike) -> Gpx: ...
 
 def parse(data: str) -> Gpx: ...

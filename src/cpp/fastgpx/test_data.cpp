@@ -43,7 +43,15 @@ void from_json(const json& json, ExpectedTrack& track)
 
 void from_json(const json& json, ExpectedGpx& gpx)
 {
-  json.at("path").get_to(gpx.path);
+  // Need to use the u8string constructor to properly handle Unicode paths on Windows.
+  const auto path_str = json.at("path").get<std::string>();
+  const auto path_utf8 =
+      std::u8string(reinterpret_cast<const char8_t*>(path_str.c_str()), path_str.size());
+  gpx.path = std::filesystem::path(path_utf8);
+
+  // This does not correctly handle Unicode on Windows:
+  // json.at("path").get_to(gpx.path);
+
   json.at("length2d").get_to(gpx.length2d);
   json.at("length3d").get_to(gpx.length3d);
   json.at("tracks").get_to(gpx.tracks);

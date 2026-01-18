@@ -441,10 +441,7 @@ Gpx LoadGpx(const std::filesystem::path& path)
   pugi::xml_document doc;
 
 #ifdef _WIN32
-  // On Windows, convert the path to UTF-16 for compatibility in order to load files
-  // with non-ASCII characters in the path.
-  const auto path16 = utf8_to_utf16(path.string());
-  pugi::xml_parse_result result = doc.load_file(path16.c_str());
+  pugi::xml_parse_result result = doc.load_file(path.wstring().c_str());
 #else
   pugi::xml_parse_result result = doc.load_file(path.string().c_str());
 #endif
