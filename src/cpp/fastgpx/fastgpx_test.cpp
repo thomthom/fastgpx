@@ -231,7 +231,7 @@ TEST_CASE("Parse GPX from XML string", "[parse][simple]")
   buffer << file.rdbuf();
   const auto data = buffer.str();
 
-  const auto gpx = fastgpx::LoadGpx(data);
+  const auto gpx = fastgpx::ParseGpx(data);
 
   REQUIRE(gpx.tracks.size() == 1);
   REQUIRE(gpx.tracks[0].segments.size() == 1);
