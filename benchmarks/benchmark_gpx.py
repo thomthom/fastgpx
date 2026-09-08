@@ -138,7 +138,7 @@ def read_fastgpx():
     gpx_files = get_gpx_files(GPX_PATH)
     for gpx_filepath in gpx_files:
         fullpath = os.path.abspath(gpx_filepath)
-        gpx = fastgpx.parse(fullpath)
+        gpx = fastgpx.load(fullpath)
         length = gpx.length_2d()
         total_length += length
     print('fastgpx', total_length, 'meters')
