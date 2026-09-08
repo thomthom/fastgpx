@@ -107,6 +107,28 @@ void SetBoundsMember(Bounds& self, std::optional<LatLong> Bounds::* field, doubl
 
 NB_MODULE(fastgpx, m)
 {
+  // Exceptions
+  //
+  // `fastgpx_error` derives from `std::runtime_error`, which nanobind would map to a bare
+  // `RuntimeError`. Every fastgpx error describes input the library cannot use, so the hierarchy
+  // is exposed as `ValueError` subclasses instead: `fastgpx.Error` for the base (which also covers
+  // `value_error`) and `fastgpx.ParseError` for malformed GPX, polyline or timestamp data.
+  // Translators are tried most-recently-registered first, so the base goes first.
+  nb::exception<fastgpx_error> error_type(m, "Error", PyExc_ValueError);
+  nb::exception<parse_error>(m, "ParseError", error_type.ptr());
+
+  // File access failures are `OSError`s in Python, not value errors.
+  nb::register_exception_translator([](const std::exception_ptr& p, void*) {
+    try
+    {
+      std::rethrow_exception(p);
+    }
+    catch (const fastgpx::file_error& e)
+    {
+      PyErr_SetString(e.not_found() ? PyExc_FileNotFoundError : PyExc_OSError, e.what());
+    }
+  });
+
   nb::class_<TimeBounds>(m, "TimeBounds")
       .def(nb::init<>())
       .def(nb::init<std::optional<chrono_timepoint>, std::optional<chrono_timepoint>>(),
@@ -348,21 +370,6 @@ NB_MODULE(fastgpx, m)
           "   which may lead to slightly different results.")
 
       .doc() = "Algorithms for geographic calculations.";
-
-  // Exceptions
-
-  // `fastgpx_error` derives from `std::runtime_error`, which nanobind maps to `RuntimeError`.
-  // Invalid input values are a `ValueError` in Python, matching the precision argument checks.
-  nb::register_exception_translator([](const std::exception_ptr& p, void*) {
-    try
-    {
-      std::rethrow_exception(p);
-    }
-    catch (const fastgpx::value_error& e)
-    {
-      PyErr_SetString(PyExc_ValueError, e.what());
-    }
-  });
 
   // fastgpx.polyline
 

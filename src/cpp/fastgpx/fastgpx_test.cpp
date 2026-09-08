@@ -205,7 +205,7 @@ TEST_CASE("Benchmark GPX Parsing", "[!benchmark][parse]")
 TEST_CASE("Parse string file path", "[parse][simple]")
 {
   const auto path = project_path / "gpx/not-a-real-path/fake.gpx";
-  REQUIRE_THROWS_AS(fastgpx::LoadGpx(path), fastgpx::parse_error);
+  REQUIRE_THROWS_AS(fastgpx::LoadGpx(path), fastgpx::file_error);
 }
 
 TEST_CASE("Parse non-existing file path", "[parse][simple]")

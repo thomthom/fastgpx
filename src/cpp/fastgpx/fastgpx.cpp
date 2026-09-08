@@ -490,6 +490,10 @@ Gpx LoadGpx(const std::filesystem::path& path)
   {
     const auto message =
         std::format("Failed to load GPX file: {} - {}", result.description(), path.string());
+    if (result.status == pugi::status_file_not_found || result.status == pugi::status_io_error)
+    {
+      throw file_error(message, result.status == pugi::status_file_not_found);
+    }
     throw parse_error(message);
   }
 

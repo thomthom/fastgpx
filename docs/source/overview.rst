@@ -42,3 +42,32 @@ How to use
   encoded = fastgpx.polyline.encode(locations, precision=6)
 
   decoded = fastgpx.polyline.decode(encoded, precision=6)
+
+
+Errors
+------
+
+All errors raised by ``fastgpx`` describe input the library cannot use, so they are
+``ValueError`` subclasses:
+
+- ``fastgpx.Error`` is the base class. It is raised directly for invalid values, such as a
+  non-finite coordinate passed to ``fastgpx.polyline.encode``.
+- ``fastgpx.ParseError`` is raised for malformed GPX data, polyline strings and timestamps.
+
+Timestamps are parsed on demand, so a malformed ``<time>`` element raises from
+``time_bounds()`` rather than from ``load()`` or ``parse()``.
+
+A file that cannot be read raises ``FileNotFoundError`` or ``OSError``, as any file API would.
+
+.. code-block:: python
+  :caption: Handling errors
+
+  import fastgpx
+
+  try:
+      gpx = fastgpx.load("example.gpx")
+      time_bounds = gpx.time_bounds()
+  except fastgpx.ParseError as error:
+      print(f"Malformed GPX: {error}")
+  except OSError as error:
+      print(f"Cannot read file: {error}")

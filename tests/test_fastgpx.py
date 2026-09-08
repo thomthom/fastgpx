@@ -233,3 +233,36 @@ class TestSegment:
         segment = gpx.tracks[0].segments[0]
         repr_str = repr(segment)
         assert repr_str == "<fastgpx.Segment(points: 1326)>"
+
+
+class TestErrors:
+    # All fastgpx errors describe input the library cannot use, so they are ValueError
+    # subclasses: fastgpx.Error is the base and fastgpx.ParseError covers malformed data.
+    # File access failures are OSErrors.
+
+    def test_error_hierarchy(self):
+        assert issubclass(fastgpx.Error, ValueError)
+        assert issubclass(fastgpx.ParseError, fastgpx.Error)
+
+    def test_parse_malformed_gpx_raises_parse_error(self):
+        with pytest.raises(fastgpx.ParseError, match='Failed to parse GPX data'):
+            fastgpx.parse('<gpx><trk>')
+
+    def test_parse_malformed_gpx_is_value_error(self):
+        with pytest.raises(ValueError):
+            fastgpx.parse('<gpx><trk>')
+
+    def test_load_missing_file_raises_file_not_found(self):
+        with pytest.raises(FileNotFoundError, match='not-a-real-path'):
+            fastgpx.load('gpx/not-a-real-path/fake.gpx')
+
+    def test_invalid_time_raises_parse_error_lazily(self):
+        # Timestamps are parsed on demand, so the error surfaces from time_bounds(), not parse().
+        gpx = fastgpx.parse('<gpx><trk><trkseg><trkpt lat="60" lon="10">'
+                            '<time>not a time</time></trkpt></trkseg></trk></gpx>')
+        with pytest.raises(fastgpx.ParseError):
+            gpx.time_bounds()
+
+    def test_encode_invalid_coordinate_is_fastgpx_error(self):
+        with pytest.raises(fastgpx.Error, match='latitude out of range'):
+            fastgpx.polyline.encode([fastgpx.LatLong(float('nan'), 0.0)])

@@ -1,3 +1,5 @@
+"""Algorithms for geographic calculations."""
+
 import fastgpx
 
 

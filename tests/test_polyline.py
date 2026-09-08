@@ -160,16 +160,16 @@ class TestPolyline:
     def test_decode_truncated_raises(self):
         encoded = fastgpx.polyline.encode(
             [fastgpx.LatLong(64, 10), fastgpx.LatLong(66, 11)], precision=6)
-        with pytest.raises(RuntimeError, match='unexpected end'):
+        with pytest.raises(fastgpx.ParseError, match='unexpected end'):
             fastgpx.polyline.decode(encoded[:-1], precision=6)
 
     def test_decode_overlong_value_raises(self):
         # Eight continuation chunks would shift past 32 bits.
-        with pytest.raises(RuntimeError, match='too long'):
+        with pytest.raises(fastgpx.ParseError, match='too long'):
             fastgpx.polyline.decode('________@_')
 
     def test_decode_invalid_character_raises(self):
-        with pytest.raises(RuntimeError, match='invalid character'):
+        with pytest.raises(fastgpx.ParseError, match='invalid character'):
             fastgpx.polyline.decode('_p~iF~ps|U\x01')
 
     # fastgpx.polyline.encode/decode (coordinate range)
@@ -199,16 +199,16 @@ class TestPolyline:
     def test_decode_out_of_range_raises(self):
         # The largest delta representable in 6 chunks (2^29 - 1) already exceeds 90 degrees.
         encoded = self._encode_value((1 << 29) - 1) + self._encode_value(0)
-        with pytest.raises(RuntimeError, match='latitude out of range'):
+        with pytest.raises(fastgpx.ParseError, match='latitude out of range'):
             fastgpx.polyline.decode(encoded, precision=5)
 
         encoded = self._encode_value(0) + self._encode_value(-((1 << 29) - 1))
-        with pytest.raises(RuntimeError, match='longitude out of range'):
+        with pytest.raises(fastgpx.ParseError, match='longitude out of range'):
             fastgpx.polyline.decode(encoded, precision=6)
 
     def test_decode_accumulator_overflow_raises(self):
         # Five max-size positive deltas sum past 2^31. A 32-bit accumulator would wrap to a
         # negative latitude instead of failing.
         encoded = (self._encode_value((1 << 29) - 1) + self._encode_value(0)) * 5
-        with pytest.raises(RuntimeError, match='out of range'):
+        with pytest.raises(fastgpx.ParseError, match='out of range'):
             fastgpx.polyline.decode(encoded, precision=5)
