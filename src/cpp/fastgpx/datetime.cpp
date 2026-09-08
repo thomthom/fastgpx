@@ -802,8 +802,6 @@ public:
     return *this;
   }
 
-  ParsedValue<T>& Offset(const T& offset) { return ParsedValue<T>(value_ + offset); }
-
 private:
   T value_;
 };
@@ -815,12 +813,14 @@ public:
 
   ParsedValue<int> ExtractInt(size_t num)
   {
-    const auto it_end = std::next(it_, static_cast<std::ptrdiff_t>(num));
-    const std::string_view view(it_, it_end);
-    if (view.size() != num)
+    const auto remaining = static_cast<size_t>(std::distance(it_, std::end(input_)));
+    if (remaining < num)
     {
+      const std::string_view view(it_, std::end(input_));
       throw parse_error("not enough characters to extract", input_, view);
     }
+    const auto it_end = std::next(it_, static_cast<std::ptrdiff_t>(num));
+    const std::string_view view(it_, it_end);
     if (!std::ranges::all_of(view, [](unsigned char ch) { return std::isdigit(ch) != 0; }))
     {
       throw parse_error("characters are not all digits", input_, view);
@@ -851,6 +851,11 @@ public:
 
   void Expect(char ch)
   {
+    if (it_ == std::end(input_))
+    {
+      const auto message = std::format("unexpected end of string (expected: {})", ch);
+      throw parse_error(message);
+    }
     if (*it_ != ch)
     {
       std::string_view view(it_, std::next(it_));
@@ -1014,7 +1019,7 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
     // YYYY-MM-DDThh:mm:ss.sss±hh:mm
     //                     ^^^
     const auto ms = parser.ExtractInt(3).value();
-    adjustment = +std::chrono::milliseconds(ms);
+    adjustment += std::chrono::milliseconds(ms);
 
     // YYYY-MM-DDThh:mm:ss.sss±hh:mm
     //                        ^^^^^^
@@ -1041,7 +1046,7 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
     // YYYY-MM-DDThh:mm:ss.sss
     //                     ^^^
     const auto ms = parser.ExtractInt(3).value();
-    adjustment = +std::chrono::milliseconds(ms);
+    adjustment += std::chrono::milliseconds(ms);
     break;
   }
   default:
