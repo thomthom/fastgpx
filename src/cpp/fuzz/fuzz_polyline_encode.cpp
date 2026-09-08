@@ -1,14 +1,9 @@
 // Fuzz target: fastgpx::polyline::encode, checked against decode.
 //
 // The input is interpreted as a precision selector byte followed by raw (latitude, longitude)
-// double pairs. Encoding must succeed and decoding the result must give back every coordinate,
-// rounded to the selected precision.
-//
-// The encoder casts `std::round(coordinate * factor)` to `int`. Non-finite values and values
-// outside roughly +/-21474 degrees make that cast undefined behaviour, which UBSan reports
-// immediately. The values are therefore folded into the valid coordinate range here so that the
-// fuzzer can explore the rest of the encoder. Keep that limitation in mind: `encode` itself does
-// not validate its input.
+// double pairs, fed to the encoder unmodified. The encoder must either reject the input with a
+// `value_error` - exactly when a coordinate is non-finite or rounds outside +/-90 / +/-180 - or
+// encode it such that decoding gives back every coordinate at the selected precision.
 
 #include <cmath>
 #include <cstddef>
@@ -18,6 +13,7 @@
 #include <string>
 #include <vector>
 
+#include "fastgpx/errors.hpp"
 #include "fastgpx/fastgpx.hpp"
 #include "fastgpx/polyline.hpp"
 
@@ -34,7 +30,14 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
   ++data;
   --size;
 
+  // Mirror of the encoder's contract, computed independently.
+  const auto representable = [factor](double value, double limit) {
+    const double scaled = std::round(value * factor);
+    return std::isfinite(scaled) && std::abs(scaled) <= limit * factor;
+  };
+
   std::vector<fastgpx::LatLong> points;
+  bool expect_valid = true;
   constexpr std::size_t kPairSize = 2 * sizeof(double);
   for (std::size_t offset = 0; offset + kPairSize <= size; offset += kPairSize)
   {
@@ -42,18 +45,29 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
     double longitude = 0.0;
     std::memcpy(&latitude, data + offset, sizeof(double));
     std::memcpy(&longitude, data + offset + sizeof(double), sizeof(double));
-    if (!std::isfinite(latitude) || !std::isfinite(longitude))
-    {
-      continue;
-    }
-    // Fold into (-90, 90) and (-180, 180). See the note at the top of the file.
-    latitude = std::fmod(latitude, 90.0);
-    longitude = std::fmod(longitude, 180.0);
+    expect_valid = expect_valid && representable(latitude, 90.0) && representable(longitude, 180.0);
     points.push_back({latitude, longitude, 0.0});
   }
 
-  // Neither call may throw: the encoder produces valid polylines for valid coordinates.
-  const std::string encoded = fastgpx::polyline::encode(points, precision);
+  std::string encoded;
+  try
+  {
+    encoded = fastgpx::polyline::encode(points, precision);
+  }
+  catch (const fastgpx::value_error&)
+  {
+    if (expect_valid)
+    {
+      std::abort(); // Rejected input the contract says is representable.
+    }
+    return 0;
+  }
+  if (!expect_valid)
+  {
+    std::abort(); // Accepted input the contract says must be rejected.
+  }
+
+  // The encoder produces valid polylines for valid coordinates: decode must not throw.
   const std::vector<fastgpx::LatLong> decoded = fastgpx::polyline::decode(encoded, precision);
 
   if (decoded.size() != points.size())

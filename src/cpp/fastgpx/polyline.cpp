@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <format>
 #include <utility>
 
 #include "fastgpx/errors.hpp"
@@ -14,14 +15,30 @@ namespace polyline {
 std::string encode(std::span<const LatLong> locations, Precision precision)
 {
   const int factor = (precision == Precision::Six) ? 1'000'000 : 100'000;
+  // Same limits as `decode`: |latitude| <= 90 and |longitude| <= 180 after rounding.
+  const double lat_limit = 90.0 * factor;
+  const double lng_limit = 180.0 * factor;
+
+  // Rounds a coordinate to the precision and rejects what cannot be encoded. The check is done on
+  // the double: casting NaN, infinity or an out-of-range value to `int` is undefined behaviour
+  // (found while writing fuzz_polyline_encode, #49). `!(x <= limit)` is also true for NaN.
+  const auto to_fixed = [factor](double value, double limit, const char* name) -> int {
+    const double scaled = std::round(value * factor);
+    if (!(std::abs(scaled) <= limit))
+    {
+      throw value_error(std::format("polyline: {} out of range: {}", name, value));
+    }
+    return static_cast<int>(scaled);
+  };
+
   std::string encoded_polyline;
   int last_lat = 0;
   int last_lng = 0;
 
   for (const auto& coord : locations)
   {
-    const int lat = static_cast<int>(std::round(coord.latitude * factor));
-    const int lng = static_cast<int>(std::round(coord.longitude * factor));
+    const int lat = to_fixed(coord.latitude, lat_limit, "latitude");
+    const int lng = to_fixed(coord.longitude, lng_limit, "longitude");
 
     const int delta_lat = lat - last_lat;
     const int delta_lng = lng - last_lng;

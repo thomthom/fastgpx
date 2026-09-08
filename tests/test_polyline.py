@@ -73,6 +73,20 @@ class TestPolyline:
         with pytest.raises(ValueError):
             fastgpx.polyline.encode(points, precision=7)
 
+    @pytest.mark.parametrize('latitude, longitude', [
+        (float('nan'), 0.0),
+        (0.0, float('inf')),
+        (-float('inf'), 0.0),
+        (90.1, 0.0),
+        (0.0, -180.1),
+        (1e300, 0.0),
+    ])
+    def test_encode_invalid_coordinates_raises(self, latitude: float, longitude: float):
+        # Casting NaN, infinity or an out-of-range double to int is undefined behaviour in
+        # C++, so encode must reject such values (#49). Limits match decode: +/-90 and +/-180.
+        with pytest.raises(ValueError, match='out of range'):
+            fastgpx.polyline.encode([fastgpx.LatLong(latitude, longitude)])
+
     # fastgpx.polyline.decode
 
     def test_decode_p5_segment(self, gpx_path: str):

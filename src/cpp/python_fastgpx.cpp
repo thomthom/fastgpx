@@ -15,6 +15,7 @@
 
 #include "fastgpx/fastgpx.hpp"
 #include "fastgpx/geom.hpp"
+#include "fastgpx/errors.hpp"
 #include "fastgpx/polyline.hpp"
 
 #include "python_utc_chrono_nanobind.hpp"
@@ -347,6 +348,21 @@ NB_MODULE(fastgpx, m)
           "   which may lead to slightly different results.")
 
       .doc() = "Algorithms for geographic calculations.";
+
+  // Exceptions
+
+  // `fastgpx_error` derives from `std::runtime_error`, which nanobind maps to `RuntimeError`.
+  // Invalid input values are a `ValueError` in Python, matching the precision argument checks.
+  nb::register_exception_translator([](const std::exception_ptr& p, void*) {
+    try
+    {
+      std::rethrow_exception(p);
+    }
+    catch (const fastgpx::value_error& e)
+    {
+      PyErr_SetString(PyExc_ValueError, e.what());
+    }
+  });
 
   // fastgpx.polyline
 
