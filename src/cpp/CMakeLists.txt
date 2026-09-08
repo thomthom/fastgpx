@@ -151,7 +151,9 @@ nanobind_add_module(
 target_include_directories(fastgpx SYSTEM PRIVATE ${nanobind_INCLUDE_DIR})
 set_common_properties(fastgpx)
 target_link_libraries(fastgpx PRIVATE fastgpx-static)
-target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS) # std::gmtime on MSVC
+# No source in this target currently calls a CRT function that MSVC flags as deprecated (the
+# datetime caster uses gmtime_s/localtime_s). Kept as a safety net for standard C calls.
+target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS)
 
 # https://nanobind.readthedocs.io/en/latest/typing.html
 nanobind_add_stub(
