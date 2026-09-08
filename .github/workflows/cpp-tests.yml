@@ -30,10 +30,10 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install and setup UV with Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10
         with:
           python-version: "3.12"
 
@@ -60,7 +60,7 @@ jobs:
           echo "PYTHON_EXECUTABLE=$(uv run --no-sync python -c 'import sys; print(sys.executable)')" >> $GITHUB_ENV
 
       - name: Cache fetched dependencies (pugixml, Catch2, nlohmann/json)
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ env.FETCHCONTENT_BASE_DIR }}
           key: fetchcontent-${{ runner.os }}-${{ hashFiles('src/cpp/CMakeLists.txt') }}
