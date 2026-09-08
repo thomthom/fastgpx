@@ -6,6 +6,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -15,6 +16,7 @@ class TimePoint
 {
 public:
   TimePoint(const std::string& time_string) : data_(time_string) {}
+  TimePoint(std::string&& time_string) : data_(std::move(time_string)) {}
   TimePoint(const std::chrono::system_clock::time_point time_point) : data_(time_point) {}
 
   auto operator<=>(const TimePoint&) const = default;
