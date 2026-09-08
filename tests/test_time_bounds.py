@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 import fastgpx
 
 
@@ -73,6 +75,28 @@ class TestTimeBounds:
     def test_add_naive_time_point_is_utc(self):
         bounds = fastgpx.TimeBounds()
         bounds.add(datetime(2025, 6, 20, 12, 0, 0))
+        assert bounds.start_time == datetime(2025, 6, 20, 12, 0, 0, tzinfo=timezone.utc)
+
+    def test_add_invalid_utcoffset_raises_type_error(self):
+        # A datetime subclass whose `utcoffset()` returns something other than a timedelta must
+        # be rejected as an incompatible argument, not crash the process.
+        class BadOffsetDateTime(datetime):
+            def utcoffset(self):
+                return 3600
+
+        bounds = fastgpx.TimeBounds()
+        with pytest.raises(TypeError, match='incompatible function arguments'):
+            bounds.add(BadOffsetDateTime(2025, 6, 20, 12, 0, 0, tzinfo=timezone.utc))
+        assert bounds.is_empty()
+
+    def test_add_naive_time_point_ignores_utcoffset_override(self):
+        # For naive datetimes `tzinfo` is None, so `utcoffset()` is never consulted.
+        class BadOffsetDateTime(datetime):
+            def utcoffset(self):
+                return 3600
+
+        bounds = fastgpx.TimeBounds()
+        bounds.add(BadOffsetDateTime(2025, 6, 20, 12, 0, 0))
         assert bounds.start_time == datetime(2025, 6, 20, 12, 0, 0, tzinfo=timezone.utc)
 
     def test_init_with_timezone_aware_times(self):
