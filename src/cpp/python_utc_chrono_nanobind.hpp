@@ -233,18 +233,34 @@ public:
     // resulting time point represents the same instant.
     try
     {
-      if (hasattr(src, "utcoffset"))
+      // Only aware datetimes have a `tzinfo`. Checking it first skips the `utcoffset()` call
+      // (a Python method call) for every naive datetime. `datetime.date` has no `tzinfo`.
+      object tzinfo = getattr(src, "tzinfo", none());
+      if (!tzinfo.is_none())
       {
         object offset = borrow(src).attr("utcoffset")();
         if (!offset.is_none())
         {
-          value -= ch::duration_cast<Duration>(cast<ch::microseconds>(offset));
+          // A subclass may override `utcoffset()` to return something other than a timedelta.
+          // `cast` would throw `cast_error` (a `std::bad_cast`, not a `python_error`) which must
+          // not escape this `noexcept` function, so use `try_cast` and reject the value instead.
+          ch::microseconds offset_us;
+          if (!try_cast<ch::microseconds>(offset, offset_us))
+          {
+            return false;
+          }
+          value -= ch::duration_cast<Duration>(offset_us);
         }
       }
     }
     catch (python_error& e)
     {
       e.discard_as_unraisable(src.ptr());
+      return false;
+    }
+    catch (...)
+    {
+      // Nothing may escape a `noexcept` function; treat any other failure as "not convertible".
       return false;
     }
     // HACK: (End)
