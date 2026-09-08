@@ -148,6 +148,10 @@ class TestGpx:
         else:
             pytest.skip('No locale with "," decimal separator available')
         try:
+            # Guard against a locale that exists but does not actually change the separator,
+            # in which case the test would pass without exercising anything.
+            if locale.localeconv()['decimal_point'] != ',':
+                pytest.skip('Selected locale does not use "," as decimal separator')
             xml = ('<gpx><trk><trkseg>'
                    '<trkpt lat="61.5" lon="10.25"><ele>123.5</ele></trkpt>'
                    '<trkpt lat=" +61.75" lon="10.5"></trkpt>'
