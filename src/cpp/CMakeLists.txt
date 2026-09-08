@@ -114,6 +114,8 @@ target_sources(fastgpx-static
 
 # fastgpx python module
 
+if(FASTGPX_BUILD_PYTHON_MODULE)
+
 # https://nanobind.readthedocs.io/en/latest/building.html#preliminaries
 find_package(Python 3.12
   REQUIRED COMPONENTS
@@ -194,6 +196,14 @@ add_custom_command(TARGET fastgpx POST_BUILD
         "$<TARGET_FILE:fastgpx>"  # This is the .pyd file
         "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/"
 )
+
+endif() # FASTGPX_BUILD_PYTHON_MODULE
+
+# fastgpx fuzz targets
+
+if(FASTGPX_BUILD_FUZZERS)
+  add_subdirectory(fuzz)
+endif()
 
 if(BUILD_TESTING)
 

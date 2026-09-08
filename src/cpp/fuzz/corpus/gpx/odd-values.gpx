@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="fastgpx">
+  <trk>
+    <trkseg>
+      <trkpt lat=" +12.5 " lon="1e2"><ele>  nan </ele><time></time></trkpt>
+      <trkpt lat="abc" lon=""><ele>1e400</ele><time>not a time</time></trkpt>
+      <trkpt lat="0x10" lon="-0.0"><ele>-1e-400</ele><time>2024-13-45T25:61:61Z</time></trkpt>
+      <trkpt/>
+    </trkseg>
+  </trk>
+</gpx>

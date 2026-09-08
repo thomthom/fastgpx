@@ -6,6 +6,7 @@ env39/
 /dist/
 
 /build/
+/build-*/
 /output/
 /install/
 

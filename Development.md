@@ -182,6 +182,66 @@ build\src\cpp\RelWithDebInfo\fastgpx_test.exe
 build\src\cpp\RelWithDebInfo\fastgpx_test.exe [!benchmark]
 ```
 
+### Fuzzing
+
+The parsers have libFuzzer targets in `src/cpp/fuzz`:
+
+| Target                 | Entry point                              |
+|------------------------|------------------------------------------|
+| `fuzz_gpx`             | `fastgpx::ParseGpx` and the derived data |
+| `fuzz_polyline`        | `polyline::decode` + re-encode round trip |
+| `fuzz_polyline_encode` | `polyline::encode` checked against decode |
+| `fuzz_datetime`        | `parse_gpx_time`                          |
+
+libFuzzer needs Clang. On Windows, use WSL. Configure a dedicated build directory with
+`FASTGPX_BUILD_FUZZERS=ON`; the Python module and Catch2 are not needed:
+
+```sh
+CC=clang CXX=clang++ cmake -S . -B build-fuzz -G Ninja \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DFASTGPX_BUILD_FUZZERS=ON \
+  -DFASTGPX_BUILD_PYTHON_MODULE=OFF \
+  -DBUILD_TESTING=OFF
+cmake --build build-fuzz --parallel
+```
+
+The binaries are instrumented with AddressSanitizer and UndefinedBehaviorSanitizer, and `assert`
+is enabled regardless of build type. The first corpus directory receives new inputs; the rest are
+read-only seeds. Dictionaries help the fuzzer find structured inputs:
+
+```sh
+mkdir -p fuzz-corpus/gpx
+build-fuzz/src/cpp/fuzz/fuzz_gpx -dict=src/cpp/fuzz/gpx.dict -max_total_time=300 \
+  fuzz-corpus/gpx src/cpp/fuzz/corpus/gpx gpx/test gpx/third-party/gpxpy
+```
+
+```sh
+mkdir -p fuzz-corpus/datetime
+build-fuzz/src/cpp/fuzz/fuzz_datetime -dict=src/cpp/fuzz/datetime.dict -max_total_time=300 \
+  fuzz-corpus/datetime src/cpp/fuzz/corpus/datetime
+```
+
+A crash writes a `crash-<hash>` file. Reproduce it by passing the file as the only argument,
+and once fixed, copy it into `src/cpp/fuzz/corpus/<target>/` so that it becomes a regression
+test. To keep going past a known crash while exploring, use fork mode:
+
+```sh
+build-fuzz/src/cpp/fuzz/fuzz_gpx -fork=4 -ignore_crashes=1 -max_total_time=300 fuzz-corpus/gpx ...
+```
+
+With MSVC or GCC the same targets are built with a standalone driver that replays files or
+directories through the fuzz entry point. That is what the `fuzz_<target>_corpus` CTest entries
+do, so the seed corpora are exercised by every compiler when `FASTGPX_BUILD_FUZZERS=ON`:
+
+```sh
+cmake -S . -B build-fuzz-msvc -DFASTGPX_BUILD_FUZZERS=ON -DFASTGPX_BUILD_PYTHON_MODULE=OFF
+cmake --build build-fuzz-msvc --config Release --target fuzz_gpx fuzz_polyline fuzz_polyline_encode fuzz_datetime
+ctest --test-dir build-fuzz-msvc -C Release -R ^fuzz_
+```
+
+The `fastgpx Fuzzing` GitHub workflow runs every target for a configurable amount of time
+(manual dispatch, plus a weekly schedule) and uploads crashing inputs as artifacts.
+
 ## VSCode / CMake
 
 Building directly with CMake require pybind11 installed. Currently this is defined as a build tool dependency in `pyproject.toml` and will therefore have to be manually installed into the `.venv` using `pip install pybind11`.

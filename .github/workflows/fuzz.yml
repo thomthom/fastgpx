@@ -1,0 +1,86 @@
+name: fastgpx Fuzzing
+
+# Runs the libFuzzer targets in src/cpp/fuzz with AddressSanitizer and UndefinedBehaviorSanitizer.
+# Each target runs in its own job for the requested amount of time. The evolved corpus is cached
+# between runs so that later runs start where the previous ones stopped. Crashing inputs are
+# uploaded as artifacts; reproduce with:
+#
+#   fuzz_<target> <artifact-file>
+#
+# and, once fixed, add the input to src/cpp/fuzz/corpus/<target>/ as a regression test.
+on:
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: Seconds to fuzz each target
+        default: "300"
+        required: false
+  schedule:
+    # Mondays 04:00 UTC.
+    - cron: "0 4 * * 1"
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [gpx, polyline, polyline_encode, datetime]
+
+    env:
+      CC: clang
+      CXX: clang++
+      FASTGPX_WARNINGS_AS_ERRORS: ON
+      DURATION: ${{ inputs.duration || '300' }}
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Restore corpus
+        uses: actions/cache@v4
+        with:
+          path: fuzz-corpus/${{ matrix.target }}
+          key: fuzz-corpus-${{ matrix.target }}-${{ github.run_id }}
+          restore-keys: |
+            fuzz-corpus-${{ matrix.target }}-
+
+      # No Python module and no Catch2: only the fuzz targets and their dependencies are built.
+      - name: Configure
+        run: |
+          cmake -S . -B build-fuzz -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DFASTGPX_BUILD_FUZZERS=ON \
+            -DFASTGPX_BUILD_PYTHON_MODULE=OFF \
+            -DBUILD_TESTING=OFF
+
+      - name: Build
+        run: cmake --build build-fuzz --parallel --target fuzz_${{ matrix.target }}
+
+      - name: Fuzz
+        run: |
+          TARGET="${{ matrix.target }}"
+          mkdir -p "fuzz-corpus/$TARGET" fuzz-artifacts
+          ARGS=(
+            -max_total_time="$DURATION"
+            -timeout=10
+            -print_final_stats=1
+            -artifact_prefix=fuzz-artifacts/
+          )
+          if [[ -f "src/cpp/fuzz/$TARGET.dict" ]]; then
+            ARGS+=(-dict="src/cpp/fuzz/$TARGET.dict")
+          fi
+          SEEDS=("src/cpp/fuzz/corpus/$TARGET")
+          if [[ "$TARGET" == "gpx" ]]; then
+            SEEDS+=(gpx/test gpx/third-party/gpxpy)
+          fi
+          # The first directory receives the new inputs; the rest are read-only seeds.
+          "./build-fuzz/src/cpp/fuzz/fuzz_$TARGET" "${ARGS[@]}" "fuzz-corpus/$TARGET" "${SEEDS[@]}"
+
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-artifacts-${{ matrix.target }}
+          path: fuzz-artifacts/
+          if-no-files-found: ignore

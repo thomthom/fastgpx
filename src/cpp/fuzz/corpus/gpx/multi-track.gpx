@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="fastgpx">
+  <trk>
+    <trkseg>
+      <trkpt lat="59.9" lon="10.7"><time>2024-05-18T07:50:00.000Z</time></trkpt>
+      <trkpt lat="59.91" lon="10.71"><time>2024-05-18T07:50:01.500Z</time></trkpt>
+    </trkseg>
+    <trkseg/>
+    <trkseg>
+      <trkpt lat="-33.8" lon="151.2"><ele>-5</ele></trkpt>
+    </trkseg>
+  </trk>
+  <trk>
+    <name>Second</name>
+    <trkseg>
+      <trkpt lat="90" lon="180"><time>2024-05-18T07:50:00+02:00</time></trkpt>
+      <trkpt lat="-90" lon="-180"><time>2024-05-18T07:50:00.123-05:30</time></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
