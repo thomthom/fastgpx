@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install and setup UV with Python (${{ matrix.build-python-version }})
-        uses: astral-sh/setup-uv@v10
+        uses: astral-sh/setup-uv@v10.0.1
         with:
           python-version: ${{ matrix.build-python-version }}
 
@@ -84,7 +84,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install and setup UV with Python (${{ matrix.python-version }})
-        uses: astral-sh/setup-uv@v10
+        uses: astral-sh/setup-uv@v10.0.1
         with:
           python-version: ${{ matrix.python-version }}
 

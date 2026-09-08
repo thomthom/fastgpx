@@ -67,7 +67,7 @@ jobs:
         # submodules: true  # Optional, use if you have submodules
 
     # - name: Install and setup UV with Python
-    #   uses: astral-sh/setup-uv@v10
+    #   uses: astral-sh/setup-uv@v10.0.1
     #   with:
     #     python-version: 3.14
 
