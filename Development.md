@@ -65,18 +65,9 @@ set SPHINXOPTS=--verbose
 set SPHINXOPTS=--fresh-env --verbose
 ```
 
-The docs workflow builds with warnings as errors, so a new warning fails CI and blocks the
-Pages deploy. To get the same behaviour locally before pushing:
-
 ```sh
-# Fail on any warning, but report all of them rather than stopping at the first:
+# Warnings as errors, as the docs workflow builds it:
 set SPHINXOPTS=-W --keep-going
-make.bat html
-```
-
-```sh
-# Clear it again when iterating on half-written docstrings:
-set SPHINXOPTS=
 ```
 
 ### Python Benchmarking
@@ -238,22 +229,17 @@ build-fuzz/src/cpp/fuzz/fuzz_datetime -dict=src/cpp/fuzz/datetime.dict -max_tota
   fuzz-corpus/datetime src/cpp/fuzz/corpus/datetime
 ```
 
-A crash writes a `crash-<hash>` file. Reproduce it by passing the file as the only argument,
-and once fixed, copy it into `src/cpp/fuzz/corpus/<target>/` so that it becomes a regression
-test. To keep going past a known crash while exploring, use fork mode:
+A crash writes a `crash-<hash>` file; replay it with `fuzz_<target> -runs=1 <file>`. Fixed
+inputs go into `src/cpp/fuzz/corpus/<target>/` as regression seeds. To keep going past a known
+crash while exploring, use fork mode:
 
 ```sh
 build-fuzz/src/cpp/fuzz/fuzz_gpx -fork=4 -ignore_crashes=1 -max_total_time=300 fuzz-corpus/gpx ...
 ```
 
-Two things that look like findings in fork mode are not:
-
-- The parent process exits with a LeakSanitizer report of 16 bytes leaked from
-  `fuzzer::FuzzWithFork`, and therefore a non-zero exit code. That is a leak in libFuzzer's own
-  fork driver (LLVM 18), not in fastgpx. `ASAN_OPTIONS=detect_leaks=0` silences it.
-- `timeout-*` and `slow-unit-*` files are often scheduling stalls from running many sanitized
-  processes at once. Replay the file on its own (`fuzz_gpx -runs=1 <file>`); if it finishes in
-  milliseconds it was not a slow input.
+Fork mode in LLVM 18 always ends with a 16-byte leak report from `fuzzer::FuzzWithFork` and a
+non-zero exit; that is libFuzzer's own, not fastgpx (`ASAN_OPTIONS=detect_leaks=0` silences it).
+`timeout-*` and `slow-unit-*` files from a busy machine usually replay in milliseconds.
 
 With MSVC or GCC the same targets are built with a standalone driver that replays files or
 directories through the fuzz entry point. That is what the `fuzz_<target>_corpus` CTest entries
@@ -270,4 +256,6 @@ The `fastgpx Fuzzing` GitHub workflow runs every target for a configurable amoun
 
 ## VSCode / CMake
 
-Building directly with CMake require pybind11 installed. Currently this is defined as a build tool dependency in `pyproject.toml` and will therefore have to be manually installed into the `.venv` using `pip install pybind11`.
+Configuring directly with CMake needs `nanobind` importable from the Python interpreter CMake
+finds (`uv sync --only-dev` installs it into `.venv`). Pass `-DFASTGPX_BUILD_PYTHON_MODULE=OFF`
+for a C++-only build that needs neither Python nor nanobind.
