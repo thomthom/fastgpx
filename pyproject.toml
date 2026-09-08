@@ -1,5 +1,7 @@
 [build-system]
-requires = ["scikit-build-core", "nanobind"]
+# nanobind 3.x removed `nanobind/stl/detail/chrono.h`, which the custom datetime
+# caster in `src/cpp/python_utc_chrono_nanobind.hpp` builds on.
+requires = ["scikit-build-core", "nanobind>=2.9.2,<3"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -35,7 +37,7 @@ classifiers = [
 [dependency-groups]
 dev = [ # Tests and build
   "gpxpy",
-  "nanobind>=2.9.2",
+  "nanobind>=2.9.2,<3",
   "polyline>=2.0.4",
   "pytest",
 ]
