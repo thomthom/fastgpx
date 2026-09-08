@@ -472,7 +472,7 @@ Gpx ReadGpxXml(const pugi::xml_node& doc)
         {
           // Read only the raw string, but don't parse it. This is done on demand
           // when the value is read.
-          point.time = std::string(time.text().as_string());
+          point.time.emplace(std::string(time.text().as_string()));
         }
       }
     }
