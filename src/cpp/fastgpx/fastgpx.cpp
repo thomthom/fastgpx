@@ -4,8 +4,11 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cerrno>
+#include <charconv>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <ctime>
 #include <filesystem>
 #include <format>
@@ -18,6 +21,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 #include "fastgpx/datetime.hpp"
 #include "fastgpx/errors.hpp"
@@ -363,6 +367,49 @@ TimeBounds Gpx::ComputeTimeBounds() const
 
 namespace {
 
+// pugixml's `as_double()` uses `strtod`, which honors the process' LC_NUMERIC locale. A host
+// application that has called `setlocale` (e.g. to "de_DE") would then parse "61.5" as 61.
+// `std::from_chars` is locale independent and considerably faster.
+double ParseDouble(std::string_view text)
+{
+  // Unlike `strtod`, `std::from_chars` neither skips leading whitespace nor accepts a leading '+'.
+  const auto first = text.find_first_not_of(" \t\n\r");
+  if (first == std::string_view::npos)
+  {
+    return 0.0;
+  }
+  text.remove_prefix(first);
+  if (text.front() == '+')
+  {
+    text.remove_prefix(1);
+  }
+
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 200000
+  // libc++ only implements floating-point `std::from_chars` from version 20. Fall back to `strtod`
+  // on older libc++. Note that this keeps the old locale-dependent behaviour there.
+  const std::string buffer(text);
+  char* end = nullptr;
+  errno = 0;
+  const double value = std::strtod(buffer.c_str(), &end);
+  if (end == buffer.c_str() || errno == ERANGE)
+  {
+    // Invalid input and out-of-range values are treated alike, as with `std::from_chars` below.
+    return 0.0;
+  }
+  return value;
+#else
+  double value = 0.0;
+  const auto [ptr, ec] = std::from_chars(text.data(), text.data() + text.size(), value);
+  if (ec != std::errc{})
+  {
+    // Invalid input (`invalid_argument`) and out-of-range values (`result_out_of_range`) are
+    // both treated as 0.0. `value` is left unmodified in either case.
+    return 0.0;
+  }
+  return value;
+#endif
+}
+
 Gpx ReadGpxXml(const pugi::xml_node& doc)
 {
   Gpx gpx;
@@ -397,8 +444,8 @@ Gpx ReadGpxXml(const pugi::xml_node& doc)
       for (pugi::xml_node trkpt = segment.child("trkpt"); trkpt;
            trkpt = trkpt.next_sibling("trkpt"))
       {
-        const double lat = trkpt.attribute("lat").as_double();
-        const double lon = trkpt.attribute("lon").as_double();
+        const double lat = ParseDouble(trkpt.attribute("lat").value());
+        const double lon = ParseDouble(trkpt.attribute("lon").value());
 
         // <ele>
         /*
@@ -408,7 +455,7 @@ Gpx ReadGpxXml(const pugi::xml_node& doc)
         const auto ele = trkpt.child("ele");
         if (ele)
         {
-          elevation = ele.text().as_double();
+          elevation = ParseDouble(ele.text().get());
         }
 
         auto& point = gpx_segment.points.emplace_back(lat, lon, elevation);
