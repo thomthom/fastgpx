@@ -185,6 +185,43 @@ inline std::tm* localtime_thread_safe(const Time* time, Buf* buf)
   }
 }
 
+// HACK: (Begin)
+template<class... Args>
+auto can_gmtime_s(Args*... args) -> decltype((gmtime_s(args...), std::true_type{}));
+std::false_type can_gmtime_s(...);
+
+template<class... Args>
+auto can_gmtime_r(Args*... args) -> decltype((gmtime_r(args...), std::true_type{}));
+std::false_type can_gmtime_r(...);
+
+// Same as `localtime_thread_safe`, but for UTC. Note that Microsoft's `gmtime_s` rejects negative
+// `time_t` values (before 1970-01-01), in which case this returns nullptr.
+template<class Time, class Buf>
+inline std::tm* gmtime_thread_safe(const Time* time, Buf* buf)
+{
+  if constexpr (decltype(can_gmtime_s(time, buf))::value)
+  {
+    // C11 gmtime_s
+    std::tm* ret = gmtime_s(time, buf);
+    return ret;
+  }
+  else if constexpr (decltype(can_gmtime_s(buf, time))::value)
+  {
+    // Microsoft gmtime_s (with parameters switched and errno_t return)
+    int ret = gmtime_s(buf, time);
+    return ret == 0 ? buf : nullptr;
+  }
+  else
+  {
+    static_assert(decltype(can_gmtime_r(time, buf))::value,
+                  "python_utc_chrono_nanobind.hpp type caster requires "
+                  "that your C library support gmtime_r or gmtime_s");
+    std::tm* ret = gmtime_r(time, buf);
+    return ret;
+  }
+}
+// HACK: (End)
+
 // Cast between times on the system clock and datetime.datetime instances
 // (also supports datetime.date and datetime.time for Python->C++ conversions)
 template<typename Duration>
@@ -289,7 +326,15 @@ public:
     //  Don't convert to local time, because the time/date is UTC.
     std::time_t tt =
         ch::system_clock::to_time_t(ch::time_point_cast<ch::system_clock::duration>(src - us));
-    std::tm gmtm = *std::gmtime(&tt);
+    // On Windows (MSVC CRT), `gmtime_s` fails for negative `time_t` (pre-1970), so such time
+    // points raise ValueError there.
+    std::tm gmtm{};
+    if (!gmtime_thread_safe(&tt, &gmtm))
+    {
+      PyErr_Format(PyExc_ValueError, "Unable to represent system_clock as UTC; got time_t %lld",
+                   static_cast<long long>(tt));
+      return handle();
+    }
 
     // Cannot use PyDateTime_FromDateAndTime with limited ABI.
     /*
