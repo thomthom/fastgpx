@@ -153,3 +153,29 @@ class TestBounds:
         bounds = fastgpx.Bounds(ll1, ll2)
         str_str = str(bounds)
         assert str_str == "Bounds(min=(-10.3, -5.2, 68.5), max=(30.3, 25.7, 150.2))"
+
+    # gpxpy compatibility setters on empty bounds
+
+    def test_set_min_latitude_on_empty_bounds(self):
+        bounds = fastgpx.Bounds()
+        bounds.min_latitude = 50.0
+        bounds.add(fastgpx.LatLong(59.0, -10.0))
+        assert bounds.min is not None
+        assert bounds.min.latitude == 50.0
+        assert bounds.min.longitude == -10.0
+
+    def test_set_max_latitude_on_empty_bounds(self):
+        bounds = fastgpx.Bounds()
+        bounds.max_latitude = 60.0
+        bounds.add(fastgpx.LatLong(59.0, -10.0))
+        assert bounds.max is not None
+        assert bounds.max.latitude == 60.0
+        assert bounds.max.longitude == -10.0
+
+    def test_set_max_longitude_on_empty_bounds(self):
+        bounds = fastgpx.Bounds()
+        bounds.max_longitude = 20.0
+        bounds.add(fastgpx.LatLong(-45.0, 10.0))
+        assert bounds.max is not None
+        assert bounds.max.latitude == -45.0
+        assert bounds.max.longitude == 20.0
