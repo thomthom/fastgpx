@@ -159,6 +159,18 @@ class TestGpx:
         assert points[0] == fastgpx.LatLong(61.5, 10.25, 123.5)
         assert points[1] == fastgpx.LatLong(61.75, 10.5, 0.0)
 
+    def test_parse_out_of_range_number_is_zero(self):
+        # Values that cannot be represented as a double (here: overflow) are treated like
+        # invalid input, which yields 0.0 rather than infinity.
+        xml = ('<gpx><trk><trkseg>'
+               '<trkpt lat="1e999" lon="10.5"><ele>-1e999</ele></trkpt>'
+               '<trkpt lat="abc" lon="10.5"></trkpt>'
+               '</trkseg></trk></gpx>')
+        gpx = fastgpx.parse(xml)
+        points = gpx.tracks[0].segments[0].points
+        assert points[0] == fastgpx.LatLong(0.0, 10.5, 0.0)
+        assert points[1] == fastgpx.LatLong(0.0, 10.5, 0.0)
+
 
 class TestTrack:
 
