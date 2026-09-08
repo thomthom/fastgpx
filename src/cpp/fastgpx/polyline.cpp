@@ -3,6 +3,7 @@
 #include <cmath>
 #include <utility>
 
+#include "fastgpx/errors.hpp"
 #include "fastgpx/fastgpx.hpp"
 
 namespace fastgpx {
@@ -54,24 +55,38 @@ std::vector<LatLong> decode(std::string_view encoded, Precision precision)
   int lat = 0;
   int lng = 0;
 
+  auto decode_value = [&](int& value) -> void {
+    int shift = 0;
+    int result = 0;
+    int byte = 0;
+
+    do
+    {
+      if (index >= encoded.size())
+      {
+        throw parse_error("polyline: unexpected end of encoded data");
+      }
+      // Each chunk carries 5 bits. Values are 32-bit, so at most 6 chunks (30 bits) are valid.
+      // A 7th chunk would shift past the width of `int`, which is undefined behavior.
+      if (shift >= 30)
+      {
+        throw parse_error("polyline: encoded value is too long");
+      }
+      byte = static_cast<unsigned char>(encoded[index++]) - 63;
+      if (byte < 0 || byte > 63)
+      {
+        throw parse_error("polyline: invalid character in encoded data");
+      }
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    }
+    while (byte >= 0x20);
+
+    value += ((result & 1) ? ~(result >> 1) : (result >> 1));
+  };
+
   while (index < encoded.size())
   {
-    auto decode_value = [&](int& value) -> void {
-      int shift = 0;
-      int result = 0;
-      int byte;
-
-      do
-      {
-        byte = encoded[index++] - 63;
-        result |= (byte & 0x1f) << shift;
-        shift += 5;
-      }
-      while (byte >= 0x20);
-
-      value += ((result & 1) ? ~(result >> 1) : (result >> 1));
-    };
-
     decode_value(lat);
     decode_value(lng);
 
