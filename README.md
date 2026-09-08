@@ -6,7 +6,7 @@ An experimental Python library for parsing GPX files fast.
 # Get the total length of the tracks in a GPX file:
 import fastgpx
 
-gpx = fastgpx.parse("example.gpx")
+gpx = fastgpx.load("example.gpx")
 print(f'{gpx.length_2d()} m')
 ```
 
@@ -14,14 +14,14 @@ print(f'{gpx.length_2d()} m')
 # Iterate over GPX file:
 import fastgpx
 
-gpx = fastgpx.parse("example.gpx")
+gpx = fastgpx.load("example.gpx")
 for track in gpx.tracks:
     print(f'Track: {track.name}')
     print(f'Distance: {track.length_2d()} m')
-    if not track.time_bounds.is_empty():
-      print(f'Time: {track.time_bounds().start_time} - {track.time_bounds().end_time}')
+    time_bounds = track.time_bounds()
+    if not time_bounds.is_empty():
+        print(f'Time: {time_bounds.start_time} - {time_bounds.end_time}')
     for segment in track.segments:
-        print(f'Segment: {segment.name}')
         for point in segment.points:
             print(f'Point: {point.latitude}, {point.longitude}')
 ```

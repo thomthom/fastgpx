@@ -28,7 +28,7 @@ def main():
 
         assert gpx_path.exists()
 
-        gpx = fastgpx.parse(str(gpx_path.resolve()))
+        gpx = fastgpx.load(str(gpx_path.resolve()))
 
         gpx_data = {
             "path": gpx_path.as_posix(),
