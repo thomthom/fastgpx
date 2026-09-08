@@ -379,5 +379,5 @@ NB_MODULE(fastgpx, m)
       [](const std::string_view encoded, int precision) {
         return polyline::decode(encoded, IntToPrecision(precision));
       },
-      "locations"_a, "precision"_a = 5);
+      "encoded"_a, "precision"_a = 5);
 }
