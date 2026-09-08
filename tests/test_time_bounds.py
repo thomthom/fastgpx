@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import fastgpx
 
@@ -60,6 +60,29 @@ class TestTimeBounds:
         assert bounds.is_range()
         assert bounds.start_time == time_point1
         assert bounds.end_time == time_point2
+
+    def test_add_timezone_aware_time_point(self):
+        bounds = fastgpx.TimeBounds()
+        # 12:00 at UTC+02:00 is 10:00 UTC.
+        time_point = datetime(2025, 6, 20, 12, 0, 0, tzinfo=timezone(timedelta(hours=2)))
+        bounds.add(time_point)
+        assert bounds.start_time == time_point
+        assert bounds.start_time == datetime(2025, 6, 20, 10, 0, 0, tzinfo=timezone.utc)
+        assert bounds.start_time.tzinfo is timezone.utc
+
+    def test_add_naive_time_point_is_utc(self):
+        bounds = fastgpx.TimeBounds()
+        bounds.add(datetime(2025, 6, 20, 12, 0, 0))
+        assert bounds.start_time == datetime(2025, 6, 20, 12, 0, 0, tzinfo=timezone.utc)
+
+    def test_init_with_timezone_aware_times(self):
+        start_time = datetime(2025, 6, 20, 8, 7, 28, tzinfo=timezone(timedelta(hours=-5)))
+        end_time = datetime(2025, 6, 27, 13, 37, 0, tzinfo=timezone(timedelta(hours=5, minutes=30)))
+        bounds = fastgpx.TimeBounds(start_time=start_time, end_time=end_time)
+        assert bounds.start_time == start_time
+        assert bounds.end_time == end_time
+        assert bounds.start_time.isoformat() == '2025-06-20T13:07:28+00:00'
+        assert bounds.end_time.isoformat() == '2025-06-27T08:07:00+00:00'
 
     def test_add_time_bounds(self):
         bounds1 = fastgpx.TimeBounds(

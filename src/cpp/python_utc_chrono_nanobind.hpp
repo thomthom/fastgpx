@@ -227,6 +227,26 @@ public:
     // msecs);
     std::time_t tt = to_utc_time_t(&cal);
     value = ch::time_point_cast<Duration>(ch::system_clock::from_time_t(tt) + msecs);
+
+    // `unpack_datetime` reads the wall clock fields and ignores `tzinfo`. Naive datetimes are
+    // interpreted as UTC. For timezone-aware datetimes, subtract the UTC offset so that the
+    // resulting time point represents the same instant.
+    try
+    {
+      if (hasattr(src, "utcoffset"))
+      {
+        object offset = borrow(src).attr("utcoffset")();
+        if (!offset.is_none())
+        {
+          value -= ch::duration_cast<Duration>(cast<ch::microseconds>(offset));
+        }
+      }
+    }
+    catch (python_error& e)
+    {
+      e.discard_as_unraisable(src.ptr());
+      return false;
+    }
     // HACK: (End)
     return true;
   }
