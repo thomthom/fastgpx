@@ -31,10 +31,10 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install and setup UV with Python (${{ matrix.build-python-version }})
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10
         with:
           python-version: ${{ matrix.build-python-version }}
 
@@ -56,7 +56,7 @@ jobs:
           uv build --wheel
 
       - name: Upload wheel artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wheel-${{ matrix.os }}-${{ matrix.compiler }}
           path: dist/*.whl
@@ -81,15 +81,15 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install and setup UV with Python (${{ matrix.python-version }})
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Download wheel artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: wheel-${{ matrix.os }}-${{ matrix.compiler }}
           path: dist
@@ -114,7 +114,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Test Results (${{ matrix.os }}, ${{ matrix.python-version }}, ${{ matrix.compiler }})
           path: reports/pytest-results.xml
@@ -131,7 +131,7 @@ jobs:
       issues: read
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
