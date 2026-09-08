@@ -22,8 +22,9 @@ How to use
   for track in gpx.tracks:
       print(f'Track: {track.name}')
       print(f'Distance: {track.length_2d()} m')
-      if not track.time_bounds().is_empty():
-        print(f'Time: {track.time_bounds().start_time} - {track.time_bounds().end_time}')
+      time_bounds = track.time_bounds()
+      if not time_bounds.is_empty():
+          print(f'Time: {time_bounds.start_time} - {time_bounds.end_time}')
       for segment in track.segments:
           for point in segment.points:
               print(f'Point: {point.latitude}, {point.longitude}')
