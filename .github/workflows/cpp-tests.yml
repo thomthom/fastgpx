@@ -1,0 +1,85 @@
+name: fastgpx C++ Tests
+
+# Manual dispatch only for now. Building Catch2 and nlohmann/json from source
+# makes this job considerably slower than the wheel build, in particular on
+# Windows. The fetched sources are cached to at least avoid the clones.
+on:
+  workflow_dispatch:
+
+jobs:
+  cpp-tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        compiler: [gcc-14, clang, default]
+        exclude:
+          # gcc and clang for Linux-only.
+          - os: windows-latest
+            compiler: gcc-14
+          - os: windows-latest
+            compiler: clang
+          # Skip default compiler on Ubuntu (you want minimum gcc-14 or clang).
+          - os: ubuntu-latest
+            compiler: default
+
+    env:
+      FASTGPX_WARNINGS_AS_ERRORS: ON
+      FETCHCONTENT_BASE_DIR: ${{ github.workspace }}/.fetchcontent
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install and setup UV with Python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set compiler if needed
+        shell: bash
+        run: |
+          if [[ "${{ matrix.compiler }}" == "gcc-14" ]]; then
+            echo "Using GCC 14"
+            echo "CC=gcc-14" >> $GITHUB_ENV
+            echo "CXX=g++-14" >> $GITHUB_ENV
+          elif [[ "${{ matrix.compiler }}" == "clang" ]]; then
+            echo "Using Clang"
+            echo "CC=clang" >> $GITHUB_ENV
+            echo "CXX=clang++" >> $GITHUB_ENV
+          fi
+
+      # The CMake project always configures the Python module as well, so
+      # nanobind must be importable. CMake 3.30.2+ is required by CMakeLists.txt.
+      - name: Install nanobind and CMake
+        shell: bash
+        run: |
+          uv sync --only-dev
+          uv pip install "cmake>=3.30.2"
+          echo "PYTHON_EXECUTABLE=$(uv run --no-sync python -c 'import sys; print(sys.executable)')" >> $GITHUB_ENV
+
+      - name: Cache fetched dependencies (pugixml, Catch2, nlohmann/json)
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.FETCHCONTENT_BASE_DIR }}
+          key: fetchcontent-${{ runner.os }}-${{ hashFiles('src/cpp/CMakeLists.txt') }}
+
+      - name: Configure
+        shell: bash
+        run: |
+          uv run --no-sync cmake -S . -B build-cpp \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=ON \
+            -DFETCHCONTENT_BASE_DIR="$FETCHCONTENT_BASE_DIR" \
+            -DPython_EXECUTABLE="$PYTHON_EXECUTABLE"
+
+      - name: Build tests
+        shell: bash
+        run: |
+          uv run --no-sync cmake --build build-cpp --config Release --parallel --target fastgpx_test
+
+      - name: Run tests
+        shell: bash
+        run: |
+          uv run --no-sync ctest --test-dir build-cpp -C Release --output-on-failure
