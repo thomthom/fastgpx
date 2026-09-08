@@ -1,4 +1,5 @@
 import datetime
+import locale
 from pathlib import Path
 
 import gpxpy
@@ -133,6 +134,46 @@ class TestGpx:
         gpx = fastgpx.parse(gpx_data)
         distance = gpx.length_2d()
         assert distance == pytest.approx(382952.7193, abs=METERS_TOL)
+
+    def test_parse_is_locale_independent(self):
+        # Locales that use ',' as the decimal separator. Names differ between platforms.
+        candidates = ['de_DE.UTF-8', 'de_DE.utf8', 'de_DE', 'German_Germany.1252', 'nb_NO.UTF-8']
+        original = locale.setlocale(locale.LC_NUMERIC)
+        for name in candidates:
+            try:
+                locale.setlocale(locale.LC_NUMERIC, name)
+                break
+            except locale.Error:
+                continue
+        else:
+            pytest.skip('No locale with "," decimal separator available')
+        try:
+            # Guard against a locale that exists but does not actually change the separator,
+            # in which case the test would pass without exercising anything.
+            if locale.localeconv()['decimal_point'] != ',':
+                pytest.skip('Selected locale does not use "," as decimal separator')
+            xml = ('<gpx><trk><trkseg>'
+                   '<trkpt lat="61.5" lon="10.25"><ele>123.5</ele></trkpt>'
+                   '<trkpt lat=" +61.75" lon="10.5"></trkpt>'
+                   '</trkseg></trk></gpx>')
+            gpx = fastgpx.parse(xml)
+        finally:
+            locale.setlocale(locale.LC_NUMERIC, original)
+        points = gpx.tracks[0].segments[0].points
+        assert points[0] == fastgpx.LatLong(61.5, 10.25, 123.5)
+        assert points[1] == fastgpx.LatLong(61.75, 10.5, 0.0)
+
+    def test_parse_out_of_range_number_is_zero(self):
+        # Values that cannot be represented as a double (here: overflow) are treated like
+        # invalid input, which yields 0.0 rather than infinity.
+        xml = ('<gpx><trk><trkseg>'
+               '<trkpt lat="1e999" lon="10.5"><ele>-1e999</ele></trkpt>'
+               '<trkpt lat="abc" lon="10.5"></trkpt>'
+               '</trkseg></trk></gpx>')
+        gpx = fastgpx.parse(xml)
+        points = gpx.tracks[0].segments[0].points
+        assert points[0] == fastgpx.LatLong(0.0, 10.5, 0.0)
+        assert points[1] == fastgpx.LatLong(0.0, 10.5, 0.0)
 
 
 class TestTrack:
