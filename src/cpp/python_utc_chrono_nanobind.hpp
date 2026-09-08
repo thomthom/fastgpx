@@ -273,7 +273,17 @@ public:
     //  Don't convert to local time, because the time/date is UTC.
     std::time_t tt =
         ch::system_clock::to_time_t(ch::time_point_cast<ch::system_clock::duration>(src - us));
-    std::tm gmtm = *std::gmtime(&tt);
+    std::tm gmtm{};
+#if defined(_WIN32)
+    if (gmtime_s(&gmtm, &tt) != 0)
+#else
+    if (gmtime_r(&tt, &gmtm) == nullptr)
+#endif
+    {
+      PyErr_Format(PyExc_ValueError, "Unable to represent system_clock as UTC; got time_t %lld",
+                   static_cast<long long>(tt));
+      return handle();
+    }
 
     // Cannot use PyDateTime_FromDateAndTime with limited ABI.
     /*
