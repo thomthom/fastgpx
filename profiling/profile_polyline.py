@@ -23,7 +23,7 @@ GPX_PATH = 'gpx/2024 Great Roadtrip'
 def benchmark_fastgpx():
     polylines = []
     for gpx_filepath in gpx_files:
-        gpx = fastgpx.parse(gpx_filepath)
+        gpx = fastgpx.load(gpx_filepath)
         for track in gpx.tracks:
             for segment in track.segments:
                 points = segment.points
@@ -35,7 +35,7 @@ def benchmark_fastgpx():
 def benchmark_polyline():
     polylines = []
     for gpx_filepath in gpx_files:
-        gpx = fastgpx.parse(gpx_filepath)
+        gpx = fastgpx.load(gpx_filepath)
         for track in gpx.tracks:
             for segment in track.segments:
                 # Note: Extra overhead because this type conversion is needed.
