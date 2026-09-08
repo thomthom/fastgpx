@@ -4,8 +4,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cerrno>
 #include <charconv>
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <format>
 #include <numeric>
@@ -375,9 +377,30 @@ double ParseDouble(std::string_view text)
     text.remove_prefix(1);
   }
 
-  double value = 0.0;
-  std::from_chars(text.data(), text.data() + text.size(), value);
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 200000
+  // libc++ only implements floating-point `std::from_chars` from version 20. Fall back to `strtod`
+  // on older libc++. Note that this keeps the old locale-dependent behaviour there.
+  const std::string buffer(text);
+  char* end = nullptr;
+  errno = 0;
+  const double value = std::strtod(buffer.c_str(), &end);
+  if (end == buffer.c_str() || errno == ERANGE)
+  {
+    // Invalid input and out-of-range values are treated alike, as with `std::from_chars` below.
+    return 0.0;
+  }
   return value;
+#else
+  double value = 0.0;
+  const auto [ptr, ec] = std::from_chars(text.data(), text.data() + text.size(), value);
+  if (ec != std::errc{})
+  {
+    // Invalid input (`invalid_argument`) and out-of-range values (`result_out_of_range`) are
+    // both treated as 0.0. `value` is left unmodified in either case.
+    return 0.0;
+  }
+  return value;
+#endif
 }
 
 Gpx ReadGpxXml(const pugi::xml_node& doc)
