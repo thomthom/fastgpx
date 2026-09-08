@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <ctime>
@@ -18,6 +19,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 #include "fastgpx/datetime.hpp"
 #include "fastgpx/errors.hpp"
@@ -363,6 +365,28 @@ TimeBounds Gpx::ComputeTimeBounds() const
 
 namespace {
 
+// pugixml's `as_double()` uses `strtod`, which honors the process' LC_NUMERIC locale. A host
+// application that has called `setlocale` (e.g. to "de_DE") would then parse "61.5" as 61.
+// `std::from_chars` is locale independent and considerably faster.
+double ParseDouble(std::string_view text)
+{
+  // Unlike `strtod`, `std::from_chars` neither skips leading whitespace nor accepts a leading '+'.
+  const auto first = text.find_first_not_of(" \t\n\r");
+  if (first == std::string_view::npos)
+  {
+    return 0.0;
+  }
+  text.remove_prefix(first);
+  if (text.front() == '+')
+  {
+    text.remove_prefix(1);
+  }
+
+  double value = 0.0;
+  std::from_chars(text.data(), text.data() + text.size(), value);
+  return value;
+}
+
 Gpx ReadGpxXml(const pugi::xml_node& doc)
 {
   Gpx gpx;
@@ -397,8 +421,8 @@ Gpx ReadGpxXml(const pugi::xml_node& doc)
       for (pugi::xml_node trkpt = segment.child("trkpt"); trkpt;
            trkpt = trkpt.next_sibling("trkpt"))
       {
-        const double lat = trkpt.attribute("lat").as_double();
-        const double lon = trkpt.attribute("lon").as_double();
+        const double lat = ParseDouble(trkpt.attribute("lat").value());
+        const double lon = ParseDouble(trkpt.attribute("lon").value());
 
         // <ele>
         /*
@@ -408,7 +432,7 @@ Gpx ReadGpxXml(const pugi::xml_node& doc)
         const auto ele = trkpt.child("ele");
         if (ele)
         {
-          elevation = ele.text().as_double();
+          elevation = ParseDouble(ele.text().get());
         }
 
         auto& point = gpx_segment.points.emplace_back(lat, lon, elevation);
