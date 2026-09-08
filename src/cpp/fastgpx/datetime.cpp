@@ -802,8 +802,6 @@ public:
     return *this;
   }
 
-  ParsedValue<T> Offset(const T& offset) const { return ParsedValue<T>(value_ + offset); }
-
 private:
   T value_;
 };
