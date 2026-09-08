@@ -77,7 +77,7 @@ def main():
 
         data.append(gpx_data)
 
-    output_path = Path("cpp/expected_gpx_data.json")
+    output_path = Path("src/cpp/expected_gpx_data.json")
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     with output_path.open("w", encoding="utf-8") as json_file:

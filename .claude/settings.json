@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv sync:*)",
+      "Bash(uv lock:*)",
+      "Bash(uv build:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run --no-sync pytest:*)",
+      "Bash(uv run mypy:*)",
+      "Bash(uv run cmake:*)",
+      "Bash(uv run --no-sync cmake:*)",
+      "Bash(uv run ctest:*)",
+      "Bash(uv run --no-sync ctest:*)",
+      "Bash(uv run catch2.py:*)",
+      "Bash(uv run make html:*)",
+      "Bash(build-cpp/src/cpp/fastgpx_test:*)",
+      "Bash(clang-format:*)"
+    ]
+  }
+}

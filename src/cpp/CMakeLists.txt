@@ -156,44 +156,65 @@ target_link_libraries(fastgpx PRIVATE fastgpx-static)
 target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS)
 
 # https://nanobind.readthedocs.io/en/latest/typing.html
-nanobind_add_stub(
-  fastgpx_stub
-  MODULE fastgpx
-
-  PYTHON_PATH $<TARGET_FILE_DIR:fastgpx>
-  DEPENDS fastgpx
-
-  MARKER_FILE py.typed
-  RECURSIVE
-
-  OUTPUT_PATH ${CMAKE_SOURCE_DIR}/src
-  # The OUTPUT parameter now accepts multiple values that should list each
-  # generated .pyi file.
-  # Note that these are not actually passed to the stub generator and purely
-  # used for dependency management within CMake (e.g., to remove files when
-  # executing the clean target, or to track dependencies when stub files are
-  # subsequently consumed by other targets). This is necessary because CMake is
-  # not able to automatically discover the generated stub paths at configuration
-  # time.
-  OUTPUT
-    ${CMAKE_SOURCE_DIR}/src/fastgpx/__init__.pyi
-    ${CMAKE_SOURCE_DIR}/src/fastgpx/geo.pyi
-    ${CMAKE_SOURCE_DIR}/src/fastgpx/polyline.pyi
+#
+# Equivalent to nanobind_add_stub(fastgpx_stub MODULE fastgpx RECURSIVE ...),
+# except that stubgen runs with `python -S`. Once the package has been installed
+# in editable mode (`uv sync`, `pip install -e .`), scikit-build-core adds an
+# import hook to site-packages that redirects `import fastgpx` to the module
+# *installed* in site-packages. Without -S that hook wins over the build
+# directory, so the stubs would be generated from the previous build and, on
+# Linux/macOS, be written to `src/fastgpx.abi3/` instead of `src/fastgpx/`.
+# -S skips site-packages so the freshly built module is imported instead.
+# stubgen.py only depends on the standard library.
+# NB_DIR is set by find_package(nanobind); same lookup as nanobind_add_stub().
+if(EXISTS "${NB_DIR}/src/stubgen.py")
+  set(FASTGPX_STUBGEN "${NB_DIR}/src/stubgen.py")
+elseif(EXISTS "${NB_DIR}/stubgen.py")
+  set(FASTGPX_STUBGEN "${NB_DIR}/stubgen.py")
+else()
+  message(FATAL_ERROR "Could not locate nanobind's stubgen.py in ${NB_DIR}")
+endif()
+set(FASTGPX_STUB_OUTPUTS
+  ${CMAKE_SOURCE_DIR}/src/fastgpx/__init__.pyi
+  ${CMAKE_SOURCE_DIR}/src/fastgpx/geo.pyi
+  ${CMAKE_SOURCE_DIR}/src/fastgpx/polyline.pyi
+  ${CMAKE_SOURCE_DIR}/src/fastgpx/py.typed
 )
+add_custom_command(
+  OUTPUT ${FASTGPX_STUB_OUTPUTS}
+  COMMAND "${Python_EXECUTABLE}" -S "${FASTGPX_STUBGEN}"
+    -q
+    -r                      # RECURSIVE: also generate fastgpx.geo and fastgpx.polyline stubs
+    -i "$<TARGET_FILE_DIR:fastgpx>"
+    -M "${CMAKE_SOURCE_DIR}/src/fastgpx/py.typed"
+    -m fastgpx
+    -O "${CMAKE_SOURCE_DIR}/src"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  DEPENDS fastgpx "${FASTGPX_STUBGEN}"
+  COMMENT "Generating fastgpx type stubs"
+)
+add_custom_target(fastgpx_stub ALL DEPENDS ${FASTGPX_STUB_OUTPUTS})
 
 install(TARGETS fastgpx LIBRARY DESTINATION .)
 
-# For development purposes, copy the .pyd file to the site-packages directory.
-# This is not needed for the final installation, as the .pyd file will be copied
+# For development purposes, copy the extension module to the site-packages
+# directory of the Python interpreter found above (normally the project .venv).
+# This is not needed for the final installation, as the module will be copied
 # to the site-packages directory by the Python installer.
+# Python_SITEARCH resolves to `.venv\Lib\site-packages` on Windows and
+# `.venv/lib/pythonX.Y/site-packages` on Linux/macOS.
+# Skipped when scikit-build-core drives the build (SKBUILD is set), since the
+# wheel is then installed into site-packages by uv/pip anyway.
 # TODO: Use a custom VSCode command to copy the binary?
-add_custom_command(TARGET fastgpx POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "$<TARGET_FILE:fastgpx>"  # This is the .pyd file
-        "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/"
-)
+if(NOT SKBUILD)
+  add_custom_command(TARGET fastgpx POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E make_directory
+          "${Python_SITEARCH}/"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "$<TARGET_FILE:fastgpx>"  # This is the .pyd/.so file
+          "${Python_SITEARCH}/"
+  )
+endif()
 
 if(BUILD_TESTING)
 

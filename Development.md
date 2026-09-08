@@ -32,10 +32,41 @@ from . import another_module
 
 ### Python C Extension
 
-Once set up, you can build the C++ extension with a simple `pip install .` or `pip install --editable .` for development builds.
+The project is managed with `uv`. `uv sync` builds the C++ extension and installs it (as an
+editable install) together with the dependency groups you ask for:
 
 ```sh
-pip install --editable .
+uv sync --all-groups
+```
+
+The extension is rebuilt automatically by `uv sync`/`uv run` when files under `src/cpp/` or
+`CMakeLists.txt` change (see `[tool.uv] cache-keys` in `pyproject.toml`). To force a rebuild:
+
+```sh
+uv sync --reinstall-package fastgpx
+```
+
+By default uv builds the extension in an isolated environment, resolving `build-system.requires`
+from PyPI. The `dev` group also contains the build tools (`scikit-build-core`, `nanobind`,
+`cmake`, `ninja`), so the build can instead run inside the project `.venv`. This is useful in
+sandboxes with limited network access and makes the build use the locked tool versions:
+
+```sh
+uv sync --all-groups --no-install-project                    # only needed on a brand new .venv
+uv sync --all-groups --no-build-isolation-package fastgpx
+```
+
+Plain `pip install --editable .` still works too.
+
+#### Linux
+
+A C++23 compiler is required. On Ubuntu 24.04 the default GCC 13 is too old, so select GCC 14 or
+Clang before the first build (CMake caches the compiler in the build directory):
+
+```sh
+export CC=gcc-14 CXX=g++-14        # or: export CC=clang CXX=clang++
+export FASTGPX_WARNINGS_AS_ERRORS=ON   # same as CI
+uv sync --all-groups
 ```
 
 ```sh
@@ -51,6 +82,18 @@ uv sync --group docs
 cd docs
 make.bat html
 ```
+
+Linux/macOS:
+
+```sh
+cd docs
+uv run make html
+# Force documentation rebuild / verbose output:
+SPHINXOPTS="--fresh-env --verbose" uv run make html
+```
+
+The output is written to `docs/build/html`. The API docs are generated with autodoc, so the
+extension must be built first.
 
 ```sh
 # Force documentation rebuild:
@@ -157,6 +200,12 @@ cd src\cpp
 for /R %f in (*.cpp *.hpp) do "C:\Program Files\LLVM\bin\clang-format.exe" -i "%f"
 ```
 
+Linux/macOS:
+
+```sh
+find src/cpp -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i
+```
+
 ### Coverage (C++ OpenCppCoverage)
 
 ```sh
@@ -182,6 +231,28 @@ build\src\cpp\RelWithDebInfo\fastgpx_test.exe
 build\src\cpp\RelWithDebInfo\fastgpx_test.exe [!benchmark]
 ```
 
+#### Building and running from the command line (Linux/macOS)
+
+This mirrors `.github/workflows/cpp-tests.yml`. `uv run cmake` uses the CMake from the `dev`
+group, which satisfies the `cmake_minimum_required` version regardless of the system CMake. The
+first configure clones pugixml, Catch2 and nlohmann/json with `FetchContent`.
+
+```sh
+uv run cmake -S . -B build-cpp -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON \
+    -DFASTGPX_WARNINGS_AS_ERRORS=ON -DPython_EXECUTABLE="$PWD/.venv/bin/python"
+uv run cmake --build build-cpp --parallel --target fastgpx_test
+uv run ctest --test-dir build-cpp --output-on-failure
+
+build-cpp/src/cpp/fastgpx_test                  # run the Catch2 binary directly
+build-cpp/src/cpp/fastgpx_test "[!benchmark]"   # benchmarks
+```
+
+The tests compare against `src/cpp/expected_gpx_data.json`, which is generated from the Python
+API with `uv run catch2.py`.
+
 ## VSCode / CMake
 
-Building directly with CMake require pybind11 installed. Currently this is defined as a build tool dependency in `pyproject.toml` and will therefore have to be manually installed into the `.venv` using `pip install pybind11`.
+Building directly with CMake requires `nanobind` (and a recent enough `cmake`) to be importable
+from the Python interpreter CMake is pointed at. Both are part of the `dev` dependency group, so
+`uv sync` installs them into `.venv`. Building the `fastgpx` target directly with CMake also
+copies the extension module into the site-packages directory of that interpreter.

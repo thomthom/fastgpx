@@ -36,10 +36,16 @@ classifiers = [
 
 [dependency-groups]
 dev = [ # Tests and build
+  # Build tools, so the extension can also be built without build isolation
+  # (`uv sync --no-build-isolation-package fastgpx`) and directly with CMake
+  # (`uv run cmake ...`). Keep the versions in sync with `build-system.requires`.
+  "cmake>=3.30.2",
   "gpxpy",
   "nanobind>=2.9.2,<3",
+  "ninja",
   "polyline>=2.0.4",
   "pytest",
+  "scikit-build-core",
 ]
 benchmarks = [ #
   "colorama",
@@ -63,13 +69,24 @@ Homepage = "https://github.com/thomthom/fastgpx"
 Repository = "https://github.com/thomthom/fastgpx.git"
 Documentation = "https://thomthom.github.io/fastgpx/"
 
+[tool.uv]
+# Rebuild the extension when `uv run`/`uv sync` sees changed C++ sources or
+# CMake files. By default uv only watches pyproject.toml, so edits to the C++
+# code would otherwise not be picked up until `uv sync --reinstall-package fastgpx`.
+# https://docs.astral.sh/uv/concepts/cache/#dynamic-metadata
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "CMakeLists.txt" },
+  { file = "src/cpp/**/*" },
+]
+
 [tool.scikit-build]
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#customizing-the-built-wheel
 wheel.packages = ["src/fastgpx"]
 
 # Build stable ABI wheels for CPython 3.12+
 wheel.py-api = "cp312"
-sdist.exclude = [".github", ".vscode", "gpx"]
+sdist.exclude = [".claude", ".github", ".vscode", "gpx"]
 
 # https://nanobind.readthedocs.io/en/latest/packaging.html
 
