@@ -132,3 +132,28 @@ class TestPolyline:
 
         with pytest.raises(ValueError):
             fastgpx.polyline.decode(polyline6, precision=7)
+
+    # fastgpx.polyline.decode (malformed input)
+
+    def test_decode_empty(self):
+        assert fastgpx.polyline.decode('') == []
+
+    def test_decode_keyword_arguments(self):
+        encoded = fastgpx.polyline.encode([fastgpx.LatLong(64, 10)], precision=6)
+        decoded = fastgpx.polyline.decode(encoded=encoded, precision=6)
+        assert decoded == [fastgpx.LatLong(64, 10)]
+
+    def test_decode_truncated_raises(self):
+        encoded = fastgpx.polyline.encode(
+            [fastgpx.LatLong(64, 10), fastgpx.LatLong(66, 11)], precision=6)
+        with pytest.raises(RuntimeError, match='unexpected end'):
+            fastgpx.polyline.decode(encoded[:-1], precision=6)
+
+    def test_decode_overlong_value_raises(self):
+        # Eight continuation chunks would shift past 32 bits.
+        with pytest.raises(RuntimeError, match='too long'):
+            fastgpx.polyline.decode('________@_')
+
+    def test_decode_invalid_character_raises(self):
+        with pytest.raises(RuntimeError, match='invalid character'):
+            fastgpx.polyline.decode('_p~iF~ps|U\x01')
