@@ -215,7 +215,7 @@ NB_MODULE(fastgpx, m)
           },
           [](Bounds& self, double value) {
             SetBoundsMember<&LatLong::latitude>(self, &Bounds::max, value,
-                                                std::numeric_limits<double>::min());
+                                                std::numeric_limits<double>::lowest());
           },
           ".. warning::\n\n"
           "   Compatibility with ``gpxpy.GPXBounds.max_latitude``.\n"
@@ -227,7 +227,7 @@ NB_MODULE(fastgpx, m)
           },
           [](Bounds& self, double value) {
             SetBoundsMember<&LatLong::longitude>(self, &Bounds::max, value,
-                                                 std::numeric_limits<double>::min());
+                                                 std::numeric_limits<double>::lowest());
           },
           ".. warning::\n\n"
           "   Compatibility with ``gpxpy.GPXBounds.max_longitude``.\n"
