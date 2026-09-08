@@ -246,6 +246,15 @@ test. To keep going past a known crash while exploring, use fork mode:
 build-fuzz/src/cpp/fuzz/fuzz_gpx -fork=4 -ignore_crashes=1 -max_total_time=300 fuzz-corpus/gpx ...
 ```
 
+Two things that look like findings in fork mode are not:
+
+- The parent process exits with a LeakSanitizer report of 16 bytes leaked from
+  `fuzzer::FuzzWithFork`, and therefore a non-zero exit code. That is a leak in libFuzzer's own
+  fork driver (LLVM 18), not in fastgpx. `ASAN_OPTIONS=detect_leaks=0` silences it.
+- `timeout-*` and `slow-unit-*` files are often scheduling stalls from running many sanitized
+  processes at once. Replay the file on its own (`fuzz_gpx -runs=1 <file>`); if it finishes in
+  milliseconds it was not a slow input.
+
 With MSVC or GCC the same targets are built with a standalone driver that replays files or
 directories through the fuzz entry point. That is what the `fuzz_<target>_corpus` CTest entries
 do, so the seed corpora are exercised by every compiler when `FASTGPX_BUILD_FUZZERS=ON`:
