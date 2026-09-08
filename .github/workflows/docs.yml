@@ -26,10 +26,12 @@ jobs:
           echo "CC=clang" >> $GITHUB_ENV
           echo "CXX=clang++" >> $GITHUB_ENV
 
+      # -W turns every Sphinx warning into a build failure (which also blocks the Pages deploy);
+      # --keep-going reports all of them instead of stopping at the first.
       - name: Build documentation
         working-directory: ./docs
         run: |
-          uv run --frozen --group docs make html
+          SPHINXOPTS="-W --keep-going" uv run --frozen --group docs make html
 
       - name: Upload static files as artifact
         id: deployment

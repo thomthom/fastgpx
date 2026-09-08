@@ -65,6 +65,20 @@ set SPHINXOPTS=--verbose
 set SPHINXOPTS=--fresh-env --verbose
 ```
 
+The docs workflow builds with warnings as errors, so a new warning fails CI and blocks the
+Pages deploy. To get the same behaviour locally before pushing:
+
+```sh
+# Fail on any warning, but report all of them rather than stopping at the first:
+set SPHINXOPTS=-W --keep-going
+make.bat html
+```
+
+```sh
+# Clear it again when iterating on half-written docstrings:
+set SPHINXOPTS=
+```
+
 ### Python Benchmarking
 
 The benchmark scripts need the `benchmarks` dependency group (`colorama`, `lxml`) in addition
