@@ -3,8 +3,11 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cerrno>
 #include <charconv>
+#include <cstdint>
 #include <ctime>
+#include <format>
 #include <iomanip>
 #include <optional>
 #include <ranges>
@@ -24,6 +27,43 @@ time_t make_utc_time(std::tm* tm)
 #else
   return timegm(tm);
 #endif
+}
+
+// Converts broken-down UTC time plus a sub-second/timezone adjustment to a `system_clock`
+// time point, rejecting anything the platform cannot represent. Found by fuzzing (#48):
+//
+// - `system_clock::from_time_t` converts seconds to `system_clock::duration`. On libstdc++ that
+//   is nanoseconds, so dates outside roughly 1677-09-21..2262-04-11 overflow `int64_t`, which is
+//   undefined behaviour. MSVC uses 100 ns ticks and covers a far wider range.
+// - `_mkgmtime` (Windows) only supports 1970-01-01..3000-12-31 and returns -1 with `errno` set
+//   for anything else. Without the check the caller would silently get 1969-12-31T23:59:59Z.
+//   glibc's `timegm` sets `errno` to `EOVERFLOW` for values it cannot represent.
+std::chrono::system_clock::time_point to_system_clock_time(std::tm* tm,
+                                                           std::chrono::milliseconds adjustment,
+                                                           std::string_view time_str)
+{
+  using namespace std::chrono;
+  using sys_duration = system_clock::duration;
+
+  errno = 0;
+  const time_t time = make_utc_time(tm);
+  if (time == time_t{-1} && errno != 0)
+  {
+    throw parse_error(std::format("time cannot be represented on this platform: \"{}\"", time_str));
+  }
+
+  // Leave room for the adjustment, which is at most one day plus a fraction of a second.
+  constexpr auto margin = days(2);
+  constexpr auto max_seconds = floor<seconds>(sys_duration::max()) - margin;
+  constexpr auto min_seconds = ceil<seconds>(sys_duration::min()) + margin;
+  const auto since_epoch = seconds(static_cast<std::int64_t>(time));
+  if (since_epoch > max_seconds || since_epoch < min_seconds)
+  {
+    throw parse_error(
+        std::format("time is outside the range of system_clock: \"{}\"", time_str));
+  }
+
+  return system_clock::time_point(duration_cast<sys_duration>(since_epoch)) + adjustment;
 }
 
 } // namespace
@@ -1053,10 +1093,7 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
     throw parse_error("invalid or unexpected format");
   }
 
-  const auto time = make_utc_time(&tm);
-  auto time_point = std::chrono::system_clock::from_time_t(time);
-  time_point += adjustment;
-  return time_point;
+  return to_system_clock_time(&tm, adjustment, time_str);
 }
 
 } // namespace v6

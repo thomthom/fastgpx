@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="fastgpx">
+  <trk>
+    <trkseg>
+      <trkpt lat="59.9" lon="10.7"><time>9999-12-31T23:59:59Z</time></trkpt>
+      <trkpt lat="59.91" lon="10.71"><time>0008-07-18T16:07:50.000</time></trkpt>
+      <trkpt lat="59.92" lon="10.72"><time>1969-12-31T23:59:59Z</time></trkpt>
+      <trkpt lat="59.93" lon="10.73"><time>2262-04-11T23:47:16Z</time></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

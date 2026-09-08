@@ -601,6 +601,42 @@ TEST_CASE("Parse iso8601 invalid year", "[datetime][gpxtime]")
   }
 }
 
+TEST_CASE("Parse GPX time outside the representable range", "[datetime][gpxtime]")
+{
+  // Found by fuzzing (#48). `system_clock::from_time_t` overflows int64 nanoseconds on libstdc++
+  // for years outside roughly 1677..2262, and `_mkgmtime` on Windows only covers 1970..3000 and
+  // returns -1 otherwise. Both must surface as a parse_error rather than undefined behaviour or
+  // a silently wrong value.
+  SECTION("v6 far future")
+  {
+    const std::string time_string = "9999-12-31T23:59:59Z";
+    REQUIRE_THROWS_AS(fastgpx::v6::parse_gpx_time(time_string), fastgpx::parse_error);
+  }
+  SECTION("v6 far past")
+  {
+    const std::string time_string = "0008-07-18T16:07:50.000";
+    REQUIRE_THROWS_AS(fastgpx::v6::parse_gpx_time(time_string), fastgpx::parse_error);
+  }
+}
+
+TEST_CASE("Parse GPX time far future within range", "[datetime][gpxtime]")
+{
+  // 2200-12-31T23:59:59Z fits both a nanosecond system_clock (until 2262) and _mkgmtime (until
+  // 3000), so it must parse on every platform.
+  const std::string time_string = "2200-12-31T23:59:59Z";
+  const std::time_t expected_timestamp = 7289654399;
+  const auto expected_time = std::chrono::system_clock::from_time_t(expected_timestamp);
+
+  CAPTURE(time_string, expected_timestamp, expected_time);
+
+  SECTION("v6 std::from_chars gpx_time")
+  {
+    const auto actual_time = fastgpx::v6::parse_gpx_time(time_string);
+    CHECK(actual_time == expected_time);
+    CHECK(format_iso8601(actual_time) == time_string);
+  }
+}
+
 TEST_CASE("Parse iso8601 invalid month out of range", "[datetime][gpxtime]")
 {
   const std::string time_string = "2024-30-18T07:50:01Z";
