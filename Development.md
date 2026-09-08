@@ -67,12 +67,15 @@ set SPHINXOPTS=--fresh-env --verbose
 
 ### Python Benchmarking
 
+The benchmark scripts need the `benchmarks` dependency group (`colorama`, `lxml`) in addition
+to the default `dev` group:
+
 ```sh
-uv run benchmarks/benchmark_gpx.py
+uv run --group benchmarks benchmarks/benchmark_gpx.py
 ```
 
 ```sh
-uv run benchmarks/benchmark_polyline.py
+uv run --group benchmarks benchmarks/benchmark_polyline.py
 ```
 
 ### Python Profiling

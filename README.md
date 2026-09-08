@@ -171,7 +171,7 @@ times faster than using `gpxpy`.
 `fastgpx` also provide faster alternatives to `polyline.encode` and `polyline.decode`:
 
 ```
-> uv run benchmark_polyline.py
+> uv run --group benchmarks benchmarks/benchmark_polyline.py
 GPX path: ../gpx/2024 Great Roadtrip
 GPX files: 24
 Iterations: 10

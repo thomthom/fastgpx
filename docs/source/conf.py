@@ -3,6 +3,10 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+# `sphinx.application` is only imported under TYPE_CHECKING, so annotations that mention it must
+# not be evaluated at definition time.
+from __future__ import annotations
+
 import logging
 import os
 import re

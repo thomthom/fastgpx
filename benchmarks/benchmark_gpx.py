@@ -163,37 +163,43 @@ benchmarks: list[Benchmark] = [
 # print("Press Enter to continue...")
 # input()
 
-print()
-print('Computing expected distance with gpxpy...' + Fore.LIGHTMAGENTA_EX)
-# gpxpy is _very_ slow, so omitting from doing multiple benchmark runs with it.
-t = time.perf_counter()
-expected = read_gpxpy()
-d = time.perf_counter()
-e = d - t
-print(Fore.LIGHTYELLOW_EX + f'gpxpy: {e:.6f} seconds')
-print()
 
-iterations = 3
-print(Fore.CYAN + f'Running {len(benchmarks)} benchmarks with {iterations} iterations...')
-for benchmark in benchmarks:
-    func = benchmark['function']
+def main():
     print()
-    # Benchmark timings:
-    print(Fore.LIGHTYELLOW_EX + f"Running {benchmark['name']} ..." + Fore.LIGHTBLACK_EX)
-    execution_time = timeit.timeit(func, number=iterations)
-    average_time = execution_time / iterations
-    print(Fore.LIGHTYELLOW_EX +
-          f"{benchmark['name']}: {execution_time:.6f} seconds (Average: {average_time:.6f} seconds)" + Fore.YELLOW)
-    # Print info about result accuracy:
-    result = func()
-    name = benchmark['name'].split(' ')[0]
-    indent = ' ' * len(name)
-    print(Fore.YELLOW +
-          f"{indent} {expected} meters (expected)")
-    deviation = result - expected
-    percent = (deviation / expected) * 100
-    print(Fore.LIGHTMAGENTA_EX + f'Distance deviation: {deviation} meters ({percent:.4f}%)')
-    if deviation != 0.0:
-        print(Back.LIGHTRED_EX + Fore.WHITE + '  FAIL  ' + Back.RESET + Fore.RESET)
+    print('Computing expected distance with gpxpy...' + Fore.LIGHTMAGENTA_EX)
+    # gpxpy is _very_ slow, so omitting from doing multiple benchmark runs with it.
+    t = time.perf_counter()
+    expected = read_gpxpy()
+    d = time.perf_counter()
+    e = d - t
+    print(Fore.LIGHTYELLOW_EX + f'gpxpy: {e:.6f} seconds')
+    print()
 
-print(Fore.RESET)
+    iterations = 3
+    print(Fore.CYAN + f'Running {len(benchmarks)} benchmarks with {iterations} iterations...')
+    for benchmark in benchmarks:
+        func = benchmark['function']
+        print()
+        # Benchmark timings:
+        print(Fore.LIGHTYELLOW_EX + f"Running {benchmark['name']} ..." + Fore.LIGHTBLACK_EX)
+        execution_time = timeit.timeit(func, number=iterations)
+        average_time = execution_time / iterations
+        print(Fore.LIGHTYELLOW_EX +
+              f"{benchmark['name']}: {execution_time:.6f} seconds (Average: {average_time:.6f} seconds)" + Fore.YELLOW)
+        # Print info about result accuracy:
+        result = func()
+        name = benchmark['name'].split(' ')[0]
+        indent = ' ' * len(name)
+        print(Fore.YELLOW +
+              f"{indent} {expected} meters (expected)")
+        deviation = result - expected
+        percent = (deviation / expected) * 100
+        print(Fore.LIGHTMAGENTA_EX + f'Distance deviation: {deviation} meters ({percent:.4f}%)')
+        if deviation != 0.0:
+            print(Back.LIGHTRED_EX + Fore.WHITE + '  FAIL  ' + Back.RESET + Fore.RESET)
+
+    print(Fore.RESET)
+
+
+if __name__ == '__main__':
+    main()

@@ -1,9 +1,8 @@
 import os
 
 import polyline
-from colorama import Fore, Back
+from colorama import Fore
 
-from docs.source.conf import PROJECT_ROOT
 import fastgpx
 
 
