@@ -268,5 +268,7 @@ The `fastgpx Fuzzing` GitHub workflow runs every target for a configurable amoun
 ## VSCode / CMake
 
 Configuring directly with CMake needs `nanobind` importable from the Python interpreter CMake
-finds (`uv sync --only-dev` installs it into `.venv`). Pass `-DFASTGPX_BUILD_PYTHON_MODULE=OFF`
-for a C++-only build that needs neither Python nor nanobind.
+finds (`uv sync --only-dev` installs it into `.venv`). The extension is built in nanobind's split
+mode, so importing it, and therefore the `fastgpx_stub` target, also needs the `nanobind-backend`
+package; it is a project dependency, so a plain `uv sync` installs it. Pass
+`-DFASTGPX_BUILD_PYTHON_MODULE=OFF` for a C++-only build that needs neither Python nor nanobind.

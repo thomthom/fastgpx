@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -98,6 +99,40 @@ class TestTimeBounds:
         bounds = fastgpx.TimeBounds()
         bounds.add(BadOffsetDateTime(2025, 6, 20, 12, 0, 0))
         assert bounds.start_time == datetime(2025, 6, 20, 12, 0, 0, tzinfo=timezone.utc)
+
+    def test_add_time_point_with_microseconds(self):
+        bounds = fastgpx.TimeBounds()
+        time_point = datetime(2025, 6, 20, 12, 0, 0, 123456, tzinfo=timezone.utc)
+        bounds.add(time_point)
+        assert bounds.start_time == time_point
+        assert bounds.start_time.microsecond == 123456
+
+    def test_add_time_point_before_epoch(self):
+        # Negative time since the epoch: the time of day and the sub-second part must still come
+        # out non-negative. (Before the C++20 calendar conversion, Windows raised ValueError for
+        # any time point before 1970.)
+        bounds = fastgpx.TimeBounds()
+        time_point = datetime(1969, 12, 31, 23, 59, 59, 500000, tzinfo=timezone.utc)
+        bounds.add(time_point)
+        assert bounds.start_time == time_point
+
+    @pytest.mark.parametrize('time_point', [
+        datetime(1, 1, 1, tzinfo=timezone.utc),
+        datetime(9999, 12, 31, 23, 59, 59, 999999, tzinfo=timezone.utc),
+    ])
+    def test_add_time_point_at_datetime_limits(self, time_point):
+        # `system_clock` covers the whole `datetime` range on MSVC (100 ns ticks) but only about
+        # 1677..2262 on libstdc++ (nanoseconds). Outside that range the value must be rejected as
+        # an incompatible argument, never silently converted to a wrong time.
+        bounds = fastgpx.TimeBounds()
+        try:
+            bounds.add(time_point)
+        except TypeError as error:
+            assert sys.platform != 'win32'
+            assert 'incompatible function arguments' in str(error)
+            assert bounds.is_empty()
+        else:
+            assert bounds.start_time == time_point
 
     def test_init_with_timezone_aware_times(self):
         start_time = datetime(2025, 6, 20, 8, 7, 28, tzinfo=timezone(timedelta(hours=-5)))

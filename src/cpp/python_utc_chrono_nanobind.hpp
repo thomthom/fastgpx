@@ -1,292 +1,98 @@
-// HACK: Modified from pybind11/chrono.h to avoid converting system_clock to local time.
-//       This allows us to use system_clock for UTC times.
-
-/*
-    nanobind/stl/chrono.h: conversion between std::chrono and python's datetime
-
-    Copyright (c) 2023 Hudson River Trading LLC <opensource@hudson-trading.com> and
-                       Trent Houliston <trent@houliston.me> and
-                       Wenzel Jakob <wenzel.jakob@epfl.ch>
-
-    All rights reserved. Use of this source code is governed by a
-    BSD-style license that can be found in the LICENSE file.
-*/
+// UTC conversion between `std::chrono::system_clock::time_point` and `datetime.datetime`.
+//
+// The stock caster in <nanobind/stl/chrono.h> goes through the process's local time zone:
+// Python -> C++ uses `mktime` and C++ -> Python uses `localtime`, producing a naive datetime.
+// fastgpx time points are UTC (GPX timestamps are UTC by specification), so this header replaces
+// that caster for `system_clock::time_point` with one that
+//
+// - converts C++ -> Python as UTC and returns a timezone-aware datetime with
+//   `tzinfo=datetime.timezone.utc`, and
+// - converts Python -> C++ honouring `tzinfo`: aware datetimes are shifted by their `utcoffset()`
+//   and naive datetimes are interpreted as UTC. `datetime.date` (midnight) and `datetime.time`
+//   (on 1970-01-01) are accepted like the stock caster does.
+//
+// The conversion is done with the C++20 calendar types instead of `time_t`, which sidesteps the
+// CRT differences (`_mkgmtime` rejects dates before 1970, glibc's `timegm` does not) and lets the
+// range check happen before any arithmetic that could overflow `system_clock::duration`.
+//
+// An explicit specialization takes precedence over the partial specialization in the nanobind
+// header, so the stock `std::chrono::duration` caster (used for `utcoffset()`) and the generic
+// time point caster remain available.
 #pragma once
 
-#include <nanobind/nanobind.h>
-
-#if !defined(__STDC_WANT_LIB_EXT1__)
-  #define __STDC_WANT_LIB_EXT1__ 1 // for localtime_s
-#endif
-#include <time.h>
-
 #include <chrono>
-#include <cmath>
-#include <ctime>
-#include <limits>
+#include <cstdint>
 
-#include <nanobind/stl/detail/chrono.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/stl/chrono.h>
 
-// HACK: (Begin)
-namespace {
+namespace nanobind::detail {
 
-inline std::time_t to_utc_time_t(std::tm* tm)
+// `datetime.datetime` and `datetime.timezone.utc`, resolved once. The references are leaked on
+// purpose: the objects live as long as the interpreter, and a static `nb::object` would try to
+// decrement them after interpreter finalization. (nanobind 2.x cached its datetime types the same
+// way.)
+struct utc_datetime_types
 {
-#if defined(_WIN32)
-  return _mkgmtime(tm);
-#else
-  return timegm(tm);
-#endif
-}
+  PyObject* datetime_type;
+  PyObject* utc;
 
-inline nanobind::object make_utc_datetime(PyObject* dt_raw)
-{
-  namespace nb = nanobind;
-  using namespace nb::literals;
-
-  nb::object naive = nb::steal<nb::object>(dt_raw);
-
-  // Import timezone.utc dynamically (ABI3-safe)
-  nb::object datetime_mod = nb::module_::import_("datetime");
-  nb::object timezone = datetime_mod.attr("timezone");
-  nb::object utc = timezone.attr("utc");
-
-  // Attach tzinfo=utc
-  nb::object aware = naive.attr("replace")("tzinfo"_a = utc);
-
-  return aware;
-}
-
-} // namespace
-
-// HACK: (End)
-
-// Casts a std::chrono type (either a duration or a time_point) to/from
-// Python timedelta objects, or from a Python float representing seconds.
-template<typename type>
-class duration_caster
-{
-public:
-  using rep = typename type::rep;
-  using period = typename type::period;
-  using duration_t = std::chrono::duration<rep, period>;
-
-  bool from_python(handle src, uint8_t /*flags*/, cleanup_list*) noexcept
+  // Throws `python_error` if the `datetime` module cannot be imported.
+  static const utc_datetime_types& get()
   {
-    namespace ch = std::chrono;
-
-    if (!src)
-      return false;
-
-    // support for signed 25 bits is required by the standard
-    using days = ch::duration<int_least32_t, std::ratio<86400>>;
-
-    // If invoked with datetime.delta object, unpack it
-    int dd, ss, uu;
-    try
-    {
-      if (unpack_timedelta(src.ptr(), &dd, &ss, &uu))
-      {
-        value =
-            type(ch::duration_cast<duration_t>(days(dd) + ch::seconds(ss) + ch::microseconds(uu)));
-        return true;
-      }
-    }
-    catch (python_error& e)
-    {
-      e.discard_as_unraisable(src.ptr());
-      return false;
-    }
-
-    // If invoked with a float we assume it is seconds and convert
-    int is_float;
-#if defined(Py_LIMITED_API)
-    is_float = PyType_IsSubtype(Py_TYPE(src.ptr()), &PyFloat_Type);
-#else
-    is_float = PyFloat_Check(src.ptr());
-#endif
-    if (is_float)
-    {
-      value =
-          type(ch::duration_cast<duration_t>(ch::duration<double>(PyFloat_AsDouble(src.ptr()))));
-      return true;
-    }
-    return false;
+    static const utc_datetime_types types = [] {
+      module_ datetime_mod = module_::import_("datetime");
+      object datetime_type = datetime_mod.attr("datetime");
+      object utc = datetime_mod.attr("timezone").attr("utc");
+      return utc_datetime_types{datetime_type.release().ptr(), utc.release().ptr()};
+    }();
+    return types;
   }
-
-  // If this is a duration just return it back
-  static const duration_t& get_duration(const duration_t& src) { return src; }
-
-  // If this is a time_point get the time_since_epoch
-  template<typename Clock>
-  static duration_t get_duration(const std::chrono::time_point<Clock, duration_t>& src)
-  {
-    return src.time_since_epoch();
-  }
-
-  static handle from_cpp(const type& src, rv_policy, cleanup_list*) noexcept
-  {
-    namespace ch = std::chrono;
-
-    // Use overloaded function to get our duration from our source
-    // Works out if it is a duration or time_point and get the duration
-    auto d = get_duration(src);
-
-    // Declare these special duration types so the conversions happen with the correct primitive
-    // types (int)
-    using dd_t = ch::duration<int, std::ratio<86400>>;
-    using ss_t = ch::duration<int, std::ratio<1>>;
-    using us_t = ch::duration<int, std::micro>;
-
-    auto dd = ch::duration_cast<dd_t>(d);
-    auto subd = d - dd;
-    auto ss = ch::duration_cast<ss_t>(subd);
-    auto us = ch::duration_cast<us_t>(subd - ss);
-    return pack_timedelta(dd.count(), ss.count(), us.count());
-  }
-
-#if PY_VERSION_HEX < 0x03090000
-  NB_TYPE_CASTER(type, io_name("typing.Union[datetime.timedelta, float]", "datetime.timedelta"))
-#else
-  NB_TYPE_CASTER(type, io_name("datetime.timedelta | float", "datetime.timedelta"))
-#endif
 };
 
-template<class... Args>
-auto can_localtime_s(Args*... args) -> decltype((localtime_s(args...), std::true_type{}));
-std::false_type can_localtime_s(...);
-
-template<class... Args>
-auto can_localtime_r(Args*... args) -> decltype((localtime_r(args...), std::true_type{}));
-std::false_type can_localtime_r(...);
-
-template<class Time, class Buf>
-inline std::tm* localtime_thread_safe(const Time* time, Buf* buf)
-{
-  if constexpr (decltype(can_localtime_s(time, buf))::value)
-  {
-    // C11 localtime_s
-    std::tm* ret = localtime_s(time, buf);
-    return ret;
-  }
-  else if constexpr (decltype(can_localtime_s(buf, time))::value)
-  {
-    // Microsoft localtime_s (with parameters switched and errno_t return)
-    int ret = localtime_s(buf, time);
-    return ret == 0 ? buf : nullptr;
-  }
-  else
-  {
-    static_assert(decltype(can_localtime_r(time, buf))::value,
-                  "<nanobind/stl/chrono.h> type caster requires "
-                  "that your C library support localtime_r or localtime_s");
-    std::tm* ret = localtime_r(time, buf);
-    return ret;
-  }
-}
-
-// HACK: (Begin)
-template<class... Args>
-auto can_gmtime_s(Args*... args) -> decltype((gmtime_s(args...), std::true_type{}));
-std::false_type can_gmtime_s(...);
-
-template<class... Args>
-auto can_gmtime_r(Args*... args) -> decltype((gmtime_r(args...), std::true_type{}));
-std::false_type can_gmtime_r(...);
-
-// Same as `localtime_thread_safe`, but for UTC. Note that Microsoft's `gmtime_s` rejects negative
-// `time_t` values (before 1970-01-01), in which case this returns nullptr.
-template<class Time, class Buf>
-inline std::tm* gmtime_thread_safe(const Time* time, Buf* buf)
-{
-  if constexpr (decltype(can_gmtime_s(time, buf))::value)
-  {
-    // C11 gmtime_s
-    std::tm* ret = gmtime_s(time, buf);
-    return ret;
-  }
-  else if constexpr (decltype(can_gmtime_s(buf, time))::value)
-  {
-    // Microsoft gmtime_s (with parameters switched and errno_t return)
-    int ret = gmtime_s(buf, time);
-    return ret == 0 ? buf : nullptr;
-  }
-  else
-  {
-    static_assert(decltype(can_gmtime_r(time, buf))::value,
-                  "python_utc_chrono_nanobind.hpp type caster requires "
-                  "that your C library support gmtime_r or gmtime_s");
-    std::tm* ret = gmtime_r(time, buf);
-    return ret;
-  }
-}
-// HACK: (End)
-
-// Cast between times on the system clock and datetime.datetime instances
-// (also supports datetime.date and datetime.time for Python->C++ conversions)
-template<typename Duration>
-class type_caster<std::chrono::time_point<std::chrono::system_clock, Duration>>
+template<>
+class type_caster<std::chrono::system_clock::time_point>
 {
 public:
-  using type = std::chrono::time_point<std::chrono::system_clock, Duration>;
-  bool from_python(handle src, uint8_t /*flags*/, cleanup_list*) noexcept
+  using type = std::chrono::system_clock::time_point;
+  using duration = type::duration;
+
+  bool from_python(handle src, uint32_t /*flags*/, cleanup_list* cleanup) noexcept
   {
-    namespace ch = std::chrono;
+    using namespace std::chrono;
 
     if (!src)
+    {
       return false;
+    }
 
-    std::tm cal;
-    ch::microseconds msecs;
     int yy, mon, dd, hh, min, ss, uu;
-    try
+    const int rv = unpack_datetime(src.ptr(), &yy, &mon, &dd, &hh, &min, &ss, &uu, cleanup);
+    if (rv <= 0)
     {
-      if (!unpack_datetime(src.ptr(), &yy, &mon, &dd, &hh, &min, &ss, &uu))
+      if (rv < 0)
       {
-        return false;
+        PyErr_Clear();
       }
-    }
-    catch (python_error& e)
-    {
-      e.discard_as_unraisable(src.ptr());
       return false;
     }
-    cal.tm_sec = ss;
-    cal.tm_min = min;
-    cal.tm_hour = hh;
-    cal.tm_mday = dd;
-    cal.tm_mon = mon - 1;
-    cal.tm_year = yy - 1900;
-    cal.tm_isdst = -1;
-    msecs = ch::microseconds(uu);
-    // HACK: (Begin)
-    // value = ch::time_point_cast<Duration>(ch::system_clock::from_time_t(std::mktime(&cal)) +
-    // msecs);
-    std::time_t tt = to_utc_time_t(&cal);
-    value = ch::time_point_cast<Duration>(ch::system_clock::from_time_t(tt) + msecs);
 
-    // `unpack_datetime` reads the wall clock fields and ignores `tzinfo`. Naive datetimes are
-    // interpreted as UTC. For timezone-aware datetimes, subtract the UTC offset so that the
-    // resulting time point represents the same instant.
+    // `unpack_datetime` reads the wall clock fields and ignores `tzinfo`. Only aware datetimes
+    // have a `tzinfo`; checking it first skips the `utcoffset()` call (a Python method call) for
+    // every naive datetime. `datetime.date` has no `tzinfo` attribute at all.
+    microseconds offset{0};
     try
     {
-      // Only aware datetimes have a `tzinfo`. Checking it first skips the `utcoffset()` call
-      // (a Python method call) for every naive datetime. `datetime.date` has no `tzinfo`.
       object tzinfo = getattr(src, "tzinfo", none());
       if (!tzinfo.is_none())
       {
-        object offset = borrow(src).attr("utcoffset")();
-        if (!offset.is_none())
+        object utcoffset = src.attr("utcoffset")();
+        // A subclass may override `utcoffset()` to return something other than a timedelta.
+        // `cast` would throw `cast_error` (a `std::bad_cast`, not a `python_error`) which must
+        // not escape this `noexcept` function, so use `try_cast` and reject the value instead.
+        if (!utcoffset.is_none() && !try_cast<microseconds>(utcoffset, offset))
         {
-          // A subclass may override `utcoffset()` to return something other than a timedelta.
-          // `cast` would throw `cast_error` (a `std::bad_cast`, not a `python_error`) which must
-          // not escape this `noexcept` function, so use `try_cast` and reject the value instead.
-          ch::microseconds offset_us;
-          if (!try_cast<ch::microseconds>(offset, offset_us))
-          {
-            return false;
-          }
-          value -= ch::duration_cast<Duration>(offset_us);
+          return false;
         }
       }
     }
@@ -300,112 +106,68 @@ public:
       // Nothing may escape a `noexcept` function; treat any other failure as "not convertible".
       return false;
     }
-    // HACK: (End)
+
+    // The fields come from a valid Python datetime (year 1..9999), so `sys_days` and the
+    // microsecond total (about +-3e17) cannot overflow. `sys_days` is only days precision, so
+    // widen to `seconds` before adding the time of day: `minutes` may be a 32-bit type and would
+    // overflow for late years.
+    const sys_days date = year{yy} / month{static_cast<unsigned>(mon)} /
+                          day{static_cast<unsigned>(dd)};
+    const microseconds since_epoch = duration_cast<seconds>(date.time_since_epoch()) +
+                                     hours{hh} + minutes{min} + seconds{ss} +
+                                     microseconds{uu} - offset;
+
+    // `system_clock::duration` is nanoseconds on libstdc++ (about 1677..2262), so check before
+    // converting; the conversion is a multiplication that would overflow silently.
+    constexpr auto max_since_epoch = floor<microseconds>(duration::max());
+    constexpr auto min_since_epoch = ceil<microseconds>(duration::min());
+    if (since_epoch > max_since_epoch || since_epoch < min_since_epoch)
+    {
+      return false;
+    }
+
+    value = type{duration_cast<duration>(since_epoch)};
     return true;
   }
 
   static handle from_cpp(const type& src, rv_policy, cleanup_list*) noexcept
   {
-    namespace ch = std::chrono;
+    using namespace std::chrono;
 
-    // Get out microseconds, and make sure they are positive, to
-    // avoid bug in eastern hemisphere time zones
-    // (cfr. https://github.com/pybind/pybind11/issues/2417). Note
-    // that if us_t is 32 bits and we get a time_point that also
-    // has a 32-bit time_since_epoch (perhaps because it's
-    // measuring time in minutes or something), then writing `src
-    // - us` below can lead to overflow based on how common_type
-    // is defined on durations. Defining us_t to store 64-bit
-    // microseconds works around this.
-    using us_t = ch::duration<std::int64_t, std::micro>;
-    auto us = ch::duration_cast<us_t>(src.time_since_epoch() % ch::seconds(1));
-    if (us.count() < 0)
-      us += ch::seconds(1);
+    // Split into whole seconds and a non-negative sub-second part, then whole days and time of
+    // day. `floor` keeps the sub-second and time-of-day parts non-negative before the epoch too.
+    const auto whole_seconds = floor<seconds>(src);
+    const auto us = duration_cast<microseconds>(src - whole_seconds);
+    const sys_days date = floor<days>(whole_seconds);
+    const year_month_day ymd{date};
+    const hh_mm_ss time_of_day{whole_seconds - date};
 
-    // HACK: (Begin)
-    //  Don't convert to local time, because the time/date is UTC.
-    std::time_t tt =
-        ch::system_clock::to_time_t(ch::time_point_cast<ch::system_clock::duration>(src - us));
-    // On Windows (MSVC CRT), `gmtime_s` fails for negative `time_t` (pre-1970), so such time
-    // points raise ValueError there.
-    std::tm gmtm{};
-    if (!gmtime_thread_safe(&tt, &gmtm))
+    const utc_datetime_types* types;
+    try
     {
-      PyErr_Format(PyExc_ValueError, "Unable to represent system_clock as UTC; got time_t %lld",
-                   static_cast<long long>(tt));
+      types = &utc_datetime_types::get();
+    }
+    catch (python_error& e)
+    {
+      e.restore();
       return handle();
     }
 
-    // Cannot use PyDateTime_FromDateAndTime with limited ABI.
-    /*
-    if (!PyDateTimeAPI)
-    {
-      PyDateTime_IMPORT;
-      if (!PyDateTimeAPI)
-        raise_python_error();
-    }
-
-    return PyDateTimeAPI->DateTime_FromDateAndTime(
-        gmtm.tm_year + 1900, gmtm.tm_mon + 1, gmtm.tm_mday, gmtm.tm_hour, gmtm.tm_min, gmtm.tm_sec,
-        static_cast<int>(us.count()), PyDateTime_TimeZone_UTC, PyDateTimeAPI->DateTimeType);
-      */
-
-    PyObject* dt_raw = pack_datetime(gmtm.tm_year + 1900, gmtm.tm_mon + 1, gmtm.tm_mday,
-                                     gmtm.tm_hour, gmtm.tm_min, gmtm.tm_sec, (int)us.count());
-    // Somewhat of a kludge, recreate a timezone-aware datetime in UTC.
-    return make_utc_datetime(dt_raw).release().ptr();
-
-    /*
-    // Subtract microseconds BEFORE `system_clock::to_time_t`, because:
-    // > If std::time_t has lower precision, it is implementation-defined
-    //   whether the value is rounded or truncated.
-    // (https://en.cppreference.com/w/cpp/chrono/system_clock/to_time_t)
-    std::time_t tt =
-        ch::system_clock::to_time_t(ch::time_point_cast<ch::system_clock::duration>(src - us));
-
-    std::tm localtime;
-    if (!localtime_thread_safe(&tt, &localtime))
-    {
-      PyErr_Format(PyExc_ValueError,
-                   "Unable to represent system_clock in local time; "
-                   "got time_t %ld",
-                   static_cast<std::int64_t>(tt));
-      return handle();
-    }
-    return pack_datetime(localtime.tm_year + 1900, localtime.tm_mon + 1, localtime.tm_mday,
-                         localtime.tm_hour, localtime.tm_min, localtime.tm_sec, (int)us.count());
-
-                         */
-    // HACK: (End)
+    // `datetime.datetime(year, month, day, hour, minute, second, microsecond, tzinfo)`. The
+    // constructor raises ValueError for years outside 1..9999. Returns a new reference, or
+    // nullptr with the Python error indicator set.
+    return PyObject_CallFunction(types->datetime_type, "iiiiiiiO", //
+                                 static_cast<int>(ymd.year()),
+                                 static_cast<int>(static_cast<unsigned>(ymd.month())),
+                                 static_cast<int>(static_cast<unsigned>(ymd.day())),
+                                 static_cast<int>(time_of_day.hours().count()),
+                                 static_cast<int>(time_of_day.minutes().count()),
+                                 static_cast<int>(time_of_day.seconds().count()),
+                                 static_cast<int>(us.count()), types->utc);
   }
-#if PY_VERSION_HEX < 0x03090000
-  NB_TYPE_CASTER(type, io_name("typing.Union[datetime.datetime, datetime.date, datetime.time]",
-                               "datetime.datetime"))
-#else
+
   NB_TYPE_CASTER(type,
                  io_name("datetime.datetime | datetime.date | datetime.time", "datetime.datetime"))
-#endif
 };
 
-// Other clocks that are not the system clock are not measured as
-// datetime.datetime objects since they are not measured on calendar
-// time. So instead we just make them timedeltas; or if they have
-// passed us a time as a float, we convert that.
-template<typename Clock, typename Duration>
-class type_caster<std::chrono::time_point<Clock, Duration>>
-    : public duration_caster<std::chrono::time_point<Clock, Duration>>
-{
-};
-
-template<typename Rep, typename Period>
-class type_caster<std::chrono::duration<Rep, Period>>
-    : public duration_caster<std::chrono::duration<Rep, Period>>
-{
-};
-
-// HACK: (Begin)
-// NAMESPACE_END(detail)
-// NAMESPACE_END(NB_NAMESPACE)
-} // namespace detail
-} // namespace NB_NAMESPACE
-// HACK: (End)
+} // namespace nanobind::detail

@@ -135,29 +135,34 @@ nanobind_add_module(
   # Name of the extension:
   fastgpx
 
-  NB_STATIC
+  # nanobind split mode: libnanobind is not linked into the extension but provided at runtime by
+  # the `nanobind-backend` package, which ships the Python-version-specific fast paths. The
+  # extension itself is a stable ABI module. Measured 17-25% faster than the linked stable ABI
+  # build on the list conversion and polyline paths; see benchmarks/nanobind3.md.
+  BACKEND_MODULE nanobind_backend
+
+  # Split mode always targets the stable ABI, with a 3.10 floor by default. Pin the floor so that
+  # plain CMake builds match the wheels (`wheel.py-api = "cp312"` in pyproject.toml).
+  STABLE_ABI_VERSION 3.12
 
   # Marks the nanobind include directories as SYSTEM to suppress warnings.
   NB_SUPPRESS_WARNINGS
-
-  # Target the stable ABI for Python 3.12+, which reduces
-  # the number of binary wheels that must be built. This
-  # does nothing on older Python versions.
-  STABLE_ABI
 
   # Sources:
   python_fastgpx.cpp
   python_utc_chrono_nanobind.hpp
 )
-# Treat nanobind includes as system headers to silence warnings from nanobind
-target_include_directories(fastgpx SYSTEM PRIVATE ${nanobind_INCLUDE_DIR})
 set_common_properties(fastgpx)
 target_link_libraries(fastgpx PRIVATE fastgpx-static)
 # No source in this target currently calls a CRT function that MSVC flags as deprecated (the
-# datetime caster uses gmtime_s/localtime_s). Kept as a safety net for standard C calls.
+# datetime caster uses the C++20 calendar types, not the C time functions). Kept as a safety net
+# for standard C calls.
 target_compile_definitions(fastgpx PRIVATE _CRT_SECURE_NO_WARNINGS)
 
 # https://nanobind.readthedocs.io/en/latest/typing.html
+# The stub generator imports the freshly built module, so the Python running it needs the
+# `nanobind-backend` package (a project dependency, installed by `uv sync` and by the build
+# backend's requirements).
 nanobind_add_stub(
   fastgpx_stub
   MODULE fastgpx
