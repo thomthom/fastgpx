@@ -267,6 +267,15 @@ class TestErrors:
         with pytest.raises(fastgpx.ParseError, match='NUL byte'):
             fastgpx.parse(doc + '\x00' + doc)
 
+    def test_parse_without_gpx_root_raises_parse_error(self):
+        # Well-formed XML of some other type (TCX, KML, a saved HTML error page) used to parse as
+        # a Gpx with no tracks and no error.
+        with pytest.raises(fastgpx.ParseError, match='missing <gpx> root element'):
+            fastgpx.parse('<html><body/></html>')
+
+    def test_parse_empty_gpx_root_is_empty_document(self):
+        assert fastgpx.parse('<gpx/>').tracks == []
+
     def test_load_missing_file_raises_file_not_found(self):
         with pytest.raises(FileNotFoundError, match='not-a-real-path'):
             fastgpx.load('gpx/not-a-real-path/fake.gpx')

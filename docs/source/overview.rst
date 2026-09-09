@@ -52,7 +52,9 @@ All errors raised by ``fastgpx`` describe input the library cannot use, so they 
 
 - ``fastgpx.Error`` is the base class. It is raised directly for invalid values, such as a
   non-finite coordinate passed to ``fastgpx.polyline.encode``.
-- ``fastgpx.ParseError`` is raised for malformed GPX data, polyline strings and timestamps.
+- ``fastgpx.ParseError`` is raised for malformed GPX data, polyline strings and timestamps. XML
+  without a ``<gpx>`` root element counts as malformed, so passing some other document type
+  raises rather than returning an empty ``Gpx``.
 
 Timestamps are parsed on demand, so a malformed ``<time>`` element raises from
 ``time_bounds()`` rather than from ``load()`` or ``parse()``.

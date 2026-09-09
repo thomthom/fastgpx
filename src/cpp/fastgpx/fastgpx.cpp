@@ -407,6 +407,13 @@ Gpx ReadGpxXml(const pugi::xml_node& doc)
   Gpx gpx;
 
   pugi::xml_node root = doc.child("gpx");
+  if (!root)
+  {
+    // A null node returns null nodes for every child lookup, so without this check a document
+    // with some other root (a TCX or KML export, an HTML error page saved by a download script)
+    // would silently produce a Gpx with no tracks.
+    throw parse_error("Failed to parse GPX data: missing <gpx> root element");
+  }
 
   const auto metadata = root.child("metadata");
   if (metadata)

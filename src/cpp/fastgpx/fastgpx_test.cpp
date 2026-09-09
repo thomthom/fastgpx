@@ -286,6 +286,26 @@ TEST_CASE("Parse GPX with an embedded NUL byte", "[parse][simple]")
   }
 }
 
+TEST_CASE("Parse XML without a <gpx> root element", "[parse][simple]")
+{
+  // Well-formed XML that is not GPX used to parse as a Gpx with no tracks and no error.
+  SECTION("other document type")
+  {
+    REQUIRE_THROWS_AS(fastgpx::ParseGpx("<html><body/></html>"), fastgpx::parse_error);
+  }
+
+  SECTION("<gpx> nested below another root")
+  {
+    REQUIRE_THROWS_AS(fastgpx::ParseGpx("<root><gpx/></root>"), fastgpx::parse_error);
+  }
+
+  SECTION("empty <gpx> root is still a valid, empty document")
+  {
+    const auto gpx = fastgpx::ParseGpx("<gpx/>");
+    CHECK(gpx.tracks.empty());
+  }
+}
+
 // Bounds
 
 TEST_CASE("Add to Bounds", "[bounds]")
