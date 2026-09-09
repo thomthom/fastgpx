@@ -100,14 +100,12 @@ target_sources(fastgpx-static
       fastgpx/datetime.hpp
       fastgpx/errors.hpp
       fastgpx/fastgpx.hpp
-      fastgpx/filesystem.hpp
       fastgpx/geom.hpp
       fastgpx/polyline.hpp
     PRIVATE
       fastgpx/datetime.cpp
       fastgpx/errors.cpp
       fastgpx/fastgpx.cpp
-      fastgpx/filesystem.cpp
       fastgpx/geom.cpp
       fastgpx/polyline.cpp
 )
@@ -267,7 +265,6 @@ if(BUILD_TESTING)
     fastgpx/datetime_test.cpp
     fastgpx/errors_test.cpp
     fastgpx/fastgpx_test.cpp
-    fastgpx/filesystem_test.cpp
     fastgpx/geom_test.cpp
     fastgpx/polyline_test.cpp
     fastgpx/test_data_test.cpp

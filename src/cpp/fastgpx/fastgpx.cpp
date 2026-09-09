@@ -18,7 +18,6 @@
 
 #include "fastgpx/datetime.hpp"
 #include "fastgpx/errors.hpp"
-#include "fastgpx/filesystem.hpp"
 #include "fastgpx/geom.hpp"
 
 namespace fastgpx {
