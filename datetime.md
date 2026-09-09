@@ -107,8 +107,6 @@ https://learn.microsoft.com/en-us/cpp/standard-library/utc-clock-class?view=msvc
 >
 > UTC time, by definition, starts out 10 seconds behind TAI (atomic time). 10 seconds were added in 1972 to TAI time to accommodate for the leap seconds that had accumulated by that point. Given the insertion of another 27 leap seconds since then, UTC time is currently 37 seconds behind TAI (atomic clock) time.
 
-TODO: Modify `python_utc_chrono.hpp` to cast `std::chrono::utc_clock`.
-
 
 ## GPX <time>
 
