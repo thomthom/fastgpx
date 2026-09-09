@@ -342,8 +342,15 @@ NB_MODULE(fastgpx, m)
            })
       .doc() = "Represent ``<gpx>`` data in GPX files.";
 
-  m.def("load", &LoadGpx, "path"_a);
-  m.def("parse", &ParseGpx, "data"_a);
+  // Parsing is pure C++ and touches no Python objects, so the GIL is released for the duration
+  // and several threads can load files at once. nanobind enters the guard after the arguments
+  // have been converted and leaves it before the result is converted or an exception translated.
+  m.def("load", &LoadGpx, "path"_a, nb::call_guard<nb::gil_scoped_release>(),
+        "Load and parse a GPX file.\n\n"
+        "Releases the GIL while parsing, so files can be loaded from several threads at once.");
+  m.def("parse", &ParseGpx, "data"_a, nb::call_guard<nb::gil_scoped_release>(),
+        "Parse GPX data from a string.\n\n"
+        "Releases the GIL while parsing, so data can be parsed from several threads at once.");
 
   // fastgpx geo
 

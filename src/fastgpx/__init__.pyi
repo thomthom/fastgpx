@@ -325,6 +325,16 @@ class Gpx:
 
     def __repr__(self) -> str: ...
 
-def load(path: str | os.PathLike) -> Gpx: ...
+def load(path: str | os.PathLike) -> Gpx:
+    """
+    Load and parse a GPX file.
 
-def parse(data: str) -> Gpx: ...
+    Releases the GIL while parsing, so files can be loaded from several threads at once.
+    """
+
+def parse(data: str) -> Gpx:
+    """
+    Parse GPX data from a string.
+
+    Releases the GIL while parsing, so data can be parsed from several threads at once.
+    """

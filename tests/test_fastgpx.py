@@ -1,5 +1,6 @@
 import datetime
 import locale
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import gpxpy
@@ -266,3 +267,40 @@ class TestErrors:
     def test_encode_invalid_coordinate_is_fastgpx_error(self):
         with pytest.raises(fastgpx.Error, match='latitude out of range'):
             fastgpx.polyline.encode([fastgpx.LatLong(float('nan'), 0.0)])
+
+
+class TestThreading:
+
+    # `load` and `parse` release the GIL while parsing, so a thread pool must give the same
+    # results as a sequential loop, and errors raised while the GIL was released must reach the
+    # caller through the future.
+
+    FILES = [
+        'gpx/test/two-points.gpx',
+        'gpx/test/debug-segment.gpx',
+        'gpx/2024 TopCamp/Connected_20240518_094959_.gpx',
+        'gpx/2024 Great Roadtrip/Connected_20240731_113605_Näsåker_Sollefteå.gpx',
+    ]
+
+    def test_load_from_thread_pool_matches_sequential(self):
+        files = self.FILES * 4
+        expected = [fastgpx.load(f).length_3d() for f in files]
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            results = list(pool.map(lambda f: fastgpx.load(f).length_3d(), files))
+        assert results == expected
+
+    def test_parse_from_thread_pool_matches_sequential(self):
+        data = [Path(f).read_text(encoding='utf-8') for f in self.FILES] * 4
+        expected = [fastgpx.parse(d).length_3d() for d in data]
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            results = list(pool.map(lambda d: fastgpx.parse(d).length_3d(), data))
+        assert results == expected
+
+    def test_errors_propagate_from_threads(self):
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            parse_future = pool.submit(fastgpx.parse, 'not gpx')
+            load_future = pool.submit(fastgpx.load, 'gpx/not-a-real-path/fake.gpx')
+        with pytest.raises(fastgpx.ParseError):
+            parse_future.result()
+        with pytest.raises(FileNotFoundError):
+            load_future.result()
