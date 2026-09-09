@@ -247,6 +247,45 @@ TEST_CASE("Parse GPX from XML string", "[parse][simple]")
   CHECK_THAT(gpx.GetLength3D(), WithinAbs(1.7074, kMETERS_TOL));
 }
 
+TEST_CASE("Parse GPX with an embedded NUL byte", "[parse][simple]")
+{
+  // U+0000 is not a valid XML character. pugixml stops at it silently, so the parser rejects it
+  // rather than returning the truncated prefix as a successful parse.
+  const std::string head = "<gpx><trk><trkseg><trkpt lat=\"60.0\" lon=\"10.0\"/>";
+  const std::string tail = "<trkpt lat=\"60.1\" lon=\"10.0\"/></trkseg></trk></gpx>";
+
+  SECTION("NUL splitting an otherwise well-formed document")
+  {
+    std::string data = head;
+    data += '\0';
+    data += tail;
+    REQUIRE_THROWS_AS(fastgpx::ParseGpx(data), fastgpx::parse_error);
+  }
+
+  SECTION("NUL after a complete document, which pugixml would silently ignore")
+  {
+    std::string data = head + tail;
+    data += '\0';
+    data += head + tail;
+    REQUIRE_THROWS_AS(fastgpx::ParseGpx(data), fastgpx::parse_error);
+  }
+
+  SECTION("trailing NUL")
+  {
+    std::string data = head + tail;
+    data += '\0';
+    REQUIRE_THROWS_AS(fastgpx::ParseGpx(data), fastgpx::parse_error);
+  }
+
+  SECTION("the same document without a NUL parses")
+  {
+    const auto gpx = fastgpx::ParseGpx(head + tail);
+    REQUIRE(gpx.tracks.size() == 1);
+    REQUIRE(gpx.tracks[0].segments.size() == 1);
+    CHECK(gpx.tracks[0].segments[0].points.size() == 2);
+  }
+}
+
 // Bounds
 
 TEST_CASE("Add to Bounds", "[bounds]")

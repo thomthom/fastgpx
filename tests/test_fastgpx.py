@@ -253,6 +253,20 @@ class TestErrors:
         with pytest.raises(ValueError):
             fastgpx.parse('<gpx><trk>')
 
+    def test_parse_embedded_nul_raises_parse_error(self):
+        # U+0000 is not a valid XML character. The underlying XML parser stops at it silently, so
+        # without an explicit check this would return a truncated document reporting success.
+        data = ('<gpx><trk><trkseg><trkpt lat="60" lon="10"/>\x00'
+                '<trkpt lat="60.1" lon="10"/></trkseg></trk></gpx>')
+        with pytest.raises(fastgpx.ParseError, match='NUL byte'):
+            fastgpx.parse(data)
+
+    def test_parse_nul_after_complete_document_raises_parse_error(self):
+        # The prefix alone is a well-formed document, so the truncation would otherwise be silent.
+        doc = '<gpx><trk><trkseg><trkpt lat="60" lon="10"/></trkseg></trk></gpx>'
+        with pytest.raises(fastgpx.ParseError, match='NUL byte'):
+            fastgpx.parse(doc + '\x00' + doc)
+
     def test_load_missing_file_raises_file_not_found(self):
         with pytest.raises(FileNotFoundError, match='not-a-real-path'):
             fastgpx.load('gpx/not-a-real-path/fake.gpx')
