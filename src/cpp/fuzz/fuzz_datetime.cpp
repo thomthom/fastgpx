@@ -1,4 +1,4 @@
-// Fuzz target: fastgpx::parse_gpx_time (the v6 parser used for <time> elements).
+// Fuzz target: fastgpx::parse_gpx_time (the parser used for <time> elements).
 
 #include <cstddef>
 #include <cstdint>
