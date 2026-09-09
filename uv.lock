@@ -122,7 +122,7 @@ benchmarks = [
 ]
 dev = [
     { name = "gpxpy" },
-    { name = "nanobind", specifier = ">=2.9.2,<3" },
+    { name = "nanobind", specifier = ">=2.15.0,<3" },
     { name = "polyline", specifier = ">=2.0.4" },
     { name = "pytest" },
 ]
@@ -276,11 +276,11 @@ wheels = [
 
 [[package]]
 name = "nanobind"
-version = "2.9.2"
+version = "2.15.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d1/48/edccb2ec318dee2f979765ca8e565e867569522bb55ad384d57b01c3da03/nanobind-2.9.2.tar.gz", hash = "sha256:e7608472de99d375759814cab3e2c94aba3f9ec80e62cfef8ced495ca5c27d6e", size = 984270, upload-time = "2025-09-04T12:52:45.322Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0d/08/cef3343279d2bde0baa57aadaacf7196ee336f12449c50c27f799c45b3f7/nanobind-2.15.0.tar.gz", hash = "sha256:3eace37a3b8cdadd531fcc6145263985b29821467161d34ff722b0644cf445b5", size = 1060056, upload-time = "2026-08-15T19:01:04.369Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/05/20/f8944f162df48a20f8f533f4e4faed63891aa368ceca8cc8b32d4c785ed4/nanobind-2.9.2-py3-none-any.whl", hash = "sha256:c37957ffd5eac7eda349cff3622ecd32e5ee1244ecc912c99b5bc8188bafd16e", size = 243830, upload-time = "2025-09-04T12:52:43.652Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/72/16a606cbea58be568475f450ece121b3fd62cffb390fd0f8eb8b410904f5/nanobind-2.15.0-py3-none-any.whl", hash = "sha256:91dae9305c6242cf63ab11a5c41594e234e7a22fd9fcc2c5c4ba80724abc1787", size = 271648, upload-time = "2026-08-15T19:01:02.477Z" },
 ]
 
 [[package]]

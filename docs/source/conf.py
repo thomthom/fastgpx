@@ -93,14 +93,7 @@ def autodoc_process_signature(app, what, name, obj, options, signature, return_a
     logger.debug(f"signature : \033[32m{signature}\033[0m")
     logger.debug(f"Doc:\n\033[33m{obj.__doc__}\033[0m")
     logger.debug('')
-    # Fix signatures to use "fastgpx." instead of "fastgpx.fastgpx."
-    # https://github.com/sphinx-doc/sphinx/issues/10351
     # Only the first `@overload` is given to this callback.
-    if signature:
-        signature = signature.replace("fastgpx.fastgpx.", "fastgpx.")
-    if return_annotation:
-        return_annotation = return_annotation.replace(
-            "fastgpx.fastgpx.", "fastgpx.")
     return signature, return_annotation
 
 
@@ -132,7 +125,7 @@ def autodoc_process_docstring(app, what, name, obj, options, lines):
         # duplication.
         #
         # Example sig_line:
-        #   (self) -> fastgpx.fastgpx.LatLong | None
+        #   (self) -> fastgpx.LatLong | None
         #
         # for line in lines:
         #     match = re.match(r'^\(.*\)\s*->\s*(.*)$', line)
@@ -163,19 +156,14 @@ def monkey_patch_property_documenter(app: sphinx.application.Sphinx):
             sig_line = lines[0][0]
 
             # Example sig_line:
-            #   (self) -> fastgpx.fastgpx.LatLong | None
+            #   (self) -> fastgpx.LatLong | None
             #
             # We want to extract the return type:
             match = re.match(r'^\(.*\)\s*->\s*(.*)$', sig_line)
             if not match:
                 return
 
-            types = match.group(1)
-            if types:
-                types = types.replace("fastgpx.fastgpx.", "fastgpx.")
-
-            objrepr = types
-            self.add_line('   :type: ' + objrepr, sourcename)
+            self.add_line('   :type: ' + match.group(1), sourcename)
 
     app.add_autodocumenter(MonkeyPatchPropertyDocumenter, override=True)
 

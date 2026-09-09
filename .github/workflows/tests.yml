@@ -55,6 +55,12 @@ jobs:
         run: |
           uv build --wheel
 
+      # The wheel build regenerates src/fastgpx/*.pyi with the build backend's nanobind. A diff
+      # means the committed stubs are stale or the dev group and build backend disagree on nanobind.
+      - name: Check that the committed stubs match the generated ones
+        shell: bash
+        run: git diff --exit-code -- src/fastgpx
+
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v7
         with:
