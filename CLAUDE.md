@@ -34,6 +34,8 @@ justification in the commit message.
 
 ## Repository conventions
 
+- Do not commit until the user explicitly says so; "LGTM" counts as clearance to commit the work it
+  refers to. Preparing the commit message ahead of time is fine.
 - Commit messages end with `Fixes #N` when they resolve an issue; merges to `main` close them.
 - Issue labels: `fuzzer` only for findings from running the fuzzer or genuine undefined
   behaviour; `code-analysis` for things found by reading code.
