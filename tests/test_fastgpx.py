@@ -164,17 +164,32 @@ class TestGpx:
         assert points[0] == fastgpx.LatLong(61.5, 10.25, 123.5)
         assert points[1] == fastgpx.LatLong(61.75, 10.5, 0.0)
 
-    def test_parse_out_of_range_number_is_zero(self):
-        # Values that cannot be represented as a double (here: overflow) are treated like
-        # invalid input, which yields 0.0 rather than infinity.
+    def test_parse_invalid_elevation_is_zero(self):
+        # An elevation that cannot be represented as a double (here: overflow) is treated like
+        # a missing one and yields 0.0 rather than infinity. What it should be is #70.
         xml = ('<gpx><trk><trkseg>'
-               '<trkpt lat="1e999" lon="10.5"><ele>-1e999</ele></trkpt>'
-               '<trkpt lat="abc" lon="10.5"></trkpt>'
+               '<trkpt lat="60.5" lon="10.5"><ele>-1e999</ele></trkpt>'
                '</trkseg></trk></gpx>')
         gpx = fastgpx.parse(xml)
-        points = gpx.tracks[0].segments[0].points
-        assert points[0] == fastgpx.LatLong(0.0, 10.5, 0.0)
-        assert points[1] == fastgpx.LatLong(0.0, 10.5, 0.0)
+        assert gpx.tracks[0].segments[0].points[0] == fastgpx.LatLong(60.5, 10.5, 0.0)
+
+    @pytest.mark.parametrize('trkpt, message', [
+        ('<trkpt lon="10.5"/>', 'missing the lat attribute'),
+        ('<trkpt lat="60.5"/>', 'missing the lon attribute'),
+        ('<trkpt lat="abc" lon="10.5"/>', 'lat attribute is not a valid number'),
+        ('<trkpt lat="60.5" lon=""/>', 'lon attribute is not a valid number'),
+        ('<trkpt lat="1e999" lon="10.5"/>', 'lat attribute is not a valid number'),
+        ('<trkpt lat="90.5" lon="10.5"/>', 'lat attribute is out of range'),
+        ('<trkpt lat="60.5" lon="-180.5"/>', 'lon attribute is out of range'),
+        ('<trkpt lat="nan" lon="10.5"/>', 'lat attribute is out of range'),
+        ('<trkpt lat="60.5" lon="inf"/>', 'lon attribute is out of range'),
+    ])
+    def test_parse_invalid_coordinate_raises_parse_error(self, trkpt: str, message: str):
+        # A <trkpt> with a missing, unparseable or out-of-range lat/lon used to become a point at
+        # (0, 0), which silently added thousands of km to length_2d().
+        xml = f'<gpx><trk><trkseg>{trkpt}</trkseg></trk></gpx>'
+        with pytest.raises(fastgpx.ParseError, match=message):
+            fastgpx.parse(xml)
 
 
 class TestTrack:

@@ -7,6 +7,7 @@
 #include <cerrno>
 #include <charconv>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -14,6 +15,7 @@
 #include <format>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <ranges>
 #include <stdexcept>
 #include <string>
@@ -363,18 +365,25 @@ TimeBounds Gpx::ComputeTimeBounds() const
 
 namespace {
 
+constexpr std::string_view kWhitespace = " \t\n\r";
+
+// Parses a decimal number, accepting what `strtod` would accept except for the locale:
+// surrounding whitespace and a leading '+'. Returns nullopt when the text is not a number, has
+// trailing characters, or cannot be represented as a double.
+//
 // pugixml's `as_double()` uses `strtod`, which honors the process' LC_NUMERIC locale. A host
 // application that has called `setlocale` (e.g. to "de_DE") would then parse "61.5" as 61.
 // `std::from_chars` is locale independent and considerably faster.
-double ParseDouble(std::string_view text)
+std::optional<double> TryParseDouble(std::string_view text)
 {
   // Unlike `strtod`, `std::from_chars` neither skips leading whitespace nor accepts a leading '+'.
-  const auto first = text.find_first_not_of(" \t\n\r");
+  const auto first = text.find_first_not_of(kWhitespace);
   if (first == std::string_view::npos)
   {
-    return 0.0;
+    return std::nullopt;
   }
-  text.remove_prefix(first);
+  const auto last = text.find_last_not_of(kWhitespace);
+  text = text.substr(first, last - first + 1);
   if (text.front() == '+')
   {
     text.remove_prefix(1);
@@ -387,23 +396,50 @@ double ParseDouble(std::string_view text)
   char* end = nullptr;
   errno = 0;
   const double value = std::strtod(buffer.c_str(), &end);
-  if (end == buffer.c_str() || errno == ERANGE)
+  if (end != buffer.c_str() + buffer.size() || errno == ERANGE)
   {
-    // Invalid input and out-of-range values are treated alike, as with `std::from_chars` below.
-    return 0.0;
+    return std::nullopt;
   }
   return value;
 #else
   double value = 0.0;
   const auto [ptr, ec] = std::from_chars(text.data(), text.data() + text.size(), value);
-  if (ec != std::errc{})
+  if (ec != std::errc{} || ptr != text.data() + text.size())
   {
     // Invalid input (`invalid_argument`) and out-of-range values (`result_out_of_range`) are
-    // both treated as 0.0. `value` is left unmodified in either case.
-    return 0.0;
+    // treated alike. `value` is left unmodified in either case.
+    return std::nullopt;
   }
   return value;
 #endif
+}
+
+// A `<trkpt>` coordinate. GPX requires `lat` and `lon` and bounds them to ±90 and ±180, so a
+// point that violates that is rejected rather than silently placed at the equator (#51). The
+// range check also rejects `nan` and `inf`, which `std::from_chars` accepts as numbers: the
+// negated comparison is true for NaN, the same test `polyline::encode` uses.
+double ParseCoordinate(const pugi::xml_node& trkpt, const char* name, double limit)
+{
+  const auto attribute = trkpt.attribute(name);
+  if (!attribute)
+  {
+    throw parse_error(
+        std::format("Failed to parse GPX data: <trkpt> is missing the {} attribute", name));
+  }
+  const std::string_view text = attribute.value();
+  const auto value = TryParseDouble(text);
+  if (!value)
+  {
+    throw parse_error(
+        std::format("Failed to parse GPX data: <trkpt> {} attribute is not a valid number: \"{}\"",
+                    name, text));
+  }
+  if (!(std::abs(*value) <= limit))
+  {
+    throw parse_error(std::format(
+        "Failed to parse GPX data: <trkpt> {} attribute is out of range: \"{}\"", name, text));
+  }
+  return *value;
 }
 
 Gpx ReadGpxXml(const pugi::xml_node& doc)
@@ -447,18 +483,19 @@ Gpx ReadGpxXml(const pugi::xml_node& doc)
       for (pugi::xml_node trkpt = segment.child("trkpt"); trkpt;
            trkpt = trkpt.next_sibling("trkpt"))
       {
-        const double lat = ParseDouble(trkpt.attribute("lat").value());
-        const double lon = ParseDouble(trkpt.attribute("lon").value());
+        const double lat = ParseCoordinate(trkpt, "lat", 90.0);
+        const double lon = ParseCoordinate(trkpt, "lon", 180.0);
 
         // <ele>
         /*
         Elevation (in meters) of the point.
         */
+        // Missing or unparseable elevation defaults to 0.0. See #70.
         double elevation = 0.0;
         const auto ele = trkpt.child("ele");
         if (ele)
         {
-          elevation = ParseDouble(ele.text().get());
+          elevation = TryParseDouble(ele.text().get()).value_or(0.0);
         }
 
         auto& point = gpx_segment.points.emplace_back(lat, lon, elevation);

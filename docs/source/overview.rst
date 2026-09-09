@@ -54,7 +54,8 @@ All errors raised by ``fastgpx`` describe input the library cannot use, so they 
   non-finite coordinate passed to ``fastgpx.polyline.encode``.
 - ``fastgpx.ParseError`` is raised for malformed GPX data, polyline strings and timestamps. XML
   without a ``<gpx>`` root element counts as malformed, so passing some other document type
-  raises rather than returning an empty ``Gpx``.
+  raises rather than returning an empty ``Gpx``. So does a ``<trkpt>`` whose ``lat`` or ``lon``
+  is missing, not a number, or outside ±90 and ±180 degrees.
 
 Timestamps are parsed on demand, so a malformed ``<time>`` element raises from
 ``time_bounds()`` rather than from ``load()`` or ``parse()``.

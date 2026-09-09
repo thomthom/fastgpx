@@ -407,6 +407,70 @@ TEST_CASE("Load empty and directory paths", "[parse][simple]")
   }
 }
 
+TEST_CASE("Parse <trkpt> coordinates", "[parse][simple]")
+{
+  const auto parse_point = [](const std::string& trkpt) {
+    const auto gpx = fastgpx::ParseGpx("<gpx><trk><trkseg>" + trkpt + "</trkseg></trk></gpx>");
+    REQUIRE(gpx.tracks[0].segments[0].points.size() == 1);
+    return gpx.tracks[0].segments[0].points[0];
+  };
+
+  SECTION("surrounding whitespace and a leading '+' are accepted")
+  {
+    const auto point = parse_point("<trkpt lat=\" +12.5 \" lon=\"\t-0.0\n\"/>");
+    CHECK(point.latitude == 12.5);
+    CHECK(point.longitude == 0.0);
+  }
+
+  SECTION("the range limits are inclusive")
+  {
+    const auto point = parse_point("<trkpt lat=\"-90\" lon=\"180\"/>");
+    CHECK(point.latitude == -90.0);
+    CHECK(point.longitude == 180.0);
+  }
+
+  SECTION("missing attribute")
+  {
+    REQUIRE_THROWS_AS(parse_point("<trkpt lon=\"10.0\"/>"), fastgpx::parse_error);
+    REQUIRE_THROWS_AS(parse_point("<trkpt lat=\"60.0\"/>"), fastgpx::parse_error);
+    REQUIRE_THROWS_AS(parse_point("<trkpt/>"), fastgpx::parse_error);
+  }
+
+  SECTION("not a number")
+  {
+    const auto text = GENERATE("", " ", "abc", "60.0abc", "0x10", "1e999", "6,5");
+    CAPTURE(text);
+    REQUIRE_THROWS_AS(parse_point(std::format("<trkpt lat=\"{}\" lon=\"10.0\"/>", text)),
+                      fastgpx::parse_error);
+    REQUIRE_THROWS_AS(parse_point(std::format("<trkpt lat=\"60.0\" lon=\"{}\"/>", text)),
+                      fastgpx::parse_error);
+  }
+
+  SECTION("out of range")
+  {
+    REQUIRE_THROWS_AS(parse_point("<trkpt lat=\"90.5\" lon=\"10.0\"/>"), fastgpx::parse_error);
+    REQUIRE_THROWS_AS(parse_point("<trkpt lat=\"-90.5\" lon=\"10.0\"/>"), fastgpx::parse_error);
+    REQUIRE_THROWS_AS(parse_point("<trkpt lat=\"60.0\" lon=\"180.5\"/>"), fastgpx::parse_error);
+    REQUIRE_THROWS_AS(parse_point("<trkpt lat=\"60.0\" lon=\"-180.5\"/>"), fastgpx::parse_error);
+  }
+
+  SECTION("nan and inf parse as numbers but fail the range check")
+  {
+    const auto text = GENERATE("nan", "NaN", "inf", "-inf", "infinity");
+    CAPTURE(text);
+    REQUIRE_THROWS_AS(parse_point(std::format("<trkpt lat=\"{}\" lon=\"10.0\"/>", text)),
+                      fastgpx::parse_error);
+    REQUIRE_THROWS_AS(parse_point(std::format("<trkpt lat=\"60.0\" lon=\"{}\"/>", text)),
+                      fastgpx::parse_error);
+  }
+
+  SECTION("an unparseable <ele> is still 0.0 (#70)")
+  {
+    const auto point = parse_point("<trkpt lat=\"60.0\" lon=\"10.0\"><ele>abc</ele></trkpt>");
+    CHECK(point.elevation == 0.0);
+  }
+}
+
 TEST_CASE("Parse XML without a <gpx> root element", "[parse][simple]")
 {
   // Well-formed XML that is not GPX used to parse as a Gpx with no tracks and no error.
