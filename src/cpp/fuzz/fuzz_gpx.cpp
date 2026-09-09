@@ -2,7 +2,8 @@
 //
 // Feeds arbitrary bytes to the GPX parser and then walks every lazily computed property. That
 // covers the XML parsing (pugixml), the coordinate parsing, the geometry calculations and the
-// on-demand <time> parsing.
+// on-demand <time> parsing. Each segment's points are then passed to polyline::encode, as a
+// user converting a track to a polyline would.
 
 #include <cstddef>
 #include <cstdint>
@@ -10,6 +11,7 @@
 
 #include "fastgpx/errors.hpp"
 #include "fastgpx/fastgpx.hpp"
+#include "fastgpx/polyline.hpp"
 
 extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size)
 {
@@ -36,6 +38,16 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
         (void)segment.GetLength2D();
         (void)segment.GetLength3D();
         (void)segment.GetTimeBounds();
+
+        // The parser does not range-check coordinates, so the encoder is allowed to reject the
+        // segment with a value_error. Anything else it does with parsed points is a finding.
+        try
+        {
+          (void)fastgpx::polyline::encode(segment.points);
+        }
+        catch (const fastgpx::value_error&)
+        {
+        }
       }
     }
   }

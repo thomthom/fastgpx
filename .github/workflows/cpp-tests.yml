@@ -50,14 +50,13 @@ jobs:
             echo "CXX=clang++" >> $GITHUB_ENV
           fi
 
-      # The CMake project always configures the Python module as well, so
-      # nanobind must be importable. CMake 3.30.2+ is required by CMakeLists.txt.
-      - name: Install nanobind and CMake
+      # CMake 3.30.2+ is required by CMakeLists.txt. The Python module is not built here, so
+      # nanobind is not needed; the dev sync only creates the environment cmake is installed into.
+      - name: Install CMake
         shell: bash
         run: |
           uv sync --only-dev
           uv pip install "cmake>=3.30.2"
-          echo "PYTHON_EXECUTABLE=$(uv run --no-sync python -c 'import sys; print(sys.executable)')" >> $GITHUB_ENV
 
       - name: Cache fetched dependencies (pugixml, Catch2, nlohmann/json)
         uses: actions/cache@v6
@@ -65,21 +64,27 @@ jobs:
           path: ${{ env.FETCHCONTENT_BASE_DIR }}
           key: fetchcontent-${{ runner.os }}-${{ hashFiles('src/cpp/CMakeLists.txt') }}
 
+      # FASTGPX_BUILD_FUZZERS adds the fuzz targets and their fuzz_<target>_corpus CTest entries,
+      # which replay the seed corpora in src/cpp/fuzz/corpus. With GCC and Clang it also builds
+      # everything in this tree, the Catch2 tests included, with AddressSanitizer and
+      # UndefinedBehaviorSanitizer; MSVC gets the plain standalone replay driver.
       - name: Configure
         shell: bash
         run: |
           uv run --no-sync cmake -S . -B build-cpp \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_TESTING=ON \
-            -DFETCHCONTENT_BASE_DIR="$FETCHCONTENT_BASE_DIR" \
-            -DPython_EXECUTABLE="$PYTHON_EXECUTABLE"
+            -DFASTGPX_BUILD_FUZZERS=ON \
+            -DFASTGPX_BUILD_PYTHON_MODULE=OFF \
+            -DFETCHCONTENT_BASE_DIR="$FETCHCONTENT_BASE_DIR"
 
-      - name: Build tests
+      - name: Build tests and fuzz targets
         shell: bash
         run: |
-          uv run --no-sync cmake --build build-cpp --config Release --parallel --target fastgpx_test
+          uv run --no-sync cmake --build build-cpp --config Release --parallel \
+            --target fastgpx_test fuzz_gpx fuzz_polyline fuzz_polyline_encode fuzz_datetime
 
-      - name: Run tests
+      - name: Run tests and corpus replays
         shell: bash
         run: |
           uv run --no-sync ctest --test-dir build-cpp -C Release --output-on-failure
