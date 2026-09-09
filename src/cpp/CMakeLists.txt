@@ -131,15 +131,39 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
 find_package(nanobind CONFIG REQUIRED)
 
+# The extension is built in nanobind's split mode: libnanobind is a separate backend module that
+# the extension imports at load time. Wheels use the `nanobind-backend` package from PyPI. That
+# backend is built with the release CRT on Windows, and a Debug build of the extension links the
+# debug CRT, which the backend rejects with "platform ABI ... _debug". This option builds a
+# backend from nanobind's sources in this tree instead, in the same configuration as the
+# extension, so that Debug builds load. `.vscode/settings.json` turns it on for IDE builds, and
+# single-config Debug builds default to it. Wheel builds leave it off.
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(FASTGPX_LOCAL_NANOBIND_BACKEND_DEFAULT ON)
+else()
+  set(FASTGPX_LOCAL_NANOBIND_BACKEND_DEFAULT OFF)
+endif()
+option(FASTGPX_LOCAL_NANOBIND_BACKEND
+  "Build the nanobind backend module in this tree instead of using the nanobind-backend package"
+  ${FASTGPX_LOCAL_NANOBIND_BACKEND_DEFAULT})
+message(STATUS "FASTGPX_LOCAL_NANOBIND_BACKEND: ${FASTGPX_LOCAL_NANOBIND_BACKEND}")
+
+if(FASTGPX_LOCAL_NANOBIND_BACKEND)
+  nanobind_add_backend(fastgpx_nanobind_backend NB_SUPPRESS_WARNINGS)
+  set(FASTGPX_NANOBIND_BACKEND fastgpx_nanobind_backend)
+else()
+  set(FASTGPX_NANOBIND_BACKEND nanobind_backend)
+endif()
+
 nanobind_add_module(
   # Name of the extension:
   fastgpx
 
   # nanobind split mode: libnanobind is not linked into the extension but provided at runtime by
-  # the `nanobind-backend` package, which ships the Python-version-specific fast paths. The
-  # extension itself is a stable ABI module. Measured 17-25% faster than the linked stable ABI
-  # build on the list conversion and polyline paths; see benchmarks/nanobind3.md.
-  BACKEND_MODULE nanobind_backend
+  # a backend module, which ships the Python-version-specific fast paths. The extension itself is
+  # a stable ABI module. Measured 17-25% faster than the linked stable ABI build on the list
+  # conversion and polyline paths; see benchmarks/nanobind3.md.
+  BACKEND_MODULE ${FASTGPX_NANOBIND_BACKEND}
 
   # Split mode always targets the stable ABI, with a 3.10 floor by default. Pin the floor so that
   # plain CMake builds match the wheels (`wheel.py-api = "cp312"` in pyproject.toml).
@@ -154,6 +178,12 @@ nanobind_add_module(
 )
 set_common_properties(fastgpx)
 target_link_libraries(fastgpx PRIVATE fastgpx-static)
+if(FASTGPX_LOCAL_NANOBIND_BACKEND)
+  # The backend is imported by the extension, so it must exist before the stub generator runs and
+  # travel with the extension wherever it is installed.
+  add_dependencies(fastgpx fastgpx_nanobind_backend)
+  install(TARGETS fastgpx_nanobind_backend LIBRARY DESTINATION .)
+endif()
 # No source in this target currently calls a CRT function that MSVC flags as deprecated (the
 # datetime caster uses the C++20 calendar types, not the C time functions). Kept as a safety net
 # for standard C calls.
@@ -201,6 +231,15 @@ add_custom_command(TARGET fastgpx POST_BUILD
         "$<TARGET_FILE:fastgpx>"  # This is the .pyd file
         "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/"
 )
+if(FASTGPX_LOCAL_NANOBIND_BACKEND)
+  add_custom_command(TARGET fastgpx_nanobind_backend POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E make_directory
+          "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "$<TARGET_FILE:fastgpx_nanobind_backend>"
+          "${CMAKE_SOURCE_DIR}/.venv/Lib/site-packages/"
+  )
+endif()
 
 endif() # FASTGPX_BUILD_PYTHON_MODULE
 

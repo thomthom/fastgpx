@@ -45,3 +45,9 @@ justification in the commit message.
   with `SPHINXOPTS=-W --keep-going`.
 - `benchmarks/` scripts are imported by `tests/test_benchmarks.py`; keep their work under
   `if __name__ == '__main__':`.
+- The extension is a nanobind split-mode module and depends on `nanobind-backend`. Keep that
+  constraint a bare `>=`: never add an upper bound or an exact pin, because only one backend can
+  be installed per environment and a pin would clash with other split-mode extensions. Raise the
+  minimum only when CMake's configure output says `split-mode extensions require
+  'nanobind-backend>=X.Y'` with a higher version than pyproject.toml declares; routine nanobind
+  upgrades that keep printing the same minimum need no change.

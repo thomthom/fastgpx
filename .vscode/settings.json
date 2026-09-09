@@ -25,7 +25,10 @@
   "cmake.configureSettings": {
     "CMAKE_INSTALL_PREFIX": "${workspaceFolder}/install",
     "Python_EXECUTABLE": "${workspaceFolder}/.venv/Scripts/python.exe",
-    "Python_ROOT_DIR": "${workspaceFolder}/.venv"
+    "Python_ROOT_DIR": "${workspaceFolder}/.venv",
+    // Build the nanobind backend in the tree so that Debug builds of the extension load
+    // (the PyPI nanobind-backend is release-CRT only). See src/cpp/CMakeLists.txt.
+    "FASTGPX_LOCAL_NANOBIND_BACKEND": "ON"
   },
   "cmake.configureOnEdit": false,
   "cmake.configureOnOpen": false,

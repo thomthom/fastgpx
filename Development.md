@@ -272,3 +272,10 @@ finds (`uv sync --only-dev` installs it into `.venv`). The extension is built in
 mode, so importing it, and therefore the `fastgpx_stub` target, also needs the `nanobind-backend`
 package; it is a project dependency, so a plain `uv sync` installs it. Pass
 `-DFASTGPX_BUILD_PYTHON_MODULE=OFF` for a C++-only build that needs neither Python nor nanobind.
+
+The PyPI backend is built with the release CRT, so a `Debug` build of the extension cannot load
+it (`ImportError: ... platform ABI "nanobind_msvc_md_mscver19_debug"`). Configure with
+`-DFASTGPX_LOCAL_NANOBIND_BACKEND=ON` to build a backend module (`fastgpx_nanobind_backend`) from
+nanobind's sources in the same tree and configuration; the extension then imports that one
+instead. `.vscode/settings.json` sets it for IDE builds, and single-config `Debug` builds default
+to it. Both modules are copied into `.venv/Lib/site-packages/` after each build.
