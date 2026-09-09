@@ -325,7 +325,7 @@ class Gpx:
 
     def __repr__(self) -> str: ...
 
-def load(path: str | os.PathLike) -> Gpx:
+def load(path: str | bytes | os.PathLike[str] | os.PathLike[bytes]) -> Gpx:
     """
     Load and parse a GPX file.
 
