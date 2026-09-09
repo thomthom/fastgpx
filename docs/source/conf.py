@@ -149,21 +149,31 @@ def monkey_patch_property_documenter(app: sphinx.application.Sphinx):
             logger.debug(
                 f"\033[35mMonkeyPatchPropertyDocumenter adding directive header for {self.object}\033[0m")
 
-            lines = self.get_doc()
-            if not lines:
-                return
+            property_type = self.property_type()
+            if property_type:
+                self.add_line('   :type: ' + property_type, sourcename)
 
-            sig_line = lines[0][0]
+        def property_type(self) -> str | None:
+            # nanobind exposes the getter signature as `def (self) -> T`. The same line also opens
+            # the docstring, but only for properties without a docstring of their own, so prefer
+            # the signature and keep the docstring as a fallback.
+            fget = getattr(self.object, 'fget', None)
+            nb_signature = getattr(fget, '__nb_signature__', None)
+            if nb_signature:
+                sig_line = nb_signature[0][0]
+            else:
+                lines = self.get_doc()
+                if not lines or not lines[0]:
+                    return None
+                sig_line = lines[0][0]
 
             # Example sig_line:
+            #   def (self) -> fastgpx.LatLong | None
             #   (self) -> fastgpx.LatLong | None
             #
             # We want to extract the return type:
-            match = re.match(r'^\(.*\)\s*->\s*(.*)$', sig_line)
-            if not match:
-                return
-
-            self.add_line('   :type: ' + match.group(1), sourcename)
+            match = re.match(r'^(?:def )?\(.*\)\s*->\s*(.*)$', sig_line)
+            return match.group(1) if match else None
 
     app.add_autodocumenter(MonkeyPatchPropertyDocumenter, override=True)
 
