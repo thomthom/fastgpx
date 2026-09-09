@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -21,7 +22,13 @@ class parse_error : public fastgpx_error
 {
 public:
   explicit parse_error(const std::string& message) : fastgpx_error(message) {}
-  parse_error(const std::string& message, std::string_view source_str, std::string_view sub_str);
+
+  // Composes a message that quotes `source_str` and marks `length` characters from `offset` with
+  // a caret line. The marker takes an index rather than a sub-view of `source_str`, because
+  // deriving one from a view that does not point into `source_str` would be undefined behaviour.
+  // An `offset` or `length` reaching past the end of `source_str` is clamped to it.
+  parse_error(const std::string& message, std::string_view source_str, std::size_t offset,
+              std::size_t length);
 };
 
 // Thrown when a function is given a value it cannot operate on, e.g. a non-finite or out-of-range

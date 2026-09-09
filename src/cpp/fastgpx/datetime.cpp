@@ -4,6 +4,7 @@
 #include <cctype>
 #include <cerrno>
 #include <charconv>
+#include <cstddef>
 #include <cstdint>
 #include <ctime>
 #include <format>
@@ -119,14 +120,13 @@ public:
     const auto remaining = static_cast<size_t>(std::distance(it_, std::end(input_)));
     if (remaining < num)
     {
-      const std::string_view view(it_, std::end(input_));
-      throw parse_error("not enough characters to extract", input_, view);
+      throw parse_error("not enough characters to extract", input_, offset(), remaining);
     }
     const auto it_end = std::next(it_, static_cast<std::ptrdiff_t>(num));
     const std::string_view view(it_, it_end);
     if (!std::ranges::all_of(view, [](unsigned char ch) { return std::isdigit(ch) != 0; }))
     {
-      throw parse_error("characters are not all digits", input_, view);
+      throw parse_error("characters are not all digits", input_, offset(), num);
     }
 
     const auto start = &(*it_);
@@ -135,7 +135,7 @@ public:
     const auto [_ptr, ec] = std::from_chars(start, end, out);
     if (ec == std::errc::invalid_argument || ec == std::errc::result_out_of_range)
     {
-      throw parse_error("unable to extract numeric value", input_, view);
+      throw parse_error("unable to extract numeric value", input_, offset(), num);
     }
     std::advance(it_, num);
     return ParsedValue<int>(out);
@@ -161,14 +161,19 @@ public:
     }
     if (*it_ != ch)
     {
-      std::string_view view(it_, std::next(it_));
       const auto message = std::format("unexpected character: {} (expected: {})", *it_, ch);
-      throw parse_error(message, input_, view);
+      throw parse_error(message, input_, offset(), 1);
     }
     std::advance(it_, 1);
   }
 
 private:
+  // Position of the read cursor within `input_`, for the caret line in parse errors.
+  std::size_t offset() const
+  {
+    return static_cast<std::size_t>(std::distance(std::begin(input_), it_));
+  }
+
   std::string_view input_;
   std::string_view::iterator it_;
 };
