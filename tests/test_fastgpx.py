@@ -280,6 +280,28 @@ class TestErrors:
         with pytest.raises(FileNotFoundError, match='not-a-real-path'):
             fastgpx.load('gpx/not-a-real-path/fake.gpx')
 
+    def test_load_directory_raises_os_error(self):
+        with pytest.raises(OSError):
+            fastgpx.load('gpx/test')
+
+    def test_load_nul_after_complete_document_raises_parse_error(self, tmp_path: Path):
+        # Same check as parse(): the prefix alone is a well-formed document, so the truncation
+        # would otherwise be silent. NUL padding is what a partially written file looks like.
+        doc = b'<gpx><trk><trkseg><trkpt lat="60" lon="10"/></trkseg></trk></gpx>'
+        path = tmp_path / 'padded.gpx'
+        path.write_bytes(doc + b'\x00' * 16)
+        with pytest.raises(fastgpx.ParseError, match='NUL byte'):
+            fastgpx.load(path)
+
+    def test_load_utf16_file(self, tmp_path: Path):
+        # UTF-16 has a NUL byte in every ASCII character; those are left to the XML parser's
+        # encoding detection rather than rejected.
+        doc = '<gpx><trk><trkseg><trkpt lat="60" lon="10"/></trkseg></trk></gpx>'
+        path = tmp_path / 'utf16.gpx'
+        path.write_bytes(doc.encode('utf-16'))
+        gpx = fastgpx.load(path)
+        assert len(gpx.tracks[0].segments[0].points) == 1
+
     def test_invalid_time_raises_parse_error_lazily(self):
         # Timestamps are parsed on demand, so the error surfaces from time_bounds(), not parse().
         gpx = fastgpx.parse('<gpx><trk><trkseg><trkpt lat="60" lon="10">'

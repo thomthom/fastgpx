@@ -1,4 +1,6 @@
+#include <chrono>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -283,6 +285,125 @@ TEST_CASE("Parse GPX with an embedded NUL byte", "[parse][simple]")
     REQUIRE(gpx.tracks.size() == 1);
     REQUIRE(gpx.tracks[0].segments.size() == 1);
     CHECK(gpx.tracks[0].segments[0].points.size() == 2);
+  }
+}
+
+namespace {
+
+// A file in a fresh temporary directory, removed with the directory when the test ends.
+class TempFile
+{
+public:
+  explicit TempFile(const std::string& bytes)
+      : dir_(std::filesystem::temp_directory_path() /
+             std::format("fastgpx-test-{}",
+                         std::chrono::steady_clock::now().time_since_epoch().count()))
+  {
+    std::filesystem::create_directories(dir_);
+    path_ = dir_ / "test.gpx";
+    std::ofstream file(path_, std::ios::binary);
+    file.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+  }
+
+  ~TempFile() { std::filesystem::remove_all(dir_); }
+
+  const std::filesystem::path& path() const { return path_; }
+
+private:
+  std::filesystem::path dir_;
+  std::filesystem::path path_;
+};
+
+// Encodes ASCII text as UTF-16 with the given byte order, preceded by the matching BOM.
+std::string ToUtf16(const std::string& ascii, bool little_endian)
+{
+  std::string out = little_endian ? "\xff\xfe" : "\xfe\xff";
+  out.reserve(2 + ascii.size() * 2);
+  for (const char ch : ascii)
+  {
+    if (little_endian)
+    {
+      out += ch;
+      out += '\0';
+    }
+    else
+    {
+      out += '\0';
+      out += ch;
+    }
+  }
+  return out;
+}
+
+} // namespace
+
+TEST_CASE("Load GPX file with an embedded NUL byte", "[parse][simple]")
+{
+  // Same check as ParseGpx: a NUL byte after a well-formed prefix used to load as the prefix
+  // alone, with no error. The exception is UTF-16 input, where NUL bytes are part of every
+  // character and pugixml converts the document.
+  const std::string doc =
+      "<gpx><trk><trkseg><trkpt lat=\"60.0\" lon=\"10.0\"/></trkseg></trk></gpx>";
+
+  SECTION("NUL after a complete document")
+  {
+    const TempFile file(doc + '\0' + doc);
+    REQUIRE_THROWS_AS(fastgpx::LoadGpx(file.path()), fastgpx::parse_error);
+  }
+
+  SECTION("NUL splitting an otherwise well-formed document")
+  {
+    std::string data = doc;
+    data.insert(doc.find("</trkseg>"), 1, '\0');
+    const TempFile file(data);
+    REQUIRE_THROWS_AS(fastgpx::LoadGpx(file.path()), fastgpx::parse_error);
+  }
+
+  SECTION("the same document without a NUL loads")
+  {
+    const TempFile file(doc);
+    const auto gpx = fastgpx::LoadGpx(file.path());
+    REQUIRE(gpx.tracks.size() == 1);
+    CHECK(gpx.tracks[0].segments[0].points.size() == 1);
+  }
+
+  SECTION("UTF-16 LE with BOM loads")
+  {
+    const TempFile file(ToUtf16(doc, true));
+    const auto gpx = fastgpx::LoadGpx(file.path());
+    REQUIRE(gpx.tracks.size() == 1);
+    CHECK(gpx.tracks[0].segments[0].points.size() == 1);
+  }
+
+  SECTION("UTF-16 BE with BOM loads")
+  {
+    const TempFile file(ToUtf16(doc, false));
+    const auto gpx = fastgpx::LoadGpx(file.path());
+    REQUIRE(gpx.tracks.size() == 1);
+    CHECK(gpx.tracks[0].segments[0].points.size() == 1);
+  }
+}
+
+TEST_CASE("Load empty and directory paths", "[parse][simple]")
+{
+  SECTION("empty file is a parse error, not a file error")
+  {
+    const TempFile file("");
+    REQUIRE_THROWS_AS(fastgpx::LoadGpx(file.path()), fastgpx::parse_error);
+  }
+
+  SECTION("directory is a file error that is not a missing file")
+  {
+    const TempFile file("");
+    try
+    {
+      fastgpx::LoadGpx(file.path().parent_path());
+      FAIL("expected file_error");
+    }
+    catch (const fastgpx::file_error& error)
+    {
+      CHECK(!error.not_found());
+    }
   }
 }
 

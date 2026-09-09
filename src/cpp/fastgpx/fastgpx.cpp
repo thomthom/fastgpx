@@ -7,14 +7,18 @@
 #include <cerrno>
 #include <charconv>
 #include <chrono>
+#include <cstddef>
+#include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <format>
+#include <memory>
 #include <numeric>
 #include <ranges>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 #include "fastgpx/datetime.hpp"
 #include "fastgpx/errors.hpp"
@@ -480,26 +484,84 @@ Gpx ReadGpxXml(const pugi::xml_node& doc)
   return gpx;
 }
 
+struct FileBuffer
+{
+  std::unique_ptr<char[]> data;
+  std::size_t size = 0;
+};
+
+// Reads the whole file into memory. pugixml's `load_file` does the same internally but never
+// exposes the bytes, which is what the NUL check in `LoadGpx` needs. The buffer is uninitialised
+// and sized exactly; `load_buffer_inplace` parses it without a copy, so peak memory is one file
+// buffer plus the DOM, as with `load_file`.
+FileBuffer ReadFile(const std::filesystem::path& path)
+{
+  const auto fail = [&path](const std::string& description, bool not_found) {
+    throw file_error(std::format("Failed to load GPX file: {} - {}", description, path.string()),
+                     not_found);
+  };
+
+  std::error_code ec;
+  const auto file_size = std::filesystem::file_size(path, ec);
+  if (ec)
+  {
+    fail(ec.message(), ec == std::errc::no_such_file_or_directory);
+  }
+  const auto size = static_cast<std::size_t>(file_size);
+
+#ifdef _WIN32
+  std::FILE* raw_file = nullptr;
+  if (_wfopen_s(&raw_file, path.c_str(), L"rb") != 0)
+  {
+    raw_file = nullptr;
+  }
+#else
+  std::FILE* raw_file = std::fopen(path.c_str(), "rb");
+#endif
+  if (!raw_file)
+  {
+    const auto error = std::error_code(errno, std::generic_category());
+    fail(error.message(), error == std::errc::no_such_file_or_directory);
+  }
+  const std::unique_ptr<std::FILE, int (*)(std::FILE*)> file(raw_file, &std::fclose);
+
+  FileBuffer buffer{.data = std::make_unique_for_overwrite<char[]>(size), .size = size};
+  if (std::fread(buffer.data.get(), 1, buffer.size, file.get()) != buffer.size)
+  {
+    fail("error reading file", false);
+  }
+  return buffer;
+}
+
 } // namespace
 
 Gpx LoadGpx(const std::filesystem::path& path)
 {
-  pugi::xml_document doc;
+  FileBuffer buffer = ReadFile(path);
+  const std::string_view data(buffer.data.get(), buffer.size);
 
-#ifdef _WIN32
-  pugi::xml_parse_result result = doc.load_file(path.wstring().c_str());
-#else
-  pugi::xml_parse_result result = doc.load_file(path.string().c_str());
-#endif
+  // Same check as in `ParseGpx`: pugixml stops at a NUL byte without reporting it, so a corrupted
+  // or partially written file would load as a truncated document. The exception is a UTF-16 or
+  // UTF-32 file, where NUL bytes are part of every character. pugixml detects those from the BOM
+  // or the first character, and every such signature has a NUL within the first four bytes (see
+  // `guess_buffer_encoding`), so a NUL that early is left to pugixml's encoding detection. Any
+  // later NUL means the file is 8-bit and the byte is not valid XML.
+  if (const auto nul = data.find('\0'); nul != std::string_view::npos && nul >= 4)
+  {
+    throw parse_error(
+        std::format("Failed to load GPX file: NUL byte at offset {} is not valid XML - {}", nul,
+                    path.string()));
+  }
+
+  // `parse_default` and `encoding_auto` are what `load_file` used. The document refers into
+  // `buffer` until it is destroyed, so `buffer` outlives `ReadGpxXml`.
+  pugi::xml_document doc;
+  pugi::xml_parse_result result = doc.load_buffer_inplace(buffer.data.get(), buffer.size);
 
   if (!result)
   {
     const auto message =
         std::format("Failed to load GPX file: {} - {}", result.description(), path.string());
-    if (result.status == pugi::status_file_not_found || result.status == pugi::status_io_error)
-    {
-      throw file_error(message, result.status == pugi::status_file_not_found);
-    }
     throw parse_error(message);
   }
 
