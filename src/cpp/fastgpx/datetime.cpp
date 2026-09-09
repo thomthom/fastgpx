@@ -36,9 +36,8 @@ time_t make_utc_time(std::tm* tm)
 // - `_mkgmtime` (Windows) only supports 1970-01-01..3000-12-31 and returns -1 with `errno` set
 //   for anything else. Without the check the caller would silently get 1969-12-31T23:59:59Z.
 //   glibc's `timegm` sets `errno` to `EOVERFLOW` for values it cannot represent.
-std::chrono::system_clock::time_point to_system_clock_time(std::tm* tm,
-                                                           std::chrono::milliseconds adjustment,
-                                                           std::string_view time_str)
+std::chrono::system_clock::time_point to_system_clock_time(
+    std::tm* tm, std::chrono::system_clock::duration adjustment, std::string_view time_str)
 {
   using namespace std::chrono;
   using sys_duration = system_clock::duration;
@@ -63,15 +62,15 @@ std::chrono::system_clock::time_point to_system_clock_time(std::tm* tm,
   return system_clock::time_point(duration_cast<sys_duration>(since_epoch)) + adjustment;
 }
 
+// The two forms that dominate GPX files get a fixed-position fast path; see `parse_gpx_time`.
 enum Iso8601FormatLength
 {
-  DateTimeZulu = 20,                   // YYYY-MM-DDThh:mm:ssZ
-  DateTimeMilliSecondsZulu = 24,       // YYYY-MM-DDThh:mm:ss.sssZ
-  DateTimeTimeZone = 25,               // YYYY-MM-DDThh:mm:ss±hh:mm
-  DateTimeMilliSecondsTimeZone = 29,   // YYYY-MM-DDThh:mm:ss.sss±hh:mm
-  DateTimeNoTimezone = 19,             // YYYY-MM-DDThh:mm:ss
-  DateTimeMilliSecondsNoTimezone = 23, // YYYY-MM-DDThh:mm:ss.sss
+  DateTimeZulu = 20,             // YYYY-MM-DDThh:mm:ssZ
+  DateTimeMilliSecondsZulu = 24, // YYYY-MM-DDThh:mm:ss.sssZ
 };
+
+// Fractional seconds are kept to nanosecond precision; further digits are consumed and dropped.
+constexpr std::size_t kMaxFractionDigits = 9;
 
 template<typename T>
 class ParsedValue
@@ -150,6 +149,47 @@ public:
     char out = *it_;
     std::advance(it_, 1);
     return ParsedValue<char>(out);
+  }
+
+  // Consumes one or more digits after the fraction separator and returns them as a duration.
+  // xsd:dateTime puts no limit on the number of digits, so any beyond `kMaxFractionDigits` are
+  // consumed but do not contribute.
+  std::chrono::nanoseconds ExtractFraction()
+  {
+    std::int64_t value = 0;
+    std::size_t digits = 0;
+    while (it_ != std::end(input_) && std::isdigit(static_cast<unsigned char>(*it_)) != 0)
+    {
+      if (digits < kMaxFractionDigits)
+      {
+        value = value * 10 + (*it_ - '0');
+      }
+      ++digits;
+      std::advance(it_, 1);
+    }
+    if (digits == 0)
+    {
+      throw parse_error("expected fractional second digits", input_, offset(), 1);
+    }
+    for (auto scale = std::min(digits, kMaxFractionDigits); scale < kMaxFractionDigits; ++scale)
+    {
+      value *= 10;
+    }
+    return std::chrono::nanoseconds(value);
+  }
+
+  bool AtEnd() const { return it_ == std::end(input_); }
+
+  // The character at the read cursor, or NUL at the end of the string.
+  char Peek() const { return AtEnd() ? '\0' : *it_; }
+
+  void ExpectEnd()
+  {
+    if (!AtEnd())
+    {
+      const auto remaining = static_cast<std::size_t>(std::distance(it_, std::end(input_)));
+      throw parse_error("unexpected characters after the time", input_, offset(), remaining);
+    }
   }
 
   void Expect(char ch)
@@ -265,14 +305,15 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
   std::tm tm{};
   tm.tm_mday = 1; // Unlike the other members, this starts at 1.
 
-  std::chrono::milliseconds adjustment(0);
+  std::chrono::system_clock::duration adjustment(0);
 
   StringParser parser(time_str);
 
-  // Ordered by assumed likelihood.
-  switch (time_str.size())
-  {
-  case Iso8601FormatLength::DateTimeZulu:
+  // A string of one of the two Zulu lengths that ends in 'Z' can only be that form, so it takes
+  // the fixed-position path. Everything else goes through the general path, which accepts any
+  // number of fractional digits and an optional 'Z' or ±hh:mm offset.
+  const bool zulu = !time_str.empty() && time_str.back() == 'Z';
+  if (zulu && time_str.size() == Iso8601FormatLength::DateTimeZulu)
   {
     // YYYY-MM-DDThh:mm:ssZ
     // ^^^^^^^^^^^^^^^^^^^
@@ -281,9 +322,8 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
     // YYYY-MM-DDThh:mm:ssZ
     //                    ^
     parser.Expect('Z');
-    break;
   }
-  case Iso8601FormatLength::DateTimeMilliSecondsZulu:
+  else if (zulu && time_str.size() == Iso8601FormatLength::DateTimeMilliSecondsZulu)
   {
     // YYYY-MM-DDThh:mm:ss.sssZ
     // ^^^^^^^^^^^^^^^^^^^
@@ -301,64 +341,37 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
     // YYYY-MM-DDThh:mm:ss.sssZ
     //                        ^
     parser.Expect('Z');
-    break;
   }
-  case Iso8601FormatLength::DateTimeTimeZone:
+  else
   {
-    // YYYY-MM-DDThh:mm:ss±hh:mm
+    // YYYY-MM-DDThh:mm:ss[.s...][Z|±hh:mm]
     // ^^^^^^^^^^^^^^^^^^^
     ParseCommonDateAndTime(parser, tm);
 
-    // YYYY-MM-DDThh:mm:ss±hh:mm
-    //                    ^^^^^^
-    adjustment += ParseTimezone(parser);
-    break;
-  }
-  case Iso8601FormatLength::DateTimeMilliSecondsTimeZone:
-  {
-    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
-    // ^^^^^^^^^^^^^^^^^^^
-    ParseCommonDateAndTime(parser, tm);
+    // YYYY-MM-DDThh:mm:ss[.s...][Z|±hh:mm]
+    //                     ^^^^^
+    if (parser.Peek() == '.' || parser.Peek() == ',')
+    {
+      parser.ExtractChar();
+      // The fraction is truncated to the clock's resolution on its own. Truncating after the
+      // timezone offset is added would round towards zero on a negative sum, so digits below
+      // the resolution would round up instead of being dropped.
+      adjustment +=
+          std::chrono::duration_cast<std::chrono::system_clock::duration>(parser.ExtractFraction());
+    }
 
-    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
-    //                    ^
-    parser.ExtractChar().OneOf(',', '.');
-
-    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
-    //                     ^^^
-    const auto ms = parser.ExtractInt(3).value();
-    adjustment += std::chrono::milliseconds(ms);
-
-    // YYYY-MM-DDThh:mm:ss.sss±hh:mm
-    //                        ^^^^^^
-    adjustment += ParseTimezone(parser);
-    break;
-  }
-  case Iso8601FormatLength::DateTimeNoTimezone:
-  {
-    // YYYY-MM-DDThh:mm:ss
-    // ^^^^^^^^^^^^^^^^^^^
-    ParseCommonDateAndTime(parser, tm);
-    break;
-  }
-  case Iso8601FormatLength::DateTimeMilliSecondsNoTimezone:
-  {
-    // YYYY-MM-DDThh:mm:ss.sss
-    // ^^^^^^^^^^^^^^^^^^^
-    ParseCommonDateAndTime(parser, tm);
-
-    // YYYY-MM-DDThh:mm:ss.sss
-    //                    ^
-    parser.ExtractChar().OneOf(',', '.');
-
-    // YYYY-MM-DDThh:mm:ss.sss
-    //                     ^^^
-    const auto ms = parser.ExtractInt(3).value();
-    adjustment += std::chrono::milliseconds(ms);
-    break;
-  }
-  default:
-    throw parse_error("invalid or unexpected format");
+    // YYYY-MM-DDThh:mm:ss[.s...][Z|±hh:mm]
+    //                            ^^^^^^^^
+    // No designator at all is read as UTC, which is what GPX specifies for <time>.
+    if (parser.Peek() == 'Z')
+    {
+      parser.ExtractChar();
+    }
+    else if (!parser.AtEnd())
+    {
+      adjustment += ParseTimezone(parser);
+    }
+    parser.ExpectEnd();
   }
 
   return to_system_clock_time(&tm, adjustment, time_str);

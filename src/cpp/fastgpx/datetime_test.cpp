@@ -221,6 +221,63 @@ TEST_CASE("Parse GPX time missing timezone YYYY-MM-DDThh:mm:ss.sss", "[datetime]
   CHECK(actual_timestamp == expected_timestamp_ms);
 }
 
+TEST_CASE("Parse GPX time with any number of fractional digits", "[datetime][gpxtime]")
+{
+  // xsd:dateTime does not limit the fractional digits. One digit and seven digits both occur in
+  // gpxpy's test corpus (unicode_with_bom.gpx and Mojstrovka.gpx); .NET's round-trip format
+  // writes seven. Digits beyond nanoseconds are dropped, as are those beyond the clock's
+  // resolution.
+  using namespace std::chrono;
+  const auto base = system_clock::from_time_t(1731826452); // 2024-11-17T06:54:12Z
+
+  const auto [suffix, fraction] = GENERATE(table<std::string, nanoseconds>({
+      {".5Z", 500ms},
+      {".12Z", 120ms},
+      {".123Z", 123ms},
+      {".1234Z", 123400us},
+      {".123456Z", 123456us},
+      {".1234567Z", 123456700ns},
+      {".123456789Z", 123456789ns},
+      {".1234567891234Z", 123456789ns},
+      {",5Z", 500ms},
+      {".5", 500ms},
+      {".000000Z", 0ns},
+  }));
+  const std::string time_string = "2024-11-17T06:54:12" + suffix;
+  CAPTURE(time_string);
+
+  const auto expected = base + duration_cast<system_clock::duration>(fraction);
+  CHECK(fastgpx::parse_gpx_time(time_string) == expected);
+}
+
+TEST_CASE("Parse GPX time with fractional digits and a timezone offset", "[datetime][gpxtime]")
+{
+  using namespace std::chrono;
+  // 2024-11-17T06:54:12.5+01:30 is 2024-11-17T05:24:12.5Z
+  const auto expected =
+      system_clock::from_time_t(1731821052) + duration_cast<system_clock::duration>(500ms);
+  CHECK(fastgpx::parse_gpx_time("2024-11-17T06:54:12.5+01:30") == expected);
+  CHECK(fastgpx::parse_gpx_time("2024-11-17T06:54:12.500000+01:30") == expected);
+
+  // Digits below the clock's resolution are dropped regardless of the offset sign. With the
+  // fraction and offset truncated together, a positive offset would round this up to the next
+  // second on a 100 ns or microsecond clock.
+  const auto zulu = fastgpx::parse_gpx_time("2024-11-17T05:24:12.999999999Z");
+  CHECK(fastgpx::parse_gpx_time("2024-11-17T06:54:12.999999999+01:30") == zulu);
+  CHECK(fastgpx::parse_gpx_time("2024-11-17T03:54:12.999999999-01:30") == zulu);
+  CHECK(zulu < system_clock::from_time_t(1731821053));
+}
+
+TEST_CASE("Parse GPX time with malformed fraction or trailing characters", "[datetime][gpxtime]")
+{
+  const auto time_string =
+      GENERATE("2024-11-17T06:54:12.", "2024-11-17T06:54:12.Z", "2024-11-17T06:54:12.5X",
+               "2024-11-17T06:54:12.5Zx", "2024-11-17T06:54:12.5+01:00x", "2024-11-17T06:54:12Zx",
+               "2024-11-17T06:54:12.5.5Z", "2024-11-17T06:54:12 ");
+  CAPTURE(time_string);
+  REQUIRE_THROWS_AS(fastgpx::parse_gpx_time(time_string), fastgpx::parse_error);
+}
+
 TEST_CASE("Parse iso8601 invalid string", "[datetime][gpxtime]")
 {
   const std::string time_string = "hello";

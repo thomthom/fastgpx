@@ -317,6 +317,29 @@ class TestErrors:
         gpx = fastgpx.load(path)
         assert len(gpx.tracks[0].segments[0].points) == 1
 
+    @pytest.mark.parametrize('time, microsecond', [
+        ('2024-05-18T07:50:00.5Z', 500000),
+        ('2024-05-18T07:50:00.123456Z', 123456),
+        ('2024-05-18T07:50:00.1234567Z', 123456),
+    ])
+    def test_time_with_other_fraction_widths(self, time: str, microsecond: int):
+        # Three fractional digits is the norm, but the format allows any number: one digit and
+        # seven digits (.NET's round-trip format) both occur in gpxpy's test corpus.
+        gpx = fastgpx.parse('<gpx><trk><trkseg><trkpt lat="60" lon="10">'
+                            f'<time>{time}</time></trkpt></trkseg></trk></gpx>')
+        assert gpx.time_bounds().start_time == datetime.datetime(
+            2024, 5, 18, 7, 50, 0, microsecond, tzinfo=datetime.timezone.utc)
+
+    @pytest.mark.parametrize('time, message', [
+        ('2024-05-18T07:50:00.Z', 'expected fractional second digits'),
+        ('2024-05-18T07:50:00Zx', 'unexpected characters after the time'),
+    ])
+    def test_malformed_time_raises_parse_error(self, time: str, message: str):
+        gpx = fastgpx.parse('<gpx><trk><trkseg><trkpt lat="60" lon="10">'
+                            f'<time>{time}</time></trkpt></trkseg></trk></gpx>')
+        with pytest.raises(fastgpx.ParseError, match=message):
+            gpx.time_bounds()
+
     def test_invalid_time_raises_parse_error_lazily(self):
         # Timestamps are parsed on demand, so the error surfaces from time_bounds(), not parse().
         gpx = fastgpx.parse('<gpx><trk><trkseg><trkpt lat="60" lon="10">'
