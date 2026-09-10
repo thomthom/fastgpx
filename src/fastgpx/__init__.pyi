@@ -12,10 +12,16 @@ from fastgpx import geo as geo, polyline as polyline
 
 
 class Error(ValueError):
-    pass
+    """
+    Base class for everything fastgpx raises about its input. A ``ValueError``.
+    """
 
 class ParseError(Error):
-    pass
+    """
+    Malformed GPX data, polyline string or timestamp.
+
+    Timestamps are parsed on demand, so a malformed ``<time>`` raises from ``time_bounds()`` rather than from ``load()`` or ``parse()``.
+    """
 
 class TimeBounds:
     @overload
@@ -509,6 +515,8 @@ class Gpx:
 def load(path: str | bytes | os.PathLike[str] | os.PathLike[bytes]) -> Gpx:
     """
     Load and parse a GPX file.
+
+    A file that cannot be read raises ``FileNotFoundError`` or ``OSError``, as any file API would; malformed content raises :class:`ParseError`.
 
     Releases the GIL while parsing, so files can be loaded from several threads at once.
     """

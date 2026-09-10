@@ -278,7 +278,13 @@ NB_MODULE(fastgpx, m)
   // `value_error`) and `fastgpx.ParseError` for malformed GPX, polyline or timestamp data.
   // Translators are tried most-recently-registered first, so the base goes first.
   nb::exception<fastgpx_error> error_type(m, "Error", PyExc_ValueError);
-  nb::exception<parse_error>(m, "ParseError", error_type.ptr());
+  error_type.attr("__doc__") =
+      "Base class for everything fastgpx raises about its input. A ``ValueError``.";
+  nb::exception<parse_error> parse_error_type(m, "ParseError", error_type.ptr());
+  parse_error_type.attr("__doc__") =
+      "Malformed GPX data, polyline string or timestamp.\n\n"
+      "Timestamps are parsed on demand, so a malformed ``<time>`` raises from "
+      "``time_bounds()`` rather than from ``load()`` or ``parse()``.";
 
   // File access failures are `OSError`s in Python, not value errors.
   nb::register_exception_translator([](const std::exception_ptr& p, void*) {
@@ -646,6 +652,8 @@ NB_MODULE(fastgpx, m)
   m.def("load", &LoadGpx, "path"_a, nb::call_guard<nb::gil_scoped_release>(),
         nb::sig("def load(path: str | bytes | os.PathLike[str] | os.PathLike[bytes]) -> Gpx"),
         "Load and parse a GPX file.\n\n"
+        "A file that cannot be read raises ``FileNotFoundError`` or ``OSError``, as any file API "
+        "would; malformed content raises :class:`ParseError`.\n\n"
         "Releases the GIL while parsing, so files can be loaded from several threads at once.");
   m.def("parse", &ParseGpx, "data"_a, nb::call_guard<nb::gil_scoped_release>(),
         "Parse GPX data from a string.\n\n"
