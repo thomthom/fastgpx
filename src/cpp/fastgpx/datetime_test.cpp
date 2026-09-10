@@ -361,6 +361,77 @@ TEST_CASE("Parse GPX time normalises fields past the end of their range", "[date
   CHECK(format_iso8601(fastgpx::parse_gpx_time("2023-02-31T10:00:00Z")) == "2023-03-03T10:00:00Z");
 }
 
+TEST_CASE("Sortable GPX time", "[datetime][gpxtime]")
+{
+  SECTION("the two canonical Zulu forms are sortable")
+  {
+    CHECK(fastgpx::is_sortable_gpx_time("2024-05-18T07:50:01Z"));
+    CHECK(fastgpx::is_sortable_gpx_time("2024-05-18T07:50:01.123Z"));
+    CHECK(fastgpx::is_sortable_gpx_time("0000-01-01T00:00:00Z"));
+    CHECK(fastgpx::is_sortable_gpx_time("9999-12-31T23:59:59Z"));
+    CHECK(fastgpx::is_sortable_gpx_time("2024-02-29T00:00:00Z")); // Leap day.
+    CHECK(fastgpx::is_sortable_gpx_time("2024-04-30T00:00:00Z")); // Last day of a 30 day month.
+  }
+  SECTION("other lengths and forms are not")
+  {
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time(""));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-18T07:50:01"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-18T07:50:01.1Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-18T07:50:01+02:00"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-18t07:50:01Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-18T07:50:01z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024/05/18T07:50:01Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("20x4-05-18T07:50:01Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-18T07:50:01.x23Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-18T07:50:01.1x3Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-18T07:50:01.12xZ"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-18T07-50:01Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-18T07:50-01Z"));
+  }
+  SECTION("a comma separator orders by the separator instead of the fraction")
+  {
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-18T07:50:01,123Z"));
+  }
+  SECTION("fields that carry into the next unit are not sortable")
+  {
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-18T24:00:00Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-06-30T23:59:60Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-02-31T10:00:00Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2023-02-29T10:00:00Z")); // Not a leap year.
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-13-01T10:00:00Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-00-01T10:00:00Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-00T10:00:00Z"));
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-04-31T10:00:00Z")); // 30 day month.
+    CHECK_FALSE(fastgpx::is_sortable_gpx_time("2024-05-32T10:00:00Z")); // Past what a day can be.
+  }
+  SECTION("sortable strings of one length compare as the times they parse to")
+  {
+    const auto lhs =
+        GENERATE(as<std::string>{}, "2024-05-18T07:50:01Z", "2024-05-18T07:50:02Z",
+                 "2024-05-19T00:00:00Z", "2023-12-31T23:59:59Z", "2024-06-01T00:00:00Z");
+    const auto rhs =
+        GENERATE(as<std::string>{}, "2024-05-18T07:50:01Z", "2024-05-18T07:50:02Z",
+                 "2024-05-19T00:00:00Z", "2023-12-31T23:59:59Z", "2024-06-01T00:00:00Z");
+    CAPTURE(lhs, rhs);
+    REQUIRE(fastgpx::is_sortable_gpx_time(lhs));
+    REQUIRE(fastgpx::is_sortable_gpx_time(rhs));
+    CHECK((lhs < rhs) == (fastgpx::parse_gpx_time(lhs) < fastgpx::parse_gpx_time(rhs)));
+  }
+  SECTION("the fraction takes part in the ordering")
+  {
+    const auto lhs = GENERATE(as<std::string>{}, "2024-05-18T07:50:01.001Z",
+                              "2024-05-18T07:50:01.010Z", "2024-05-18T07:50:01.999Z",
+                              "2024-05-18T07:50:02.000Z", "2024-05-19T00:00:00.000Z");
+    const auto rhs = GENERATE(as<std::string>{}, "2024-05-18T07:50:01.001Z",
+                              "2024-05-18T07:50:01.010Z", "2024-05-18T07:50:01.999Z",
+                              "2024-05-18T07:50:02.000Z", "2024-05-19T00:00:00.000Z");
+    CAPTURE(lhs, rhs);
+    REQUIRE(fastgpx::is_sortable_gpx_time(lhs));
+    REQUIRE(fastgpx::is_sortable_gpx_time(rhs));
+    CHECK((lhs < rhs) == (fastgpx::parse_gpx_time(lhs) < fastgpx::parse_gpx_time(rhs)));
+  }
+}
+
 TEST_CASE("Parse GPX time outside a four digit year", "[datetime][gpxtime]")
 {
   // The year in the string is four digits, and `datetime.datetime` in the Python bindings only

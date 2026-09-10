@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <ratio>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -12,6 +13,7 @@
 #include <catch2/generators/catch_generators_range.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include "fastgpx/datetime.hpp"
 #include "fastgpx/errors.hpp"
 #include "fastgpx/fastgpx.hpp"
 #include "fastgpx/test_data.hpp"
@@ -201,6 +203,214 @@ TEST_CASE("Benchmark GPX Parsing", "[!benchmark][parse]")
   BENCHMARK("Connected_20240520_103549_Lagerbergsgatan_35_45131_Uddevalla_Sweden.gpx")
   {
     return fastgpx::LoadGpx(path2);
+  };
+}
+
+namespace {
+
+Segment MakeTimedSegment(const std::vector<std::string>& timestamps)
+{
+  Segment segment;
+  for (const auto& timestamp : timestamps)
+  {
+    LatLong point;
+    point.time = TimePoint(timestamp);
+    segment.points.push_back(point);
+  }
+  return segment;
+}
+
+// Compares `Segment::GetTimeBounds` against the bounds of every timestamp parsed one by one,
+// which is what the segment does when it cannot compare the strings.
+void CheckTimeBounds(const std::vector<std::string>& timestamps)
+{
+  CAPTURE(timestamps);
+
+  TimeBounds expected;
+  for (const auto& timestamp : timestamps)
+  {
+    expected.Add(parse_gpx_time(timestamp));
+  }
+
+  const auto segment = MakeTimedSegment(timestamps);
+  CHECK(segment.GetTimeBounds() == expected);
+}
+
+} // namespace
+
+TEST_CASE("Segment time bounds", "[timebounds]")
+{
+  // The bounds are found by comparing the unparsed strings when every timestamp is of one
+  // sortable form, and by parsing every point otherwise. Both paths must give the same answer.
+  // See #19.
+  SECTION("seconds only, out of order")
+  {
+    CheckTimeBounds({"2024-05-18T07:50:03Z", "2024-05-18T07:50:01Z", "2024-05-18T07:50:02Z"});
+  }
+  SECTION("the string comparison leaves the points it did not need alone")
+  {
+    // Nothing in the bounds themselves says which path ran, so this pins the observable
+    // difference: the fast path never asks a point for its parsed time, so every point still
+    // holds the string it was parsed from.
+    const auto segment =
+        MakeTimedSegment({"2024-05-18T07:50:01Z", "2024-05-18T07:50:02Z", "2024-05-18T07:50:03Z"});
+    (void)segment.GetTimeBounds();
+    for (const auto& point : segment.points)
+    {
+      CHECK(point.time->raw() != nullptr);
+    }
+  }
+  SECTION("the fallback parses every point")
+  {
+    // A timezone offset is not sortable, so this goes through `TimePoint::value()`, which
+    // replaces each string with the time point it parsed to.
+    const auto segment = MakeTimedSegment({"2024-05-18T09:50:01+02:00", "2024-05-18T07:50:02Z"});
+    (void)segment.GetTimeBounds();
+    for (const auto& point : segment.points)
+    {
+      CHECK(point.time->raw() == nullptr);
+    }
+  }
+  SECTION("milliseconds, out of order")
+  {
+    CheckTimeBounds(
+        {"2024-05-18T07:50:01.500Z", "2024-05-18T07:50:01.001Z", "2024-05-18T07:50:01.999Z"});
+  }
+  SECTION("a single timestamp")
+  {
+    CheckTimeBounds({"2024-05-18T07:50:01Z"});
+  }
+  SECTION("across a day boundary")
+  {
+    CheckTimeBounds({"2024-05-19T00:00:00Z", "2024-05-18T23:59:59Z", "2024-05-19T00:00:01Z"});
+  }
+  SECTION("mixed lengths")
+  {
+    // The 20 character string compares its 'Z' against the fraction separator of the others, so
+    // this has to fall back to parsing every point.
+    CheckTimeBounds({"2024-05-18T07:50:01.500Z", "2024-05-18T07:50:01Z", "2024-05-18T07:50:02Z"});
+  }
+  SECTION("mixed fraction separators")
+  {
+    CheckTimeBounds({"2024-05-18T07:50:01,900Z", "2024-05-18T07:50:01.100Z"});
+  }
+  SECTION("hour 24 carries into the next day")
+  {
+    // 24:30 is 00:30 the next day, which sorts before 00:15 as a string but after it in time.
+    CheckTimeBounds({"2024-05-18T24:30:00Z", "2024-05-19T00:15:00Z"});
+  }
+  SECTION("second 60 carries into the next minute")
+  {
+    CheckTimeBounds({"2024-05-18T07:50:60.500Z", "2024-05-18T07:51:00.400Z"});
+  }
+  SECTION("a day past the end of the month carries into the next one")
+  {
+    CheckTimeBounds({"2024-02-31T10:00:00Z", "2024-03-01T12:00:00Z"});
+  }
+  SECTION("timezone offsets")
+  {
+    CheckTimeBounds({"2024-05-18T09:50:01+02:00", "2024-05-18T07:50:02Z"});
+  }
+  SECTION("no timezone designator")
+  {
+    CheckTimeBounds({"2024-05-18T07:50:03", "2024-05-18T07:50:01"});
+  }
+  SECTION("points without a time are skipped")
+  {
+    Segment segment = MakeTimedSegment({"2024-05-18T07:50:03Z", "2024-05-18T07:50:01Z"});
+    segment.points.insert(segment.points.begin(), LatLong{});
+    segment.points.push_back(LatLong{});
+
+    const auto bounds = segment.GetTimeBounds();
+    REQUIRE(bounds.IsRange());
+    CHECK(*bounds.start_time == parse_gpx_time("2024-05-18T07:50:01Z"));
+    CHECK(*bounds.end_time == parse_gpx_time("2024-05-18T07:50:03Z"));
+  }
+  SECTION("a segment without any time is empty")
+  {
+    Segment segment;
+    segment.points.push_back(LatLong{});
+    CHECK(segment.GetTimeBounds().IsEmpty());
+  }
+  SECTION("an empty segment is empty")
+  {
+    const Segment segment;
+    CHECK(segment.GetTimeBounds().IsEmpty());
+  }
+  SECTION("timestamps that were already parsed")
+  {
+    // Reading `point.time->value()` replaces the string with the time point it parsed to, and
+    // there is then nothing left to compare.
+    const auto segment = MakeTimedSegment({"2024-05-18T07:50:03Z", "2024-05-18T07:50:01Z"});
+    (void)segment.points.front().time->value();
+
+    const auto bounds = segment.GetTimeBounds();
+    REQUIRE(bounds.IsRange());
+    CHECK(*bounds.start_time == parse_gpx_time("2024-05-18T07:50:01Z"));
+    CHECK(*bounds.end_time == parse_gpx_time("2024-05-18T07:50:03Z"));
+  }
+  SECTION("a malformed timestamp is still reported")
+  {
+    const auto segment =
+        MakeTimedSegment({"2024-05-18T07:50:01Z", "not a time", "2024-05-18T07:50:03Z"});
+    CHECK_THROWS_AS(segment.GetTimeBounds(), fastgpx::parse_error);
+  }
+  SECTION("a timestamp with an out of range field is still reported")
+  {
+    const auto segment =
+        MakeTimedSegment({"2024-05-18T07:50:01Z", "2024-13-01T07:50:02Z", "2024-05-18T07:50:03Z"});
+    CHECK_THROWS_AS(segment.GetTimeBounds(), fastgpx::parse_error);
+  }
+  SECTION("a year outside a four digit year is still reported")
+  {
+    const auto segment =
+        MakeTimedSegment({"2024-05-18T07:50:01Z", "0000-01-01T00:00:00Z", "2024-05-18T07:50:03Z"});
+    CHECK_THROWS_AS(segment.GetTimeBounds(), fastgpx::parse_error);
+  }
+  SECTION("a timestamp the platform cannot represent is still reported")
+  {
+    // The fast path only parses the earliest and the latest timestamp, which is why it can decide
+    // for the ones in between: anything between two representable times is representable itself.
+    // Here the earliest is the one out of range.
+    const auto segment = MakeTimedSegment({"2024-05-18T07:50:01Z", "1000-01-01T00:00:00Z"});
+    if constexpr (std::ratio_less_equal_v<std::chrono::system_clock::period, std::nano>)
+    {
+      CHECK_THROWS_AS(segment.GetTimeBounds(), fastgpx::parse_error);
+    }
+    else
+    {
+      const auto bounds = segment.GetTimeBounds();
+      REQUIRE(bounds.IsRange());
+      CHECK(*bounds.start_time == parse_gpx_time("1000-01-01T00:00:00Z"));
+    }
+  }
+}
+
+TEST_CASE("Benchmark time bounds", "[!benchmark][timebounds]")
+{
+  // `GetTimeBounds` caches its result, so every run needs a segment whose points have not been
+  // visited yet.
+  const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
+  const auto gpx = fastgpx::LoadGpx(path);
+
+  const Segment* largest = nullptr;
+  for (const auto& track : gpx.tracks)
+  {
+    for (const auto& segment : track.segments)
+    {
+      if (largest == nullptr || segment.points.size() > largest->points.size())
+      {
+        largest = &segment;
+      }
+    }
+  }
+  REQUIRE(largest != nullptr);
+  WARN("Segment points: " << largest->points.size());
+
+  BENCHMARK_ADVANCED("Segment::GetTimeBounds")(Catch::Benchmark::Chronometer meter)
+  {
+    std::vector<Segment> segments(static_cast<size_t>(meter.runs()), *largest);
+    meter.measure([&segments](int i) { return segments[static_cast<size_t>(i)].GetTimeBounds(); });
   };
 }
 

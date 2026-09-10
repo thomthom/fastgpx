@@ -32,4 +32,19 @@ namespace fastgpx {
  */
 std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str);
 
+/**
+ * @brief Reports whether the byte order of `time_str` matches its chronological order.
+ *
+ * True for `YYYY-MM-DDThh:mm:ssZ` and `YYYY-MM-DDThh:mm:ss.sssZ` when every field names a real
+ * calendar date and time. Two such strings compare the same way as the time points they parse
+ * to, as long as they are the same length; a 20 character string compares its `Z` against the
+ * fraction separator of a 24 character one, which is not the order of the times.
+ *
+ * `Segment::ComputeTimeBounds` uses this to pick the earliest and latest timestamp of a segment
+ * from the unparsed strings, so that only those two have to be parsed.
+ *
+ * @param time_str The ISO 8601 date-time string to inspect.
+ */
+bool is_sortable_gpx_time(std::string_view time_str);
+
 } // namespace fastgpx

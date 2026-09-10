@@ -41,6 +41,11 @@ std::chrono::system_clock::time_point TimePoint::value() const
   return std::get<std::chrono::system_clock::time_point>(data_);
 }
 
+const std::string* TimePoint::raw() const
+{
+  return std::get_if<std::string>(&data_);
+}
+
 // TimeBounds
 
 bool TimeBounds::IsEmpty() const
@@ -208,8 +213,73 @@ double Segment::ComputeLength3D() const
   return std::accumulate(distances.begin(), distances.end(), 0.0);
 }
 
+namespace {
+
+// Finds the earliest and latest timestamp of `points` by comparing the unparsed strings, so that
+// only those two have to be parsed instead of every one of them. See #19.
+//
+// Returns nullopt when the strings do not describe the order of the times they parse to: a
+// timestamp that `value()` has already replaced with a time point, a form that
+// `is_sortable_gpx_time` rejects, or a mix of the two Zulu lengths within one segment. The caller
+// then parses every point, which is also what reports a malformed timestamp the fast path would
+// otherwise skip over.
+std::optional<TimeBounds> ComputeTimeBoundsFromStrings(std::span<const LatLong> points)
+{
+  const std::string* earliest = nullptr;
+  const std::string* latest = nullptr;
+  for (const auto& point : points)
+  {
+    if (!point.time.has_value())
+    {
+      continue;
+    }
+    const std::string* time_string = point.time->raw();
+    if (time_string == nullptr || !is_sortable_gpx_time(*time_string))
+    {
+      return std::nullopt;
+    }
+    if (earliest == nullptr)
+    {
+      earliest = time_string;
+      latest = time_string;
+      continue;
+    }
+    // Every string is compared against `earliest`, which is only ever replaced by one of the same
+    // length, so this holds all of them to a single length.
+    if (time_string->size() != earliest->size())
+    {
+      return std::nullopt;
+    }
+    if (*time_string < *earliest)
+    {
+      earliest = time_string;
+    }
+    else if (*time_string > *latest)
+    {
+      latest = time_string;
+    }
+  }
+
+  TimeBounds computed_bounds;
+  if (earliest != nullptr)
+  {
+    // Anything between these two is within the range of `system_clock` if they both are, so
+    // parsing only the two still reports every timestamp the slow path would have rejected.
+    computed_bounds.Add(parse_gpx_time(*earliest));
+    computed_bounds.Add(parse_gpx_time(*latest));
+  }
+  return computed_bounds;
+}
+
+} // namespace
+
 TimeBounds Segment::ComputeTimeBounds() const
 {
+  if (const auto sorted_bounds = ComputeTimeBoundsFromStrings(points); sorted_bounds.has_value())
+  {
+    return *sorted_bounds;
+  }
+
   TimeBounds computed_bounds;
   for (const auto& point : points)
   {
