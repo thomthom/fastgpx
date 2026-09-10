@@ -152,6 +152,13 @@ class TestPolyline:
     def test_decode_empty(self):
         assert fastgpx.polyline.decode('') == []
 
+    def test_decode_returns_list(self):
+        # A decoded polyline is a fresh value, not a view into a document, so it is a plain list
+        # rather than a LatLongList.
+        decoded = fastgpx.polyline.decode('_p~iF~ps|U_ulLnnqC', precision=5)
+        assert type(decoded) is list
+        assert decoded == [fastgpx.LatLong(38.5, -120.2), fastgpx.LatLong(40.7, -120.95)]
+
     def test_decode_keyword_arguments(self):
         encoded = fastgpx.polyline.encode([fastgpx.LatLong(64, 10)], precision=6)
         decoded = fastgpx.polyline.decode(encoded=encoded, precision=6)

@@ -1,5 +1,7 @@
 import datetime
+import gc
 import locale
+from collections.abc import MutableSequence, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -251,6 +253,245 @@ class TestSegment:
         assert repr_str == "<fastgpx.Segment(points: 1326)>"
 
 
+class TestContainers:
+    # points, segments and tracks expose the C++ vectors directly instead of converting them to a
+    # list on every access. Points are returned as copies so that the mutating methods can
+    # never leave a dangling wrapper; segments and tracks are references and read-only.
+
+    def test_container_types(self, gpx_path: str):
+        gpx = fastgpx.load(gpx_path)
+        assert isinstance(gpx.tracks, fastgpx.TrackList)
+        assert isinstance(gpx.tracks[0].segments, fastgpx.SegmentList)
+        assert isinstance(gpx.tracks[0].segments[0].points, fastgpx.LatLongList)
+
+    def test_len_and_index(self, gpx_path: str):
+        points = fastgpx.load(gpx_path).tracks[0].segments[0].points
+        assert len(points) == 1326
+        assert points[-1] == points[len(points) - 1]
+        with pytest.raises(IndexError):
+            points[len(points)]
+        with pytest.raises(IndexError):
+            fastgpx.parse('<gpx/>').tracks[0]
+
+    def test_empty_document(self):
+        tracks = fastgpx.parse('<gpx/>').tracks
+        assert len(tracks) == 0
+        assert not tracks
+        assert list(tracks) == []
+
+    def test_append_modifies_segment(self):
+        segment = fastgpx.Segment()
+        segment.points.append(fastgpx.LatLong(60.0, 10.0))
+        segment.points.append(fastgpx.LatLong(60.1, 10.1))
+        assert len(segment.points) == 2
+        assert segment.length_2d() == pytest.approx(12431.7, abs=1.0)
+
+    def test_nested_append_is_visible_in_document(self):
+        gpx = fastgpx.parse('<gpx><trk><trkseg><trkpt lat="60" lon="10"/></trkseg></trk></gpx>')
+        gpx.tracks[0].segments[0].points.append(fastgpx.LatLong(60.1, 10.1))
+        assert len(gpx.tracks[0].segments[0].points) == 2
+
+    def test_elements_are_copies(self):
+        # Attribute assignment on an element changes a temporary, by design. Replacing the
+        # element is the way to change a point.
+        segment = fastgpx.Segment()
+        segment.points.append(fastgpx.LatLong(60.0, 10.0))
+        segment.points[0].latitude = 61.0
+        assert segment.points[0].latitude == 60.0
+        point = segment.points[0]
+        point.latitude = 61.0
+        segment.points[0] = point
+        assert segment.points[0].latitude == 61.0
+
+    def test_points_setter_accepts_sequence(self):
+        segment = fastgpx.Segment()
+        segment.points = [fastgpx.LatLong(60.0, 10.0), fastgpx.LatLong(60.1, 10.1)]
+        assert len(segment.points) == 2
+        segment.points = fastgpx.LatLongList([fastgpx.LatLong(60.0, 10.0)])
+        assert len(segment.points) == 1
+
+    def test_slice_and_list(self, gpx_path: str):
+        points = fastgpx.load(gpx_path).tracks[0].segments[0].points
+        first = points[:3]
+        assert isinstance(first, fastgpx.LatLongList)
+        assert list(first) == [points[0], points[1], points[2]]
+        assert isinstance(list(points), list)
+
+    def test_segments_and_tracks_are_read_only(self, gpx_path: str):
+        gpx = fastgpx.load(gpx_path)
+        with pytest.raises(AttributeError):
+            gpx.tracks = []  # type: ignore[misc]
+        with pytest.raises(AttributeError):
+            gpx.tracks[0].segments = []  # type: ignore[misc]
+        assert not hasattr(gpx.tracks, 'append')
+        assert not hasattr(gpx.tracks[0].segments, 'append')
+
+    def test_track_edits_are_visible_in_document(self, gpx_path: str):
+        gpx = fastgpx.load(gpx_path)
+        gpx.tracks[0].name = 'renamed'
+        assert gpx.tracks[0].name == 'renamed'
+        assert [track.name for track in gpx.tracks][0] == 'renamed'
+
+    def test_element_keeps_document_alive(self, gpx_path: str):
+        # The document is dropped as soon as the expression completes; the track and segment
+        # must keep it alive rather than refer into freed memory.
+        expected = fastgpx.load(gpx_path).length_2d()
+        track = fastgpx.load(gpx_path).tracks[0]
+        segment = fastgpx.load(gpx_path).tracks[0].segments[0]
+        for _ in range(3):
+            fastgpx.load(gpx_path)
+        gc.collect()
+        assert track.length_2d() == pytest.approx(expected, abs=METERS_TOL)
+        assert len(segment.points) == 1326
+
+    def test_iteration_over_document(self, gpx_path: str):
+        gpx = fastgpx.load(gpx_path)
+        count = sum(len(segment.points) for track in gpx.tracks for segment in track.segments)
+        assert count == sum(len(list(segment.points))
+                            for track in gpx.tracks for segment in track.segments)
+        assert count == 19962
+
+    def test_abc_registration(self, gpx_path: str):
+        gpx = fastgpx.load(gpx_path)
+        assert isinstance(gpx.tracks, Sequence)
+        assert isinstance(gpx.tracks[0].segments, Sequence)
+        assert isinstance(gpx.tracks[0].segments[0].points, MutableSequence)
+        assert not isinstance(gpx.tracks, MutableSequence)
+
+    def test_points_sequence_protocol(self):
+        a, b, c = fastgpx.LatLong(60.0, 10.0), fastgpx.LatLong(60.1, 10.1), fastgpx.LatLong(60.2, 10.2)
+        points = fastgpx.LatLongList([a, b, a])
+        assert b in points
+        assert c not in points
+        assert 'not a point' not in points
+        assert points.count(a) == 2
+        assert points.index(a) == 0
+        assert points.index(a, 1) == 2
+        with pytest.raises(ValueError):
+            points.index(c)
+        with pytest.raises(ValueError):
+            points.index(b, 2)
+        points += [c]
+        assert list(points) == [a, b, a, c]
+        points += points
+        assert len(points) == 8
+
+    def test_points_keyword_arguments(self):
+        # Generic MutableSequence code passes these by keyword.
+        a, b = fastgpx.LatLong(60.0, 10.0), fastgpx.LatLong(60.1, 10.1)
+        points = fastgpx.LatLongList([a, b, a])
+        assert points.count(value=a) == 2
+        assert points.index(value=b, start=0, stop=None) == 1
+        points.remove(value=a)
+        assert list(points) == [b, a]
+
+    def test_points_unhashable(self):
+        assert fastgpx.LatLongList([fastgpx.LatLong(60.0, 10.0)]) == \
+            fastgpx.LatLongList([fastgpx.LatLong(60.0, 10.0)])
+        with pytest.raises(TypeError):
+            hash(fastgpx.LatLongList())
+
+    def test_points_slice_is_independent(self):
+        segment = fastgpx.Segment()
+        segment.points.extend([fastgpx.LatLong(60.0, 10.0), fastgpx.LatLong(60.1, 10.1)])
+        head = segment.points[:1]
+        head.append(fastgpx.LatLong(60.2, 10.2))
+        assert len(head) == 2
+        assert len(segment.points) == 2
+
+    def test_points_foreign_values(self):
+        # A value that is not a point answers as it would for a list: absent, not a TypeError.
+        points = fastgpx.LatLongList([fastgpx.LatLong(60.0, 10.0)])
+        assert points.count('not a point') == 0
+        with pytest.raises(ValueError):
+            points.index('not a point')
+        with pytest.raises(ValueError):
+            points.remove('not a point')
+
+    def test_points_reverse(self):
+        a, b, c = fastgpx.LatLong(60.0, 10.0), fastgpx.LatLong(60.1, 10.1), fastgpx.LatLong(60.2, 10.2)
+        points = fastgpx.LatLongList([a, b, c])
+        assert list(reversed(points)) == [c, b, a]
+        points.reverse()
+        assert list(points) == [c, b, a]
+
+    def test_points_mutators_edit_segment(self):
+        a, b, c, d = (fastgpx.LatLong(60.0, 10.0), fastgpx.LatLong(60.1, 10.1),
+                      fastgpx.LatLong(60.2, 10.2), fastgpx.LatLong(60.3, 10.3))
+        segment = fastgpx.Segment()
+        segment.points.extend([a, b, c])
+        segment.points.insert(1, d)
+        assert list(segment.points) == [a, d, b, c]
+        assert segment.points.pop() == c
+        assert segment.points.pop(0) == a
+        assert list(segment.points) == [d, b]
+        segment.points.remove(d)
+        assert list(segment.points) == [b]
+        del segment.points[0]
+        assert len(segment.points) == 0
+        segment.points.extend([a, b, c, d])
+        segment.points[1:3] = [d, a]
+        assert list(segment.points) == [a, d, a, d]
+        del segment.points[::2]
+        assert list(segment.points) == [d, d]
+        segment.points.clear()
+        assert len(segment.points) == 0
+        assert segment.length_2d() == 0.0
+
+    def test_points_mutation_during_iteration(self):
+        # Resizing the vector while an iterator is alive must not read freed memory. Forward
+        # iteration reads the live vector by index, so appended points are visited and a cleared
+        # vector ends the loop. reversed() iterates a copy taken when it was called.
+        a, b = fastgpx.LatLong(60.0, 10.0), fastgpx.LatLong(60.1, 10.1)
+        points = fastgpx.LatLongList([a, b])
+        seen = []
+        for point in points:
+            seen.append(point)
+            if len(points) < 1000:
+                points.append(b)
+        assert len(seen) == 1000
+        forward = iter(points)
+        backward = reversed(points)
+        assert next(forward) == a
+        assert next(backward) == b
+        points.clear()
+        with pytest.raises(StopIteration):
+            next(forward)
+        assert next(backward) == b
+        assert list(backward)[-1] == a
+
+    def test_read_only_sequence_protocol(self, gpx_path: str):
+        # Segment and Track have no equality, so membership is by identity, as it would be for
+        # Python objects without __eq__.
+        gpx = fastgpx.load(gpx_path)
+        segments = gpx.tracks[0].segments
+        second = segments[1]
+        assert second in segments
+        assert fastgpx.Segment() not in segments
+        assert 'not a segment' not in segments
+        assert segments.count('not a segment') == 0
+        with pytest.raises(ValueError):
+            segments.index('not a segment')
+        assert segments.count(second) == 1
+        assert segments.index(second) == 1
+        assert segments.index(second, -8) == 1
+        with pytest.raises(ValueError):
+            segments.index(second, 2)
+        with pytest.raises(ValueError):
+            segments.index(fastgpx.Segment())
+        assert [len(s.points) for s in reversed(segments)] == \
+            [len(s.points) for s in segments][::-1]
+
+    def test_read_only_slice_is_list_of_document_objects(self, gpx_path: str):
+        segments = fastgpx.load(gpx_path).tracks[0].segments
+        tail = segments[-2:]
+        assert isinstance(tail, list)
+        assert len(tail) == 2
+        assert tail[1] is segments[-1]
+        assert segments[::3] == [segments[i] for i in range(0, len(segments), 3)]
+        assert segments[5:2] == []
+
+
 class TestErrors:
     # All fastgpx errors describe input the library cannot use, so they are ValueError
     # subclasses: fastgpx.Error is the base and fastgpx.ParseError covers malformed data.
@@ -289,7 +530,7 @@ class TestErrors:
             fastgpx.parse('<html><body/></html>')
 
     def test_parse_empty_gpx_root_is_empty_document(self):
-        assert fastgpx.parse('<gpx/>').tracks == []
+        assert len(fastgpx.parse('<gpx/>').tracks) == 0
 
     def test_load_missing_file_raises_file_not_found(self):
         with pytest.raises(FileNotFoundError, match='not-a-real-path'):

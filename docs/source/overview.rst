@@ -44,6 +44,26 @@ How to use
   decoded = fastgpx.polyline.decode(encoded, precision=6)
 
 
+Changing a point
+----------------
+
+Indexing or iterating ``segment.points`` gives copies of the points, and slicing it gives a new,
+independent list, so assigning to an attribute of a point does not change the segment. Assign
+the point back instead:
+
+.. code-block:: python
+  :caption: Moving the first point of a segment
+
+  import fastgpx
+
+  gpx = fastgpx.load("example.gpx")
+  segment = gpx.tracks[0].segments[0]
+
+  point = segment.points[0]
+  point.latitude = 60.0
+  segment.points[0] = point
+
+
 Errors
 ------
 
