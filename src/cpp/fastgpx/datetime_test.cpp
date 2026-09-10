@@ -1,5 +1,6 @@
 #include <chrono>
 #include <format>
+#include <ratio>
 #include <string>
 
 #include <catch2/benchmark/catch_benchmark.hpp>
@@ -302,28 +303,84 @@ TEST_CASE("Parse iso8601 invalid year", "[datetime][gpxtime]")
   REQUIRE_THROWS_AS(fastgpx::parse_gpx_time(time_string), fastgpx::parse_error);
 }
 
+// A nanosecond `system_clock` (libstdc++) reaches from roughly 1677 to 2262, which is narrower
+// than the four digit years `parse_gpx_time` accepts. Coarser ticks (100 ns on MSVC, microseconds
+// on libc++) cover every one of them, and there the four digit year is the only limit.
+constexpr bool nanosecond_system_clock =
+    std::ratio_less_equal_v<std::chrono::system_clock::period, std::nano>;
+
 TEST_CASE("Parse GPX time outside the representable range", "[datetime][gpxtime]")
 {
-  // Found by fuzzing (#48). `system_clock::from_time_t` overflows int64 nanoseconds on libstdc++
-  // for years outside roughly 1677..2262, and `_mkgmtime` on Windows only covers 1970..3000 and
-  // returns -1 otherwise. Both must surface as a parse_error rather than undefined behaviour or
-  // a silently wrong value.
+  // Found by fuzzing (#48). Converting the seconds since the epoch to `system_clock::duration`
+  // overflows int64 nanoseconds on libstdc++ for years outside roughly 1677..2262, which is
+  // undefined behaviour; it has to surface as a parse_error instead. On a clock with coarser
+  // ticks the same dates are representable and have to parse.
   SECTION("far future")
   {
     const std::string time_string = "9999-12-31T23:59:59Z";
-    REQUIRE_THROWS_AS(fastgpx::parse_gpx_time(time_string), fastgpx::parse_error);
+    if constexpr (nanosecond_system_clock)
+    {
+      REQUIRE_THROWS_AS(fastgpx::parse_gpx_time(time_string), fastgpx::parse_error);
+    }
+    else
+    {
+      CHECK(format_iso8601(fastgpx::parse_gpx_time(time_string)) == time_string);
+    }
   }
   SECTION("far past")
   {
     const std::string time_string = "0008-07-18T16:07:50.000";
-    REQUIRE_THROWS_AS(fastgpx::parse_gpx_time(time_string), fastgpx::parse_error);
+    if constexpr (nanosecond_system_clock)
+    {
+      REQUIRE_THROWS_AS(fastgpx::parse_gpx_time(time_string), fastgpx::parse_error);
+    }
+    else
+    {
+      CHECK(format_iso8601(fastgpx::parse_gpx_time(time_string)) == "0008-07-18T16:07:50Z");
+    }
   }
+}
+
+TEST_CASE("Parse GPX time before the Unix epoch", "[datetime][gpxtime]")
+{
+  // `_mkgmtime` rejected everything before 1970, so this used to throw on Windows and parse
+  // everywhere else. The civil arithmetic that replaced it has no such limit. See #19.
+  const std::string time_string = "1960-06-15T12:00:00Z";
+  const auto actual_time = fastgpx::parse_gpx_time(time_string);
+  CHECK(time_point_to_epoch(actual_time) == -301233600);
+  CHECK(format_iso8601(actual_time) == time_string);
+}
+
+TEST_CASE("Parse GPX time normalises fields past the end of their range", "[datetime][gpxtime]")
+{
+  // Hour 24, second 60 and a day past the end of the month all carry into the next unit, the
+  // same way `timegm` normalised them.
+  CHECK(format_iso8601(fastgpx::parse_gpx_time("2024-05-18T24:00:00Z")) == "2024-05-19T00:00:00Z");
+  CHECK(format_iso8601(fastgpx::parse_gpx_time("2024-06-30T23:59:60Z")) == "2024-07-01T00:00:00Z");
+  CHECK(format_iso8601(fastgpx::parse_gpx_time("2024-02-31T10:00:00Z")) == "2024-03-02T10:00:00Z");
+  CHECK(format_iso8601(fastgpx::parse_gpx_time("2023-02-31T10:00:00Z")) == "2023-03-03T10:00:00Z");
+}
+
+TEST_CASE("Parse GPX time outside a four digit year", "[datetime][gpxtime]")
+{
+  // The year in the string is four digits, and `datetime.datetime` in the Python bindings only
+  // holds years 1 through 9999. Year 0 and a timezone offset that carries either end past the
+  // boundary have to be rejected on every platform, not only on the ones whose `system_clock`
+  // happens to be too narrow for them. See #19.
+  //
+  // These are the same parse_error either way, so on a nanosecond `system_clock` the assertions
+  // hold through the narrower `system_clock` check instead; the four digit year check is only
+  // reachable on a clock that reaches further than year 9999.
+  CHECK_THROWS_AS(fastgpx::parse_gpx_time("0000-01-01T00:00:00Z"), fastgpx::parse_error);
+  CHECK_THROWS_AS(fastgpx::parse_gpx_time("0000-12-31T23:59:59Z"), fastgpx::parse_error);
+  CHECK_THROWS_AS(fastgpx::parse_gpx_time("0001-01-01T00:00:00+01:00"), fastgpx::parse_error);
+  CHECK_THROWS_AS(fastgpx::parse_gpx_time("9999-12-31T23:59:59-01:00"), fastgpx::parse_error);
 }
 
 TEST_CASE("Parse GPX time far future within range", "[datetime][gpxtime]")
 {
-  // 2200-12-31T23:59:59Z fits both a nanosecond system_clock (until 2262) and _mkgmtime (until
-  // 3000), so it must parse on every platform.
+  // 2200-12-31T23:59:59Z fits a nanosecond system_clock, which reaches until 2262, so it must
+  // parse on every platform.
   const std::string time_string = "2200-12-31T23:59:59Z";
   const std::time_t expected_timestamp = 7289654399;
   const auto expected_time = std::chrono::system_clock::from_time_t(expected_timestamp);

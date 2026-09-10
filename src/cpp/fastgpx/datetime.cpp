@@ -2,11 +2,10 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cerrno>
 #include <charconv>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <ctime>
 #include <format>
 #include <iterator>
 #include <string_view>
@@ -18,48 +17,76 @@
 namespace fastgpx {
 namespace {
 
-time_t make_utc_time(std::tm* tm)
+// The calendar fields of a timestamp as they are written in the string. `hour` may be 24 and
+// `second` may be 60, and `day` may be past the end of the month; the conversion below carries
+// each of those into the following day, minute or month.
+struct CivilTime
 {
-#ifdef _WIN32
-  return _mkgmtime(tm);
-#else
-  return timegm(tm);
-#endif
-}
+  int year = 0;
+  int month = 1;
+  int day = 1;
+  int hour = 0;
+  int minute = 0;
+  int second = 0;
+};
 
-// Converts broken-down UTC time plus a sub-second/timezone adjustment to a `system_clock`
-// time point, rejecting anything the platform cannot represent. Found by fuzzing (#48):
+// Converts a civil UTC time, a timezone offset and a sub-second fraction to a `system_clock`
+// time point, rejecting anything that cannot be represented.
 //
-// - `system_clock::from_time_t` converts seconds to `system_clock::duration`. On libstdc++ that
-//   is nanoseconds, so dates outside roughly 1677-09-21..2262-04-11 overflow `int64_t`, which is
-//   undefined behaviour. MSVC uses 100 ns ticks and covers a far wider range.
-// - `_mkgmtime` (Windows) only supports 1970-01-01..3000-12-31 and returns -1 with `errno` set
-//   for anything else. Without the check the caller would silently get 1969-12-31T23:59:59Z.
-//   glibc's `timegm` sets `errno` to `EOVERFLOW` for values it cannot represent.
-std::chrono::system_clock::time_point to_system_clock_time(
-    std::tm* tm, std::chrono::system_clock::duration adjustment, std::string_view time_str)
+// The date arithmetic is `std::chrono`'s rather than `timegm`/`_mkgmtime`, which cost a call
+// into the C runtime and, on Windows, rejected everything outside 1970..3000. See #19.
+// `sys_days` carries a day past the end of the month into the next month the way `timegm` did,
+// so 2008-02-31 still reads as 2008-03-02.
+//
+// Two range checks stand between the string and the result:
+//
+// - `system_clock::duration` is nanoseconds on libstdc++, so dates outside roughly
+//   1677-09-21..2262-04-11 overflow `int64_t`, which is undefined behaviour. Found by fuzzing
+//   (#48). Other implementations use coarser ticks and reach much further.
+// - The result has to stay within a four digit year, which is all the format can write and all
+//   that `datetime.datetime` in the Python bindings can hold. The year in the string is already
+//   [0, 9999], but year 0 is not a year and a timezone offset can push either end past the
+//   boundary.
+std::chrono::system_clock::time_point to_system_clock_time(const CivilTime& civil,
+                                                           std::chrono::minutes offset,
+                                                           std::chrono::nanoseconds fraction,
+                                                           std::string_view time_str)
 {
   using namespace std::chrono;
   using sys_duration = system_clock::duration;
 
-  errno = 0;
-  const time_t time = make_utc_time(tm);
-  if (time == time_t{-1} && errno != 0)
-  {
-    throw parse_error(std::format("time cannot be represented on this platform: \"{}\"", time_str));
-  }
+  // The parser has already restricted the fields to the ranges the conversion to `sys_days` is
+  // defined for: years [0, 9999], months [1, 12] and days [1, 31].
+  const year_month_day date(year(civil.year), month(static_cast<unsigned>(civil.month)),
+                            day(static_cast<unsigned>(civil.day)));
+  const auto days_since_epoch = static_cast<sys_days>(date).time_since_epoch();
+  const auto since_epoch = duration_cast<seconds>(days_since_epoch) + hours(civil.hour) +
+                           minutes(civil.minute) + seconds(civil.second) + offset;
 
-  // Leave room for the adjustment, which is at most one day plus a fraction of a second.
-  constexpr auto margin = days(2);
+  // The fraction is never negative and always less than a second, so it can only carry
+  // `since_epoch` one second forward.
+  constexpr auto margin = seconds(1);
   constexpr auto max_seconds = floor<seconds>(sys_duration::max()) - margin;
-  constexpr auto min_seconds = ceil<seconds>(sys_duration::min()) + margin;
-  const auto since_epoch = seconds(static_cast<std::int64_t>(time));
+  constexpr auto min_seconds = ceil<seconds>(sys_duration::min());
   if (since_epoch > max_seconds || since_epoch < min_seconds)
   {
     throw parse_error(std::format("time is outside the range of system_clock: \"{}\"", time_str));
   }
 
-  return system_clock::time_point(duration_cast<sys_duration>(since_epoch)) + adjustment;
+  constexpr auto first_year =
+      duration_cast<seconds>(sys_days(year(1) / January / 1).time_since_epoch());
+  constexpr auto after_last_year =
+      duration_cast<seconds>(sys_days(year(10000) / January / 1).time_since_epoch());
+  if (since_epoch < first_year || since_epoch >= after_last_year)
+  {
+    throw parse_error(std::format("time is outside a four digit year: \"{}\"", time_str));
+  }
+
+  // The fraction is truncated to the clock's resolution on its own. Truncating it together with
+  // a negative timezone offset would round the sum towards zero, so digits below the resolution
+  // would round up instead of being dropped.
+  return system_clock::time_point(duration_cast<sys_duration>(since_epoch)) +
+         duration_cast<sys_duration>(fraction);
 }
 
 // The two forms that dominate GPX files get a fixed-position fast path; see `parse_gpx_time`.
@@ -218,12 +245,11 @@ private:
   std::string_view::iterator it_;
 };
 
-void ParseCommonDateAndTime(StringParser& parser, std::tm& tm)
+void ParseCommonDateAndTime(StringParser& parser, CivilTime& civil)
 {
   // YYYY-MM-DDThh:mm:ssZ
   // ^^^^
-  // Adjust year to be relative to 1900.
-  tm.tm_year = parser.ExtractInt(4).InRange(0, 9999).value() - 1900;
+  civil.year = parser.ExtractInt(4).InRange(0, 9999).value();
 
   // YYYY-MM-DDThh:mm:ssZ
   //     ^
@@ -231,8 +257,7 @@ void ParseCommonDateAndTime(StringParser& parser, std::tm& tm)
 
   // YYYY-MM-DDThh:mm:ssZ
   //      ^^
-  // Adjust month to be zero-based.
-  tm.tm_mon = parser.ExtractInt(2).InRange(1, 12).value() - 1;
+  civil.month = parser.ExtractInt(2).InRange(1, 12).value();
 
   // YYYY-MM-DDThh:mm:ssZ
   //        ^
@@ -240,7 +265,7 @@ void ParseCommonDateAndTime(StringParser& parser, std::tm& tm)
 
   // YYYY-MM-DDThh:mm:ssZ
   //         ^^
-  tm.tm_mday = parser.ExtractInt(2).InRange(1, 31).value();
+  civil.day = parser.ExtractInt(2).InRange(1, 31).value();
 
   // YYYY-MM-DDThh:mm:ssZ
   //           ^
@@ -248,7 +273,7 @@ void ParseCommonDateAndTime(StringParser& parser, std::tm& tm)
 
   // YYYY-MM-DDThh:mm:ssZ
   //            ^^
-  tm.tm_hour = parser.ExtractInt(2).InRange(0, 24).value();
+  civil.hour = parser.ExtractInt(2).InRange(0, 24).value();
 
   // YYYY-MM-DDThh:mm:ssZ
   //              ^
@@ -256,7 +281,7 @@ void ParseCommonDateAndTime(StringParser& parser, std::tm& tm)
 
   // YYYY-MM-DDThh:mm:ssZ
   //               ^^
-  tm.tm_min = parser.ExtractInt(2).InRange(0, 59).value();
+  civil.minute = parser.ExtractInt(2).InRange(0, 59).value();
 
   // YYYY-MM-DDThh:mm:ssZ
   //                 ^
@@ -265,7 +290,7 @@ void ParseCommonDateAndTime(StringParser& parser, std::tm& tm)
   // YYYY-MM-DDThh:mm:ssZ
   //                  ^^
   // 60 is used to denote an added leap second.
-  tm.tm_sec = parser.ExtractInt(2).InRange(0, 60).value();
+  civil.second = parser.ExtractInt(2).InRange(0, 60).value();
 }
 
 std::chrono::minutes ParseTimezone(StringParser& parser)
@@ -298,14 +323,9 @@ std::chrono::minutes ParseTimezone(StringParser& parser)
 
 std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
 {
-  // https://en.cppreference.com/w/cpp/chrono/c/tm
-  // https://www.gnu.org/software/libc/manual/html_node/Broken_002ddown-Time.html
-  // https://man7.org/linux/man-pages/man3/tm.3type.html
-  // https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/localtime-s-localtime32-s-localtime64-s?view=msvc-170
-  std::tm tm{};
-  tm.tm_mday = 1; // Unlike the other members, this starts at 1.
-
-  std::chrono::system_clock::duration adjustment(0);
+  CivilTime civil;
+  std::chrono::minutes offset(0);
+  std::chrono::nanoseconds fraction(0);
 
   StringParser parser(time_str);
 
@@ -317,7 +337,7 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
   {
     // YYYY-MM-DDThh:mm:ssZ
     // ^^^^^^^^^^^^^^^^^^^
-    ParseCommonDateAndTime(parser, tm);
+    ParseCommonDateAndTime(parser, civil);
 
     // YYYY-MM-DDThh:mm:ssZ
     //                    ^
@@ -327,7 +347,7 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
   {
     // YYYY-MM-DDThh:mm:ss.sssZ
     // ^^^^^^^^^^^^^^^^^^^
-    ParseCommonDateAndTime(parser, tm);
+    ParseCommonDateAndTime(parser, civil);
 
     // YYYY-MM-DDThh:mm:ss.sssZ
     //                    ^
@@ -336,7 +356,7 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
     // YYYY-MM-DDThh:mm:ss.sssZ
     //                     ^^^
     const auto ms = parser.ExtractInt(3).value();
-    adjustment += std::chrono::milliseconds(ms);
+    fraction = std::chrono::milliseconds(ms);
 
     // YYYY-MM-DDThh:mm:ss.sssZ
     //                        ^
@@ -346,18 +366,14 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
   {
     // YYYY-MM-DDThh:mm:ss[.s...][Z|±hh:mm]
     // ^^^^^^^^^^^^^^^^^^^
-    ParseCommonDateAndTime(parser, tm);
+    ParseCommonDateAndTime(parser, civil);
 
     // YYYY-MM-DDThh:mm:ss[.s...][Z|±hh:mm]
     //                     ^^^^^
     if (parser.Peek() == '.' || parser.Peek() == ',')
     {
       parser.ExtractChar();
-      // The fraction is truncated to the clock's resolution on its own. Truncating after the
-      // timezone offset is added would round towards zero on a negative sum, so digits below
-      // the resolution would round up instead of being dropped.
-      adjustment +=
-          std::chrono::duration_cast<std::chrono::system_clock::duration>(parser.ExtractFraction());
+      fraction = parser.ExtractFraction();
     }
 
     // YYYY-MM-DDThh:mm:ss[.s...][Z|±hh:mm]
@@ -369,12 +385,12 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
     }
     else if (!parser.AtEnd())
     {
-      adjustment += ParseTimezone(parser);
+      offset = ParseTimezone(parser);
     }
     parser.ExpectEnd();
   }
 
-  return to_system_clock_time(&tm, adjustment, time_str);
+  return to_system_clock_time(civil, offset, fraction, time_str);
 }
 
 } // namespace fastgpx
