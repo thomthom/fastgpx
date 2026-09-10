@@ -20,7 +20,18 @@ public:
   TimePoint(std::string&& time_string) : data_(std::move(time_string)) {}
   TimePoint(const std::chrono::system_clock::time_point time_point) : data_(time_point) {}
 
-  auto operator<=>(const TimePoint&) const = default;
+  // Two time points are equal when they name the same instant, whether or not `value()` has
+  // already parsed either of them. A timestamp that cannot be parsed at all is equal only to the
+  // identical text, so comparing points from a file with a malformed <time> is still well defined
+  // and cannot throw. See #16.
+  //
+  // "Cannot be parsed" includes a date outside the range of `system_clock`, which is narrower on
+  // some platforms than the four digit years the format allows, so two spellings of one instant
+  // outside that range compare equal where the clock reaches them and unequal where it does not.
+  //
+  // There is deliberately no ordering. Comparing the raw text would order same-length Zulu
+  // strings correctly and nothing else, and nothing in the library orders time points.
+  bool operator==(const TimePoint& other) const;
 
   std::chrono::system_clock::time_point value() const;
 
@@ -56,7 +67,8 @@ struct LatLong
   double elevation = 0.0;
   std::optional<TimePoint> time = std::nullopt;
 
-  auto operator<=>(const LatLong&) const = default;
+  // Equality only: `time` has no ordering. See `TimePoint::operator==`.
+  bool operator==(const LatLong&) const = default;
 };
 
 struct Bounds
@@ -64,7 +76,7 @@ struct Bounds
   std::optional<LatLong> min = std::nullopt;
   std::optional<LatLong> max = std::nullopt;
 
-  auto operator<=>(const Bounds&) const = default;
+  bool operator==(const Bounds&) const = default;
 
   bool IsEmpty() const;
 

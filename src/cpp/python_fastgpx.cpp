@@ -19,6 +19,7 @@
 // container types below for every std::vector in this file. See the container section in
 // NB_MODULE.
 
+#include "fastgpx/datetime.hpp"
 #include "fastgpx/fastgpx.hpp"
 #include "fastgpx/geom.hpp"
 #include "fastgpx/errors.hpp"
@@ -73,6 +74,48 @@ std::string FormatTimePointAsISO8601(const std::optional<chrono_timepoint>& tp)
 }
 
 // Format as a python datetime string
+// `LatLong::time` holds a `TimePoint`, which has no nanobind caster: it is either the unparsed
+// `<time>` text or the instant it parses to. These convert between it and the optional datetime
+// the bindings expose.
+//
+// Reading parses on demand and lets a `parse_error` from a malformed `<time>` reach the caller,
+// which is the documented behaviour of the `time` property.
+std::optional<chrono_timepoint> ReadTimePoint(const std::optional<fastgpx::TimePoint>& time)
+{
+  if (!time.has_value())
+  {
+    return std::nullopt;
+  }
+  return time->value();
+}
+
+std::optional<fastgpx::TimePoint> MakeTimePoint(const std::optional<chrono_timepoint>& time)
+{
+  if (!time.has_value())
+  {
+    return std::nullopt;
+  }
+  return fastgpx::TimePoint(*time);
+}
+
+// Formats `LatLong::time` for `__repr__` and `__str__`, where raising would make a point with a
+// malformed `<time>` unprintable. `format_time` renders an instant; a timestamp the parser rejects
+// is rendered as its own text instead, which is more use than reporting it as absent.
+template<typename FORMAT>
+std::string FormatLatLongTime(const std::optional<fastgpx::TimePoint>& time, FORMAT format_time)
+{
+  if (!time.has_value())
+  {
+    return "None";
+  }
+  if (const std::string* text = time->raw(); text != nullptr)
+  {
+    const auto parsed = fastgpx::try_parse_gpx_time(*text);
+    return parsed.has_value() ? format_time(*parsed) : std::format("'{}'", *text);
+  }
+  return format_time(time->value());
+}
+
 std::string FormatTimePointAsDateTime(const chrono_timepoint& tp)
 {
   nb::object py = nb::cast(tp);
@@ -283,8 +326,9 @@ NB_MODULE(fastgpx, m)
   nb::exception<parse_error> parse_error_type(m, "ParseError", error_type.ptr());
   parse_error_type.attr("__doc__") =
       "Malformed GPX data, polyline string or timestamp.\n\n"
-      "Timestamps are parsed on demand, so a malformed ``<time>`` raises from "
-      "``time_bounds()`` rather than from ``load()`` or ``parse()``.";
+      "Timestamps are parsed on demand, so a malformed ``<time>`` raises from whatever first "
+      "reads it, either ``time_bounds()`` or :attr:`LatLong.time`, rather than from ``load()`` "
+      "or ``parse()``.";
 
   // File access failures are `OSError`s in Python, not value errors.
   nb::register_exception_translator([](const std::exception_ptr& p, void*) {
@@ -324,26 +368,49 @@ NB_MODULE(fastgpx, m)
 
   nb::class_<LatLong>(m, "LatLong")
       .def(nb::init<>())
-      .def(nb::init<double, double, double>(), "latitude"_a, "longitude"_a, "elevation"_a = 0.0)
+      .def(
+          "__init__",
+          [](LatLong* self, double latitude, double longitude, double elevation,
+             std::optional<chrono_timepoint> time) {
+            new (self) LatLong{latitude, longitude, elevation, MakeTimePoint(time)};
+          },
+          "latitude"_a, "longitude"_a, "elevation"_a = 0.0, "time"_a.none() = nb::none())
       .def_rw("latitude", &LatLong::latitude,
               "The latitude of the point. Decimal degrees, WGS84 datum.")
       .def_rw("longitude", &LatLong::longitude,
               "The longitude of the point. Decimal degrees, WGS84 datum.")
       .def_rw("elevation", &LatLong::elevation, "The elevation of the point in meters.")
-      // .def_rw("time", &LatLong::time,
-      //         "Creation/modification timestamp for element. Date and time in are in Univeral "
-      //         "Coordinated Time (UTC), not local time! Conforms to ISO 8601 specification for "
-      //         "date/time representation. Fractional seconds are allowed for millisecond timing "
-      //         "in tracklogs.")
+      .def_prop_rw(
+          "time", [](const LatLong& ll) { return ReadTimePoint(ll.time); },
+          [](LatLong& ll, std::optional<chrono_timepoint> time) { ll.time = MakeTimePoint(time); },
+          "time"_a.none(),
+          "Creation/modification timestamp for the point, or ``None`` when the ``<trkpt>`` has "
+          "no ``<time>``. Always UTC, not local time.\n"
+          "\n"
+          "The ``<time>`` text is read when the document is parsed and only converted to a "
+          ":class:`datetime.datetime` when this attribute is read, so a malformed timestamp "
+          "surfaces as :exc:`fastgpx.ParseError` here rather than from :func:`load` or "
+          ":func:`parse`.\n"
+          "\n"
+          ".. note::\n"
+          "\n"
+          "   Reading a point out of :attr:`Segment.points` copies it, so assigning to this "
+          "attribute of ``points[0]`` changes a temporary. Assign a whole point back to "
+          "``points[0]`` instead.\n")
       .def(nb::self == nb::self, nb::sig("def __eq__(self, arg: object, /) -> bool"))
       .def("__repr__",
            [](const LatLong& ll) {
-             return std::format("fastgpx.LatLong(latitude={}, longitude={}, elevation={})",
-                                ll.latitude, ll.longitude, ll.elevation);
+             const auto time = FormatLatLongTime(
+                 ll.time, [](const chrono_timepoint& tp) { return FormatTimePointAsDateTime(tp); });
+             return std::format("fastgpx.LatLong(latitude={}, longitude={}, elevation={}, time={})",
+                                ll.latitude, ll.longitude, ll.elevation, time);
            })
       .def("__str__",
            [](const LatLong& ll) {
-             return std::format("LatLong({}, {}, {})", ll.latitude, ll.longitude, ll.elevation);
+             const auto time = FormatLatLongTime(
+                 ll.time, [](const chrono_timepoint& tp) { return FormatTimePointAsISO8601(tp); });
+             return std::format("LatLong({}, {}, {}, {})", ll.latitude, ll.longitude, ll.elevation,
+                                time);
            })
       .doc() = "Represent ``<trkpt>`` data in GPX files.";
 

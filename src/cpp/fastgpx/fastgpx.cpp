@@ -46,6 +46,28 @@ const std::string* TimePoint::raw() const
   return std::get_if<std::string>(&data_);
 }
 
+bool TimePoint::operator==(const TimePoint& other) const
+{
+  const std::string* text = raw();
+  const std::string* other_text = other.raw();
+
+  // Identical text names the same instant. This is the common case, two points read from the same
+  // document that nothing has asked the time of yet, and it needs no parsing at all.
+  if (text != nullptr && other_text != nullptr && *text == *other_text)
+  {
+    return true;
+  }
+
+  // Otherwise compare the instants. This goes through `try_parse_gpx_time` rather than `value()`
+  // for two reasons: a timestamp the parser rejects must not make a comparison throw, and a
+  // comparison should not write the parsed value back into the point, which would make comparing
+  // the same point from two threads a data race.
+  const auto time = (text != nullptr) ? try_parse_gpx_time(*text) : std::optional(value());
+  const auto other_time =
+      (other_text != nullptr) ? try_parse_gpx_time(*other_text) : std::optional(other.value());
+  return time.has_value() && other_time.has_value() && *time == *other_time;
+}
+
 // TimeBounds
 
 bool TimeBounds::IsEmpty() const
@@ -101,6 +123,12 @@ bool Bounds::IsEmpty() const
 
 void Bounds::Add(const LatLong& location)
 {
+  // A corner of a bounding box is a place, not one of the points that produced it, so it gets the
+  // coordinates and not the timestamp. Seeding it with the whole point used to leave the first
+  // point's <time> on the corner, which made `min.time` an arbitrary timestamp and made comparing
+  // a parsed `Bounds` to a constructed one fail.
+  const LatLong corner{location.latitude, location.longitude, location.elevation};
+
   // TODO: compare all values? In case min/max is not initialized correctly.
   if (min.has_value())
   {
@@ -109,7 +137,7 @@ void Bounds::Add(const LatLong& location)
   }
   else
   {
-    min = location;
+    min = corner;
   }
 
   if (max.has_value())
@@ -119,7 +147,7 @@ void Bounds::Add(const LatLong& location)
   }
   else
   {
-    max = location;
+    max = corner;
   }
 }
 
