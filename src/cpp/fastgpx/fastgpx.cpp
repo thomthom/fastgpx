@@ -605,14 +605,14 @@ Gpx LoadGpx(const std::filesystem::path& path)
   return ReadGpxXml(doc);
 }
 
-Gpx ParseGpx(const std::string& data)
+Gpx ParseGpx(std::string_view data)
 {
   // U+0000 is excluded from the XML `Char` production, so a NUL byte anywhere makes the document
   // ill-formed. pugixml does not report it: it zero-terminates its own copy of the buffer and uses
   // NUL as the parser's end sentinel, so an embedded NUL is indistinguishable from end of input
   // and everything after it is dropped. Passing the explicit length does not help. Reject it here
   // instead, so that a truncated or corrupted document fails rather than parsing as a short one.
-  if (const auto nul = data.find('\0'); nul != std::string::npos)
+  if (const auto nul = data.find('\0'); nul != std::string_view::npos)
   {
     const auto message =
         std::format("Failed to parse GPX data: NUL byte at offset {} is not valid XML", nul);

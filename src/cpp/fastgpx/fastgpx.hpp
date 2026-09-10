@@ -6,6 +6,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -148,6 +149,6 @@ private:
 
 Gpx LoadGpx(const std::filesystem::path& path);
 
-Gpx ParseGpx(const std::string& path);
+Gpx ParseGpx(std::string_view data);
 
 } // namespace fastgpx
