@@ -89,6 +89,23 @@ std::chrono::system_clock::time_point to_system_clock_time(const CivilTime& civi
          duration_cast<sys_duration>(fraction);
 }
 
+// Reads `count` decimal digits starting at `offset`, or -1 if any of them is not a digit.
+// `offset + count` must be within `time_str`.
+int ReadDigits(std::string_view time_str, std::size_t offset, std::size_t count)
+{
+  int value = 0;
+  for (std::size_t i = 0; i < count; ++i)
+  {
+    const auto ch = static_cast<unsigned char>(time_str[offset + i]);
+    if (ch < '0' || ch > '9')
+    {
+      return -1;
+    }
+    value = (value * 10) + (ch - '0');
+  }
+  return value;
+}
+
 // The two forms that dominate GPX files get a fixed-position fast path; see `parse_gpx_time`.
 enum Iso8601FormatLength
 {
@@ -391,6 +408,57 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
   }
 
   return to_system_clock_time(civil, offset, fraction, time_str);
+}
+
+bool is_sortable_gpx_time(std::string_view time_str)
+{
+  const auto size = time_str.size();
+  const bool has_fraction = (size == Iso8601FormatLength::DateTimeMilliSecondsZulu);
+  if (size != Iso8601FormatLength::DateTimeZulu && !has_fraction)
+  {
+    return false;
+  }
+
+  // YYYY-MM-DDThh:mm:ss[.sss]Z
+  //     ^  ^  ^  ^  ^      ^ ^
+  if (time_str[4] != '-' || time_str[7] != '-' || time_str[10] != 'T' || time_str[13] != ':' ||
+      time_str[16] != ':' || time_str.back() != 'Z')
+  {
+    return false;
+  }
+  if (has_fraction)
+  {
+    // `parse_gpx_time` also accepts ',' as the separator. Two strings that differ only there
+    // would be ordered by the separator rather than by the fraction, so only '.' is sortable.
+    if (time_str[19] != '.' || ReadDigits(time_str, 20, 3) < 0)
+    {
+      return false;
+    }
+  }
+
+  const auto year = ReadDigits(time_str, 0, 4);
+  const auto month = ReadDigits(time_str, 5, 2);
+  const auto day = ReadDigits(time_str, 8, 2);
+  const auto hour = ReadDigits(time_str, 11, 2);
+  const auto minute = ReadDigits(time_str, 14, 2);
+  const auto second = ReadDigits(time_str, 17, 2);
+  if (year < 0 || month < 0 || day < 0 || hour < 0 || minute < 0 || second < 0)
+  {
+    return false;
+  }
+
+  // `parse_gpx_time` accepts hour 24 and second 60, which name a time in the following day or
+  // minute. Both sort before strings that are chronologically earlier, so they are not sortable.
+  if (hour > 23 || minute > 59 || second > 59)
+  {
+    return false;
+  }
+
+  // A day past the end of its month carries into the next month, with the same problem.
+  const std::chrono::year_month_day date(std::chrono::year(year),
+                                         std::chrono::month(static_cast<unsigned>(month)),
+                                         std::chrono::day(static_cast<unsigned>(day)));
+  return date.ok();
 }
 
 } // namespace fastgpx

@@ -24,6 +24,12 @@ public:
 
   std::chrono::system_clock::time_point value() const;
 
+  // The unparsed source string, or nullptr once `value()` has replaced it with the time point it
+  // parsed to. `Segment::ComputeTimeBounds` reads it to compare timestamps without parsing them.
+  // A later `value()` call on the same TimePoint destroys the string, so the pointer must not
+  // outlive it.
+  const std::string* raw() const;
+
 private:
   mutable std::variant<std::string, std::chrono::system_clock::time_point> data_;
 };

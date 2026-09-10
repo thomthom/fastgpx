@@ -1,4 +1,6 @@
-# libFuzzer dictionary for fuzz_datetime: ISO 8601 fragments.
+# libFuzzer dictionary for fuzz_datetime: ISO 8601 fragments. A NUL byte splits the input into
+# two timestamps whose order is checked against the order of the times they parse to.
+"\x00"
 "T"
 "Z"
 "z"
