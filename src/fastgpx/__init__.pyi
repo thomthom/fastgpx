@@ -20,7 +20,7 @@ class ParseError(Error):
     """
     Malformed GPX data, polyline string or timestamp.
 
-    Timestamps are parsed on demand, so a malformed ``<time>`` raises from ``time_bounds()`` rather than from ``load()`` or ``parse()``.
+    Timestamps are parsed on demand, so a malformed ``<time>`` raises from whatever first reads it, either ``time_bounds()`` or :attr:`LatLong.time`, rather than from ``load()`` or ``parse()``.
     """
 
 class TimeBounds:
@@ -65,7 +65,7 @@ class LatLong:
     def __init__(self) -> None: ...
 
     @overload
-    def __init__(self, latitude: float, longitude: float, elevation: float = 0.0) -> None: ...
+    def __init__(self, latitude: float, longitude: float, elevation: float = 0.0, time: datetime.datetime | datetime.date | datetime.time | None = None) -> None: ...
 
     @property
     def latitude(self) -> float:
@@ -87,6 +87,21 @@ class LatLong:
 
     @elevation.setter
     def elevation(self, arg: float, /) -> None: ...
+
+    @property
+    def time(self) -> datetime.datetime | None:
+        """
+        Creation/modification timestamp for the point, or ``None`` when the ``<trkpt>`` has no ``<time>``. Always UTC, not local time.
+
+        The ``<time>`` text is read when the document is parsed and only converted to a :class:`datetime.datetime` when this attribute is read, so a malformed timestamp surfaces as :exc:`fastgpx.ParseError` here rather than from :func:`load` or :func:`parse`.
+
+        .. note::
+
+           Reading a point out of :attr:`Segment.points` copies it, so assigning to this attribute of ``points[0]`` changes a temporary. Assign a whole point back to ``points[0]`` instead.
+        """
+
+    @time.setter
+    def time(self, time: datetime.datetime | datetime.date | datetime.time | None) -> None: ...
 
     def __eq__(self, arg: object, /) -> bool: ...
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <optional>
 #include <string_view>
 
 namespace fastgpx {
@@ -31,6 +32,17 @@ namespace fastgpx {
  * @param time_str The ISO 8601 date-time string to parse.
  */
 std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str);
+
+/**
+ * @brief Parses `time_str` the way `parse_gpx_time` does, returning nullopt instead of throwing.
+ *
+ * For callers that have to do something sensible with a timestamp they cannot read, rather than
+ * report it. `TimePoint::operator==` uses it so that comparing two points from a file with a
+ * malformed `<time>` is still well defined.
+ *
+ * @param time_str The ISO 8601 date-time string to parse.
+ */
+std::optional<std::chrono::system_clock::time_point> try_parse_gpx_time(std::string_view time_str);
 
 /**
  * @brief Reports whether the byte order of `time_str` matches its chronological order.

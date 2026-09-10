@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <format>
 #include <iterator>
+#include <optional>
 #include <string_view>
 #include <system_error>
 #include <type_traits>
@@ -408,6 +409,18 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str)
   }
 
   return to_system_clock_time(civil, offset, fraction, time_str);
+}
+
+std::optional<std::chrono::system_clock::time_point> try_parse_gpx_time(std::string_view time_str)
+{
+  try
+  {
+    return parse_gpx_time(time_str);
+  }
+  catch (const parse_error&)
+  {
+    return std::nullopt;
+  }
 }
 
 bool is_sortable_gpx_time(std::string_view time_str)

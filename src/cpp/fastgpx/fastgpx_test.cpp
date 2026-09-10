@@ -238,6 +238,127 @@ void CheckTimeBounds(const std::vector<std::string>& timestamps)
 
 } // namespace
 
+TEST_CASE("TimePoint equality", "[timepoint]")
+{
+  // A `TimePoint` holds either the unparsed <time> text or the instant it parses to, and the two
+  // states have to compare the same. See #16.
+  const auto instant = parse_gpx_time("2024-05-18T07:50:01Z");
+
+  SECTION("identical text")
+  {
+    CHECK(TimePoint("2024-05-18T07:50:01Z") == TimePoint("2024-05-18T07:50:01Z"));
+    CHECK_FALSE(TimePoint("2024-05-18T07:50:01Z") == TimePoint("2024-05-18T07:50:02Z"));
+  }
+  SECTION("text against the instant it parses to")
+  {
+    CHECK(TimePoint("2024-05-18T07:50:01Z") == TimePoint(instant));
+    CHECK(TimePoint(instant) == TimePoint("2024-05-18T07:50:01Z"));
+  }
+  SECTION("equality is transitive across all three states")
+  {
+    const TimePoint zulu("2024-05-18T07:50:01Z");
+    const TimePoint offset("2024-05-18T09:50:01+02:00");
+    const TimePoint parsed(instant);
+    const TimePoint unparseable("not a time");
+
+    CHECK(zulu == offset);
+    CHECK(offset == parsed);
+    CHECK(zulu == parsed);
+
+    CHECK_FALSE(unparseable == zulu);
+    CHECK_FALSE(unparseable == offset);
+    CHECK_FALSE(unparseable == parsed);
+    // The instant on the left takes the branch that reads the stored time point rather than
+    // parsing, which must not throw for a right hand side that will not parse.
+    CHECK_FALSE(parsed == unparseable);
+  }
+  SECTION("an empty timestamp")
+  {
+    // `<time></time>` produces this.
+    CHECK(TimePoint("") == TimePoint(""));
+    CHECK_FALSE(TimePoint("") == TimePoint("2024-05-18T07:50:01Z"));
+    CHECK_FALSE(TimePoint("") == TimePoint(instant));
+  }
+  SECTION("the same instant written differently")
+  {
+    CHECK(TimePoint("2024-05-18T07:50:01Z") == TimePoint("2024-05-18T07:50:01.000Z"));
+    CHECK(TimePoint("2024-05-18T07:50:01Z") == TimePoint("2024-05-18T09:50:01+02:00"));
+    CHECK(TimePoint("2024-05-18T07:50:01Z") == TimePoint("2024-05-18T07:50:01"));
+  }
+  SECTION("comparing does not parse the stored text")
+  {
+    // `value()` caches, comparison deliberately does not, so that comparing the same point from
+    // two threads is not a data race.
+    const TimePoint time_point("2024-05-18T07:50:01Z");
+    CHECK(time_point == TimePoint(instant));
+    CHECK(time_point.raw() != nullptr);
+  }
+  SECTION("a timestamp that cannot be parsed compares by its text")
+  {
+    CHECK(TimePoint("not a time") == TimePoint("not a time"));
+    CHECK_FALSE(TimePoint("not a time") == TimePoint("also not a time"));
+    CHECK_FALSE(TimePoint("not a time") == TimePoint(instant));
+    CHECK_FALSE(TimePoint("not a time") == TimePoint("2024-05-18T07:50:01Z"));
+  }
+  SECTION("a timestamp outside the representable range compares by its text")
+  {
+    // Year 0 is rejected on every platform, so neither side has an instant to compare.
+    CHECK(TimePoint("0000-01-01T00:00:00Z") == TimePoint("0000-01-01T00:00:00Z"));
+    CHECK_FALSE(TimePoint("0000-01-01T00:00:00Z") == TimePoint("0000-01-02T00:00:00Z"));
+  }
+}
+
+TEST_CASE("LatLong equality", "[timepoint]")
+{
+  // `LatLong` compares its time along with its coordinates, so a point read from a document has to
+  // compare equal to one built with the same instant. See #16.
+  LatLong parsed{60.5, 10.5, 100.0, TimePoint(std::string("2024-05-18T07:50:01Z"))};
+  LatLong built{60.5, 10.5, 100.0, TimePoint(parse_gpx_time("2024-05-18T07:50:01Z"))};
+  CHECK(parsed == built);
+
+  built.time = TimePoint(parse_gpx_time("2024-05-18T07:50:02Z"));
+  CHECK(parsed != built);
+
+  built.time = std::nullopt;
+  CHECK(parsed != built);
+}
+
+TEST_CASE("Segment points compare equal after their times have been parsed", "[timepoint]")
+{
+  // The one route that converts the *stored* points rather than a copy: a segment whose timestamps
+  // `is_sortable_gpx_time` rejects falls back to reading every point's time. The points must still
+  // compare equal to ones carrying the same instants. See #16.
+  const auto segment = MakeTimedSegment({"2024-05-18T09:50:01+02:00", "2024-05-18T09:50:02+02:00"});
+  const auto expected =
+      MakeTimedSegment({"2024-05-18T09:50:01+02:00", "2024-05-18T09:50:02+02:00"});
+
+  (void)segment.GetTimeBounds();
+  REQUIRE(segment.points.front().time->raw() == nullptr);
+  REQUIRE(expected.points.front().time->raw() != nullptr);
+
+  CHECK(segment.points == expected.points);
+}
+
+TEST_CASE("Bounds equality", "[bounds]")
+{
+  // A corner of a bounding box carries no timestamp, so bounds computed from timed points compare
+  // equal to bounds built from the coordinates alone. See #16.
+  const auto segment = MakeTimedSegment({"2024-05-18T07:50:01Z", "2024-05-18T07:50:02Z"});
+  Segment placed = segment;
+  placed.points[0].latitude = 60.5;
+  placed.points[0].longitude = 10.5;
+  placed.points[1].latitude = 61.5;
+  placed.points[1].longitude = 11.5;
+
+  const auto bounds = placed.GetBounds();
+  REQUIRE(bounds.min.has_value());
+  CHECK_FALSE(bounds.min->time.has_value());
+  CHECK_FALSE(bounds.max->time.has_value());
+
+  const Bounds expected{LatLong{60.5, 10.5, 0.0}, LatLong{61.5, 11.5, 0.0}};
+  CHECK(bounds == expected);
+}
+
 TEST_CASE("Segment time bounds", "[timebounds]")
 {
   // The bounds are found by comparing the unparsed strings when every timestamp is of one
