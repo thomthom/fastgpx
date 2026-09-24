@@ -8,18 +8,25 @@ sizes. This runs every GPX file found under the given folders (duplicates by con
     uv run benchmarks/benchmark_corpus.py run DIR [DIR ...] -o after.json
     uv run benchmarks/benchmark_corpus.py compare before.json after.json
 
-`run` records, per file, the time bounds and 2D/3D length of every segment, and the best-of-N
+`run` records which fastgpx build, Python and machine produced the numbers, and per file its path,
+MD5, the time bounds and 2D/3D length of every segment, and the best-of-N
 time of `load()` and of `time_bounds()`, `length_2d()` and `length_3d()`. Those three cache their
-result, so each is timed on a freshly loaded document. `compare` reports files whose results or
-errors differ between the two runs, then the total and per-file speedup. Run each side more than
+result, so each is timed on a freshly loaded document. `compare` reports files found in only one run
+and files whose results or errors differ, then the total and per-file speedup over the files both
+runs share. Run each side more than
 once and alternate them; single runs are noisy.
 """
 import argparse
 import hashlib
+import importlib.metadata
 import json
 import math
+import platform
 import statistics
+import subprocess
+import sys
 import timeit
+from datetime import datetime, timezone
 from pathlib import Path
 
 import fastgpx
@@ -45,22 +52,77 @@ def find_gpx_files(folders: list[str]) -> dict[str, Path]:
     return files
 
 
+def run_info() -> dict:
+    """What produced a run: the fastgpx build, Python and machine.
+
+    fastgpx has no version or build attributes of its own, so the build is identified by the
+    package version, how it was installed, and the MD5 of the extension module that was loaded.
+    The repository commit is where the script ran from; for an editable install it is also what
+    was built, unless the extension is stale.
+    """
+    dist = importlib.metadata.distribution('fastgpx')
+    direct_url = dist.read_text('direct_url.json')
+    extension = Path(fastgpx.__file__)
+    repo = Path(__file__).resolve().parent.parent
+    try:
+        commit = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=repo, capture_output=True,
+                                text=True, check=True).stdout.strip()
+        dirty = bool(subprocess.run(['git', 'status', '--porcelain', '--untracked-files=no'],
+                                    cwd=repo, capture_output=True, text=True, check=True).stdout)
+    except (OSError, subprocess.CalledProcessError):
+        commit, dirty = None, None
+    return {
+        'fastgpx_version': dist.version,
+        'fastgpx_install': json.loads(direct_url) if direct_url else None,
+        'fastgpx_extension': str(extension),
+        'fastgpx_extension_md5': hashlib.md5(extension.read_bytes()).hexdigest(),
+        'repo_commit': commit,
+        'repo_dirty': dirty,
+        'python': sys.version,
+        'python_implementation': platform.python_implementation(),
+        'platform': platform.platform(),
+        'machine': platform.machine(),
+        'processor': platform.processor(),
+        'date': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+    }
+
+
+def print_run_info(label: str, info: dict | None) -> None:
+    if info is None:
+        print(f'{label}: no run information (output from before it was recorded)')
+        return
+    commit = (info['repo_commit'] or '?')[:10] + (' (dirty)' if info['repo_dirty'] else '')
+    print(f'{label}: fastgpx {info["fastgpx_version"]}, extension md5 '
+          f'{info["fastgpx_extension_md5"][:10]}, commit {commit}, '
+          f'Python {info["python"].split()[0]}, {info["platform"]} {info["machine"]}')
+
+
+def read_run(path: str) -> tuple[dict | None, dict]:
+    """Return (run information, rows by content hash). Older outputs are the bare rows."""
+    data = json.loads(Path(path).read_text(encoding='utf-8'))
+    if 'run_info' in data and 'files' in data:
+        return data['run_info'], data['files']
+    return None, data
+
+
 def describe(bounds: fastgpx.TimeBounds) -> list[str | None]:
     return [None if t is None else t.isoformat() for t in (bounds.start_time, bounds.end_time)]
 
 
 def measure(path: Path, repeats: int) -> dict:
+    md5 = hashlib.md5(path.read_bytes()).hexdigest()
     try:
         gpx = fastgpx.load(path)
         segments = [s for t in gpx.tracks for s in t.segments]
         row: dict = {
             'path': str(path),
+            'md5': md5,
             'points': sum(len(s.points) for s in segments),
             'segment_bounds': [describe(s.time_bounds()) for s in segments],
             'segment_lengths': [[s.length_2d(), s.length_3d()] for s in segments],
         }
     except fastgpx.Error as e:
-        return {'path': str(path), 'error': f'{type(e).__name__}: {e}'}
+        return {'path': str(path), 'md5': md5, 'error': f'{type(e).__name__}: {e}'}
 
     row['load_ms'] = min(timeit.repeat(lambda: fastgpx.load(path), number=1, repeat=repeats)) * 1e3
     for method in TIMED_METHODS:
@@ -77,15 +139,24 @@ def measure(path: Path, repeats: int) -> dict:
 def run(args: argparse.Namespace) -> None:
     files = find_gpx_files(args.folders)
     result = {digest: measure(path, args.repeats) for digest, path in files.items()}
-    Path(args.output).write_text(json.dumps(result, indent=1), encoding='utf-8')
+    output = {'run_info': run_info(), 'repeats': args.repeats, 'files': result}
+    Path(args.output).write_text(json.dumps(output, indent=1), encoding='utf-8')
     errors = sum('error' in row for row in result.values())
     print(f'{len(result)} unique files, {errors} failed to load, written to {args.output}')
 
 
 def compare(args: argparse.Namespace) -> None:
-    before = json.loads(Path(args.before).read_text(encoding='utf-8'))
-    after = json.loads(Path(args.after).read_text(encoding='utf-8'))
+    before_info, before = read_run(args.before)
+    after_info, after = read_run(args.after)
+    print_run_info('before', before_info)
+    print_run_info('after ', after_info)
     common = [d for d in before if d in after]
+    for label, run_rows, other in (('before', before, after), ('after', after, before)):
+        only = [d for d in run_rows if d not in other]
+        if only:
+            print(f'{len(only)} files only in the {label} run, left out of the comparison:')
+            for digest in only:
+                print(f'  {run_rows[digest]["path"]}')
 
     def differences(a: dict, b: dict) -> list[str]:
         if 'error' in a or 'error' in b:
@@ -111,7 +182,8 @@ def compare(args: argparse.Namespace) -> None:
 
     timed = [d for d in common if d not in changed and 'error' not in before[d]
              and before[d]['points'] >= MIN_POINTS_FOR_SPEEDUP]
-    print(f'\nSpeedup over the {len(timed)} files with at least {MIN_POINTS_FOR_SPEEDUP} points:')
+    print(f'\nSpeedup over the {len(timed)} files that are in both runs, give the same '
+          f'results and have at least {MIN_POINTS_FOR_SPEEDUP} points:')
     for key in ['load_ms'] + [f'{method}_ms' for method in TIMED_METHODS]:
         total_before = sum(before[d][key] for d in timed)
         total_after = sum(after[d][key] for d in timed)

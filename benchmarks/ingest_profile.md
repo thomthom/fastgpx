@@ -56,12 +56,21 @@ Parsing from Python compared with C++, same files, Linux:
 
 ## Reproducing
 
-`ingest_bench.py` mirrors the fastgpx calls in `create_gpx_file` and times each step. It is kept
-outside the repository with the other benchmark scripts:
+The script used for the numbers above was kept outside the repository and is lost.
+[benchmark_ingest.py](benchmark_ingest.py) replaces it: it repeats the fastgpx calls of the upload
+view and `create_gpx_file` in the same order and times each step per point. It also times the
+path after thomthom/sleipnir#596, without the `LatLong` copy, and records which build, Python and
+machine produced a run. Its steps are split a little finer than the table above, so compare new
+numbers with each other rather than with this table.
 
 ```sh
-python ingest_bench.py <gpx folder> [<gpx folder> ...]
+uv run benchmarks/benchmark_ingest.py run gpx/sleipnir gpx/TET -o before.json
+uv run benchmarks/benchmark_ingest.py compare before.json after.json
 ```
+
+The 140 files are most likely `gpx/sleipnir` and `gpx/TET` as listed in
+[corpus_manifest.json](corpus_manifest.json): together they are 140 unique files and 3.0 million
+track points. `uv run benchmarks/corpus_manifest.py verify` checks a local copy against it.
 
 On WSL, read the files from WSL's own file system, not `/mnt/c`, or `load()` measures the file
 share rather than fastgpx.
