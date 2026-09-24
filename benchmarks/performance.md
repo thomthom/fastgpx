@@ -116,6 +116,23 @@ builds, desktop; Linux is WSL2 on the same machine.
 | `polyline.encode`, all segments of one file (Python, Windows) | 2.86 ms | 1.49 ms | 1.9× |
 | `polyline::encode` with link-time optimization (C++, Windows) | 484 µs | 81 µs | 6.0× |
 
+## Trimming numbers without a general search
+
+Every latitude, longitude and elevation is trimmed of surrounding whitespace before it is converted.
+The trim used `find_first_not_of` and `find_last_not_of`, which the profile put at about a tenth of
+load time on Windows (see [load_profile.md](load_profile.md)). It now checks the first and last
+character directly. Accepted input is unchanged. Release builds, desktop; Linux is WSL2 on the same
+machine.
+
+| Measurement | Before | After | Speedup |
+|---|---:|---:|---:|
+| `LoadGpx`, TET files (C++, Windows) | 474 ns/point | 418 ns/point | 1.13× |
+| `load()`, 183 real files (Python, Windows) | 1.65 s | 1.42 s | 1.16× |
+| `LoadGpx`, TET files (C++, Linux) | 139 ns/point | 143 ns/point | no change within noise |
+
+On Linux the rounds varied by about 25%, and no gain could be seen. GCC may already have made the
+old search cheap; that has not been checked.
+
 ## Earlier measurements
 
 Recorded before this document existed, in their own notes:

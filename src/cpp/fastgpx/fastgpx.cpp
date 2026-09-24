@@ -463,7 +463,11 @@ TimeBounds Gpx::ComputeTimeBounds() const
 
 namespace {
 
-constexpr std::string_view kWhitespace = " \t\n\r";
+// The whitespace XML allows around a value.
+constexpr bool IsXmlWhitespace(char c)
+{
+  return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+}
 
 // Parses a decimal number, accepting what `strtod` would accept except for the locale:
 // surrounding whitespace and a leading '+'. Returns nullopt when the text is not a number, has
@@ -475,13 +479,21 @@ constexpr std::string_view kWhitespace = " \t\n\r";
 std::optional<double> TryParseDouble(std::string_view text)
 {
   // Unlike `strtod`, `std::from_chars` neither skips leading whitespace nor accepts a leading '+'.
-  const auto first = text.find_first_not_of(kWhitespace);
-  if (first == std::string_view::npos)
+  // The GPX schema types these values as xsd:decimal, which allows both. Real files almost never
+  // have whitespace, so check one character at a time: `find_first_not_of` cost about a tenth of
+  // load time on these short strings (see benchmarks/load_profile.md).
+  while (!text.empty() && IsXmlWhitespace(text.front()))
+  {
+    text.remove_prefix(1);
+  }
+  while (!text.empty() && IsXmlWhitespace(text.back()))
+  {
+    text.remove_suffix(1);
+  }
+  if (text.empty())
   {
     return std::nullopt;
   }
-  const auto last = text.find_last_not_of(kWhitespace);
-  text = text.substr(first, last - first + 1);
   if (text.front() == '+')
   {
     text.remove_prefix(1);
