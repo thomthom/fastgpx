@@ -1,0 +1,1368 @@
+{
+ "about": "GPX files in the local benchmark folders. Written by benchmarks/corpus_manifest.py.",
+ "corpora": [
+  {
+   "folder": "gpx/sleipnir",
+   "source": "Sleipnir's local upload folder, sleipnir/uploaded/gpx/ (2026/02 and 2026/08): 145 files, of which 106 are unique by content. One copy of each is kept, under its upload file name.",
+   "copied": "2026-09-24",
+   "totals": {
+    "files": 106,
+    "size": 131539277,
+    "points": 1349258,
+    "timed_points": 1319787
+   },
+   "files": [
+    {
+     "name": "0028a2b7-0b30-475d-9340-a531dd8372d5.gpx",
+     "md5": "49ec7b60c3a86c03fb630933545533ac",
+     "size": 211530,
+     "points": 2080,
+     "timed_points": 2080,
+     "source_paths": [
+      "2026/08/0028a2b7-0b30-475d-9340-a531dd8372d5.gpx"
+     ]
+    },
+    {
+     "name": "01353a7a-bf00-4d0d-8437-4e8b9b4b254a.gpx",
+     "md5": "844f1d8c87fa94102ce417577ca6bdaf",
+     "size": 31619,
+     "points": 678,
+     "timed_points": 0,
+     "source_paths": [
+      "2026/08/01353a7a-bf00-4d0d-8437-4e8b9b4b254a.gpx",
+      "2026/08/07974d33-4678-4691-9244-80b4807a200c.gpx",
+      "2026/08/862eef05-a6e8-4c22-b1b4-938c8627dae8.gpx",
+      "2026/08/8b6bba14-5cd3-4a32-826f-50524f200f17.gpx",
+      "2026/08/ab4bbe67-ef3c-4b1c-88c8-2f2cbed5dd53.gpx"
+     ]
+    },
+    {
+     "name": "01597a40-5d47-411a-a235-75b1466a10f1.gpx",
+     "md5": "192d54041686ee4a6be51a5872308768",
+     "size": 1171864,
+     "points": 12237,
+     "timed_points": 12237,
+     "source_paths": [
+      "2026/02/01597a40-5d47-411a-a235-75b1466a10f1.gpx",
+      "2026/08/0ef99a59-64e0-4a2c-a0b4-3edbeedfb676.gpx"
+     ]
+    },
+    {
+     "name": "01b3fcdc-b168-43f6-a741-28e7ed242e82.gpx",
+     "md5": "62a8d30f814cea5d274db9d4e4956917",
+     "size": 1378641,
+     "points": 14263,
+     "timed_points": 14263,
+     "source_paths": [
+      "2026/02/01b3fcdc-b168-43f6-a741-28e7ed242e82.gpx"
+     ]
+    },
+    {
+     "name": "01c33e77-3d7e-4843-9d48-79a4c5a72739.gpx",
+     "md5": "8f3dde3aa345b09cf4f85df47c9e0bdd",
+     "size": 1847819,
+     "points": 19237,
+     "timed_points": 19237,
+     "source_paths": [
+      "2026/02/01c33e77-3d7e-4843-9d48-79a4c5a72739.gpx"
+     ]
+    },
+    {
+     "name": "04d275b1-55e1-49f7-9bba-898f2f28465c.gpx",
+     "md5": "949e466e7496c96bd8f49afb0a7f98e8",
+     "size": 2091287,
+     "points": 21475,
+     "timed_points": 21475,
+     "source_paths": [
+      "2026/08/04d275b1-55e1-49f7-9bba-898f2f28465c.gpx"
+     ]
+    },
+    {
+     "name": "072da1fc-44a4-4f9b-a616-f4da2c108ec2.gpx",
+     "md5": "0ee8fa66d1411bf717852015b8c56a1f",
+     "size": 1832152,
+     "points": 18772,
+     "timed_points": 18772,
+     "source_paths": [
+      "2026/02/072da1fc-44a4-4f9b-a616-f4da2c108ec2.gpx"
+     ]
+    },
+    {
+     "name": "081ecd80-45c5-443d-b7a8-66aa8f60dc14.gpx",
+     "md5": "ea620ea5db2909dd475e741d73f5a52b",
+     "size": 1439714,
+     "points": 14939,
+     "timed_points": 14939,
+     "source_paths": [
+      "2026/02/081ecd80-45c5-443d-b7a8-66aa8f60dc14.gpx"
+     ]
+    },
+    {
+     "name": "0b294784-55bd-4634-b848-c3f97bb02167.gpx",
+     "md5": "4b00fafcdf41cd012250391a9b8a35fa",
+     "size": 1593190,
+     "points": 16315,
+     "timed_points": 16315,
+     "source_paths": [
+      "2026/02/0b294784-55bd-4634-b848-c3f97bb02167.gpx"
+     ]
+    },
+    {
+     "name": "0f1869fa-3bf5-4f94-81ce-879de8803dbb.gpx",
+     "md5": "4ae22a79c006de50b8cd2a9a76bac7c6",
+     "size": 119180,
+     "points": 2591,
+     "timed_points": 0,
+     "source_paths": [
+      "2026/08/0f1869fa-3bf5-4f94-81ce-879de8803dbb.gpx",
+      "2026/08/5b99943c-0b7c-4b89-bdc9-4ed72b46b382.gpx",
+      "2026/08/814ed9fc-ba8e-48c1-98ea-2f096fc2354d.gpx",
+      "2026/08/d148150a-1b68-4eeb-adc6-26cfa2c9e514.gpx",
+      "2026/08/ebb9649c-a306-4e19-bc9c-38b0fa4bafda.gpx"
+     ]
+    },
+    {
+     "name": "0fd79fe5-5b35-474b-aee1-d87ca992c5a9.gpx",
+     "md5": "e1abe7779330fec5bc56c956839b237b",
+     "size": 66235,
+     "points": 1403,
+     "timed_points": 0,
+     "source_paths": [
+      "2026/08/0fd79fe5-5b35-474b-aee1-d87ca992c5a9.gpx",
+      "2026/08/338b12ed-69f8-4333-a007-b2ca3dc5cbe5.gpx",
+      "2026/08/75fd6395-09c4-4db1-bc5a-de5519a109b1.gpx",
+      "2026/08/81fd35a1-ec7a-4f8c-a682-f82002be6262.gpx",
+      "2026/08/da0e01bd-4054-4ed4-87ab-765ede50b9c7.gpx"
+     ]
+    },
+    {
+     "name": "1018dcee-c7f0-4d3f-a322-35fb3333bc01.gpx",
+     "md5": "a7fc41dbf1d12238486179865969fff6",
+     "size": 2140063,
+     "points": 21950,
+     "timed_points": 21950,
+     "source_paths": [
+      "2026/02/1018dcee-c7f0-4d3f-a322-35fb3333bc01.gpx"
+     ]
+    },
+    {
+     "name": "10b1c004-b3da-4e84-b100-7e1e8b52e84f.gpx",
+     "md5": "4a7eca4746d7a0c5a456a09d9e7cc7fb",
+     "size": 1671029,
+     "points": 17209,
+     "timed_points": 17209,
+     "source_paths": [
+      "2026/02/10b1c004-b3da-4e84-b100-7e1e8b52e84f.gpx"
+     ]
+    },
+    {
+     "name": "11cfdcb8-a54e-4b2d-b09b-1ac629180202.gpx",
+     "md5": "f3cadee657ac431d04b503191893a37a",
+     "size": 2110011,
+     "points": 21748,
+     "timed_points": 21748,
+     "source_paths": [
+      "2026/02/11cfdcb8-a54e-4b2d-b09b-1ac629180202.gpx"
+     ]
+    },
+    {
+     "name": "13f2aa5c-d90c-4862-9080-d8cbfb1f61b9.gpx",
+     "md5": "a6cba8e5567b002fe26e12c99f5c9604",
+     "size": 1069219,
+     "points": 11000,
+     "timed_points": 11000,
+     "source_paths": [
+      "2026/08/13f2aa5c-d90c-4862-9080-d8cbfb1f61b9.gpx"
+     ]
+    },
+    {
+     "name": "141f109b-4c2f-4128-a131-01566af76e5e.gpx",
+     "md5": "1fe6535860573ff41ae8b0689b67574a",
+     "size": 810783,
+     "points": 8411,
+     "timed_points": 8411,
+     "source_paths": [
+      "2026/02/141f109b-4c2f-4128-a131-01566af76e5e.gpx",
+      "2026/08/4b4dc30d-64ca-4e3c-9aea-66c610c981f0.gpx"
+     ]
+    },
+    {
+     "name": "19b9a65f-1832-48cb-84c8-ddf07773686f.gpx",
+     "md5": "adb4def5b1cedcc762b24b5cf2722bc1",
+     "size": 2548935,
+     "points": 26117,
+     "timed_points": 26117,
+     "source_paths": [
+      "2026/02/19b9a65f-1832-48cb-84c8-ddf07773686f.gpx"
+     ]
+    },
+    {
+     "name": "21785b02-1986-440c-96ce-050a9d7e3584.gpx",
+     "md5": "7904284f90288300cf6680df92068221",
+     "size": 2254035,
+     "points": 23292,
+     "timed_points": 23292,
+     "source_paths": [
+      "2026/02/21785b02-1986-440c-96ce-050a9d7e3584.gpx"
+     ]
+    },
+    {
+     "name": "218538b9-8a98-42d0-abb3-24299eadca08.gpx",
+     "md5": "fbd3068d5ac16fdb486960ccf2137b35",
+     "size": 1694316,
+     "points": 17369,
+     "timed_points": 17369,
+     "source_paths": [
+      "2026/02/218538b9-8a98-42d0-abb3-24299eadca08.gpx"
+     ]
+    },
+    {
+     "name": "23fdb88e-9749-4143-b13b-73da065946e1.gpx",
+     "md5": "7292e34fc7ebce26220f7a98bd397a78",
+     "size": 1137956,
+     "points": 11670,
+     "timed_points": 11670,
+     "source_paths": [
+      "2026/08/23fdb88e-9749-4143-b13b-73da065946e1.gpx"
+     ]
+    },
+    {
+     "name": "25a03ef9-33bb-45f7-b6a5-2c035da90534.gpx",
+     "md5": "7af10f65e87dd61b223a77f6f9874ca9",
+     "size": 1916946,
+     "points": 19962,
+     "timed_points": 19962,
+     "source_paths": [
+      "2026/02/25a03ef9-33bb-45f7-b6a5-2c035da90534.gpx"
+     ]
+    },
+    {
+     "name": "260c2c6f-f0a6-458c-8dba-0dd00e05d190.gpx",
+     "md5": "4fa0270afd1521d95750c4e8427416cd",
+     "size": 82267,
+     "points": 1745,
+     "timed_points": 0,
+     "source_paths": [
+      "2026/08/260c2c6f-f0a6-458c-8dba-0dd00e05d190.gpx",
+      "2026/08/77709b6d-5d77-4f40-8d0d-51ba51ac7990.gpx",
+      "2026/08/bacdb937-a4d1-42d9-8f06-25aee9e0f717.gpx",
+      "2026/08/d9431ac4-b9fc-478f-8830-32daa126fa28.gpx",
+      "2026/08/ea572bc6-1fa6-49be-9919-04009769a6f7.gpx"
+     ]
+    },
+    {
+     "name": "288ef1a9-ce0b-40e6-bfad-ae4d5b85008d.gpx",
+     "md5": "5598d54589851e519d7360601dfb7753",
+     "size": 2478636,
+     "points": 17009,
+     "timed_points": 17009,
+     "source_paths": [
+      "2026/08/288ef1a9-ce0b-40e6-bfad-ae4d5b85008d.gpx"
+     ]
+    },
+    {
+     "name": "2a15468b-2688-4cb6-92e1-eca3dbd8a8b9.gpx",
+     "md5": "5e90805f4542bde804f6a533e61070be",
+     "size": 1801727,
+     "points": 18564,
+     "timed_points": 18564,
+     "source_paths": [
+      "2026/08/2a15468b-2688-4cb6-92e1-eca3dbd8a8b9.gpx"
+     ]
+    },
+    {
+     "name": "2b0bac04-ecaf-469d-8ca4-cf902598ac7d.gpx",
+     "md5": "276dc316774198f3ca266ab5cec35358",
+     "size": 1257585,
+     "points": 12994,
+     "timed_points": 12994,
+     "source_paths": [
+      "2026/02/2b0bac04-ecaf-469d-8ca4-cf902598ac7d.gpx"
+     ]
+    },
+    {
+     "name": "2b4c1e46-de2b-4716-81d4-fb4cc7ee315c.gpx",
+     "md5": "eb6cb60cf9ffde235d5a5461679196ee",
+     "size": 1060728,
+     "points": 11237,
+     "timed_points": 11237,
+     "source_paths": [
+      "2026/02/2b4c1e46-de2b-4716-81d4-fb4cc7ee315c.gpx"
+     ]
+    },
+    {
+     "name": "2b9a8998-4623-4062-9def-318b321f9d05.gpx",
+     "md5": "33ca189b8bd812c3de5f6753e07737c3",
+     "size": 1423712,
+     "points": 14576,
+     "timed_points": 14576,
+     "source_paths": [
+      "2026/02/2b9a8998-4623-4062-9def-318b321f9d05.gpx"
+     ]
+    },
+    {
+     "name": "2db519ed-0581-48b7-86cb-5e849b09fbff.gpx",
+     "md5": "7fc01f51e902dca6cb06f03c3f6d1a62",
+     "size": 754690,
+     "points": 7862,
+     "timed_points": 7862,
+     "source_paths": [
+      "2026/08/2db519ed-0581-48b7-86cb-5e849b09fbff.gpx"
+     ]
+    },
+    {
+     "name": "2e4ef665-c7a0-400d-acfb-b7ab05321224.gpx",
+     "md5": "cfd731bcaef5a20456386d68aebb0d28",
+     "size": 1726191,
+     "points": 18281,
+     "timed_points": 18281,
+     "source_paths": [
+      "2026/02/2e4ef665-c7a0-400d-acfb-b7ab05321224.gpx"
+     ]
+    },
+    {
+     "name": "2f5ee7d9-ef98-4b40-b2ec-15abc2ace90c.gpx",
+     "md5": "825330574659db9615dbd1d56ad61734",
+     "size": 604253,
+     "points": 6242,
+     "timed_points": 6242,
+     "source_paths": [
+      "2026/08/2f5ee7d9-ef98-4b40-b2ec-15abc2ace90c.gpx"
+     ]
+    },
+    {
+     "name": "2f6e697d-83cd-48fc-9d0c-4f16f589768d.gpx",
+     "md5": "0083095e1035afb9f1f518303da5de11",
+     "size": 2421974,
+     "points": 24831,
+     "timed_points": 24831,
+     "source_paths": [
+      "2026/02/2f6e697d-83cd-48fc-9d0c-4f16f589768d.gpx"
+     ]
+    },
+    {
+     "name": "302d3885-dae2-4f79-9fdd-3665ce4148a8.gpx",
+     "md5": "b77478d2c864b5005cf17e23c495d71a",
+     "size": 33810,
+     "points": 806,
+     "timed_points": 0,
+     "source_paths": [
+      "2026/02/302d3885-dae2-4f79-9fdd-3665ce4148a8.gpx"
+     ]
+    },
+    {
+     "name": "34b11590-4921-460f-b66c-976b5e48da1e.gpx",
+     "md5": "6c86832ca5cc80a7c538481b5a7ce344",
+     "size": 112595,
+     "points": 1173,
+     "timed_points": 1173,
+     "source_paths": [
+      "2026/02/34b11590-4921-460f-b66c-976b5e48da1e.gpx",
+      "2026/08/0ccc4027-9257-47f6-9e18-78d4528ddb79.gpx"
+     ]
+    },
+    {
+     "name": "3557660b-cebd-4190-bf1c-3475fa0d2392.gpx",
+     "md5": "1f30a615187943b5f4d953dc9d05f87d",
+     "size": 2695620,
+     "points": 20930,
+     "timed_points": 20930,
+     "source_paths": [
+      "2026/08/3557660b-cebd-4190-bf1c-3475fa0d2392.gpx"
+     ]
+    },
+    {
+     "name": "38b47d2e-558b-4213-aaaf-e5c3692e4168.gpx",
+     "md5": "6810cdf466f79676c0ea940205ac4cc4",
+     "size": 1845668,
+     "points": 19176,
+     "timed_points": 19176,
+     "source_paths": [
+      "2026/02/38b47d2e-558b-4213-aaaf-e5c3692e4168.gpx"
+     ]
+    },
+    {
+     "name": "38c7a3d9-bdfe-4628-9a5e-a0a00a011571.gpx",
+     "md5": "0564c9318d334f262d8a87030a1acbd2",
+     "size": 129161,
+     "points": 1342,
+     "timed_points": 1342,
+     "source_paths": [
+      "2026/02/38c7a3d9-bdfe-4628-9a5e-a0a00a011571.gpx"
+     ]
+    },
+    {
+     "name": "394265f0-4722-4889-97f8-c56af2186999.gpx",
+     "md5": "1401decd1578f8c1d91dba571dfacb09",
+     "size": 2126463,
+     "points": 22210,
+     "timed_points": 22210,
+     "source_paths": [
+      "2026/02/394265f0-4722-4889-97f8-c56af2186999.gpx"
+     ]
+    },
+    {
+     "name": "3da576d1-e05c-427e-8e20-286c6dc50563.gpx",
+     "md5": "598d73a8ba63be06856cceb1dac652df",
+     "size": 1850336,
+     "points": 19240,
+     "timed_points": 19240,
+     "source_paths": [
+      "2026/02/3da576d1-e05c-427e-8e20-286c6dc50563.gpx"
+     ]
+    },
+    {
+     "name": "3e3b75e4-99b5-4605-8870-81f5ae8ec4a6.gpx",
+     "md5": "a2631e377f62e57c7e00a55a7fc9eb27",
+     "size": 1131200,
+     "points": 11673,
+     "timed_points": 11673,
+     "source_paths": [
+      "2026/02/3e3b75e4-99b5-4605-8870-81f5ae8ec4a6.gpx"
+     ]
+    },
+    {
+     "name": "42ab8029-c05d-43cf-8354-b76f50ff8ea5.gpx",
+     "md5": "e7756ebfec18ef2a08e2bd0442a05908",
+     "size": 1807539,
+     "points": 19005,
+     "timed_points": 19005,
+     "source_paths": [
+      "2026/02/42ab8029-c05d-43cf-8354-b76f50ff8ea5.gpx"
+     ]
+    },
+    {
+     "name": "45918e66-64de-463d-bc51-404c0b4d3638.gpx",
+     "md5": "f53791d9e940687547435bb92669322c",
+     "size": 247774,
+     "points": 2435,
+     "timed_points": 2435,
+     "source_paths": [
+      "2026/08/45918e66-64de-463d-bc51-404c0b4d3638.gpx"
+     ]
+    },
+    {
+     "name": "4622b261-32e7-4688-b82e-e0b10b7bba45.gpx",
+     "md5": "046790d38fb8fcd7359536c9b6191ff1",
+     "size": 237401,
+     "points": 5929,
+     "timed_points": 0,
+     "source_paths": [
+      "2026/02/4622b261-32e7-4688-b82e-e0b10b7bba45.gpx"
+     ]
+    },
+    {
+     "name": "47aea171-192b-4521-b123-252c51520d15.gpx",
+     "md5": "5996df82cde0b9ded09f4482439ca9b1",
+     "size": 1468890,
+     "points": 15036,
+     "timed_points": 15036,
+     "source_paths": [
+      "2026/02/47aea171-192b-4521-b123-252c51520d15.gpx"
+     ]
+    },
+    {
+     "name": "48c185ab-5b00-4d42-b58a-8572d6b78758.gpx",
+     "md5": "c554cf9dae792aa8374c4256e743d486",
+     "size": 50723,
+     "points": 1097,
+     "timed_points": 0,
+     "source_paths": [
+      "2026/08/48c185ab-5b00-4d42-b58a-8572d6b78758.gpx",
+      "2026/08/5cea7339-1277-4532-b3c4-58eefb9f12a5.gpx",
+      "2026/08/77463557-b463-4d4d-b691-667df4f1eb80.gpx",
+      "2026/08/92b9f12e-5355-42d1-8aba-44298c87b1ab.gpx",
+      "2026/08/cdec6a77-2419-4ae6-99fb-ffd558fae275.gpx"
+     ]
+    },
+    {
+     "name": "4c42c4a6-2c1f-48f4-9143-b37eb854d92d.gpx",
+     "md5": "5efa9860bf3f684f8a979a85b7e22218",
+     "size": 1810013,
+     "points": 18859,
+     "timed_points": 18859,
+     "source_paths": [
+      "2026/02/4c42c4a6-2c1f-48f4-9143-b37eb854d92d.gpx"
+     ]
+    },
+    {
+     "name": "5545acae-03f6-450d-adca-4b04504decb5.gpx",
+     "md5": "d722f0cd25a4be82e27f7e9e384dd76e",
+     "size": 32643,
+     "points": 686,
+     "timed_points": 0,
+     "source_paths": [
+      "2026/08/5545acae-03f6-450d-adca-4b04504decb5.gpx",
+      "2026/08/7b744a55-529b-4ca7-aa89-77101cef6d62.gpx",
+      "2026/08/85f41259-7326-43b7-aacc-fc9480c011c4.gpx",
+      "2026/08/ff32d124-ccfa-4267-962a-949206e19020.gpx",
+      "2026/08/ffa3ab15-3af5-4c3a-bc62-1aa2e8d3b28d.gpx"
+     ]
+    },
+    {
+     "name": "5b1dc2b2-eb6e-4bb3-8a14-58e44a4cdaf9.gpx",
+     "md5": "b6d6352c99883a0c094ca0357d38498f",
+     "size": 1448932,
+     "points": 14948,
+     "timed_points": 14948,
+     "source_paths": [
+      "2026/08/5b1dc2b2-eb6e-4bb3-8a14-58e44a4cdaf9.gpx"
+     ]
+    },
+    {
+     "name": "5d3d0d79-86f6-409f-9145-3aed902bb157.gpx",
+     "md5": "826ea835d0506252d4d0c09603ca2da1",
+     "size": 984316,
+     "points": 10208,
+     "timed_points": 10208,
+     "source_paths": [
+      "2026/02/5d3d0d79-86f6-409f-9145-3aed902bb157.gpx"
+     ]
+    },
+    {
+     "name": "5db52975-3d46-4cce-a8cb-eba0eb455945.gpx",
+     "md5": "d3190462c89bb20e60364c8237cbc376",
+     "size": 1103657,
+     "points": 11647,
+     "timed_points": 11647,
+     "source_paths": [
+      "2026/02/5db52975-3d46-4cce-a8cb-eba0eb455945.gpx"
+     ]
+    },
+    {
+     "name": "61395b00-c31f-4ff9-b040-121c2fc0efa6.gpx",
+     "md5": "06e3e49d9cef94a0d8a70d9da41430ae",
+     "size": 343059,
+     "points": 3375,
+     "timed_points": 3375,
+     "source_paths": [
+      "2026/08/61395b00-c31f-4ff9-b040-121c2fc0efa6.gpx"
+     ]
+    },
+    {
+     "name": "637d0af3-269c-4e3d-9dd2-a9d435cbaaaf.gpx",
+     "md5": "4c5af9af60397014baf4aaa147dd220d",
+     "size": 1695170,
+     "points": 17546,
+     "timed_points": 17546,
+     "source_paths": [
+      "2026/02/637d0af3-269c-4e3d-9dd2-a9d435cbaaaf.gpx"
+     ]
+    },
+    {
+     "name": "660b4301-0b8e-4f90-92cc-eb7cfc09183d.gpx",
+     "md5": "46f25dae2ee60721755c1be7419c3474",
+     "size": 67267,
+     "points": 1425,
+     "timed_points": 0,
+     "source_paths": [
+      "2026/08/660b4301-0b8e-4f90-92cc-eb7cfc09183d.gpx"
+     ]
+    },
+    {
+     "name": "670000b3-17a8-4857-bd89-32eecca3248c.gpx",
+     "md5": "f2bc1248e360340be004c59dc7611503",
+     "size": 1128088,
+     "points": 11693,
+     "timed_points": 11693,
+     "source_paths": [
+      "2026/02/670000b3-17a8-4857-bd89-32eecca3248c.gpx"
+     ]
+    },
+    {
+     "name": "6a499e0c-107f-4d96-aff2-b5d5f5638fcb.gpx",
+     "md5": "d73a7f6a9b56a7a8194d23857f3b3a06",
+     "size": 1074043,
+     "points": 7355,
+     "timed_points": 7355,
+     "source_paths": [
+      "2026/08/6a499e0c-107f-4d96-aff2-b5d5f5638fcb.gpx"
+     ]
+    },
+    {
+     "name": "6b739941-19b9-4816-a5ad-446bfbc941ef.gpx",
+     "md5": "f17bd995e80a0abc9066de227d7508cf",
+     "size": 1574785,
+     "points": 16272,
+     "timed_points": 16272,
+     "source_paths": [
+      "2026/02/6b739941-19b9-4816-a5ad-446bfbc941ef.gpx"
+     ]
+    },
+    {
+     "name": "6e1859c2-b19b-4dfb-af4a-849ee4c3aab3.gpx",
+     "md5": "d340ca64b09598362066b89e4ec12b65",
+     "size": 207022,
+     "points": 4499,
+     "timed_points": 0,
+     "source_paths": [
+      "2026/08/6e1859c2-b19b-4dfb-af4a-849ee4c3aab3.gpx",
+      "2026/08/c017ccc6-c00c-4b1b-94c3-9c30ab5ee31d.gpx",
+      "2026/08/d3a28f92-8fc9-4797-8ed3-9ee9678db98f.gpx",
+      "2026/08/d5c3d29d-2d23-49ae-8157-390fd121e340.gpx",
+      "2026/08/dd18e9b9-0390-4015-a910-1d4ea8e159c9.gpx"
+     ]
+    },
+    {
+     "name": "745f9c09-0127-4419-b577-4981ac8c7cea.gpx",
+     "md5": "9a01555a1f6f05e69fec922d49fb0085",
+     "size": 283497,
+     "points": 2922,
+     "timed_points": 2922,
+     "source_paths": [
+      "2026/02/745f9c09-0127-4419-b577-4981ac8c7cea.gpx"
+     ]
+    },
+    {
+     "name": "78e44a12-0dc3-4206-86d8-c00ee02b8143.gpx",
+     "md5": "a246cf3a6ac332e0000440ca381963b5",
+     "size": 824685,
+     "points": 8596,
+     "timed_points": 8596,
+     "source_paths": [
+      "2026/02/78e44a12-0dc3-4206-86d8-c00ee02b8143.gpx"
+     ]
+    },
+    {
+     "name": "7994d52e-7b7e-433c-a6a8-a5fe035011c2.gpx",
+     "md5": "f0484b2817a61a531e370056d7adef4e",
+     "size": 1651816,
+     "points": 16931,
+     "timed_points": 16931,
+     "source_paths": [
+      "2026/02/7994d52e-7b7e-433c-a6a8-a5fe035011c2.gpx"
+     ]
+    },
+    {
+     "name": "79d5c9ec-c143-4ea4-89c1-a259fde1cfda.gpx",
+     "md5": "2a6f52f55518963a0fc8d3021400bb5f",
+     "size": 9869,
+     "points": 201,
+     "timed_points": 0,
+     "source_paths": [
+      "2026/08/79d5c9ec-c143-4ea4-89c1-a259fde1cfda.gpx",
+      "2026/08/817f1170-620d-4a12-acf0-232a1d193583.gpx",
+      "2026/08/81daa686-c854-4d0b-b74a-bc373dbc5a80.gpx",
+      "2026/08/a2d6b70e-ef22-418e-890f-7553edaba2cc.gpx",
+      "2026/08/d59c8700-cd7f-498a-891b-0b79cd1e9d0d.gpx"
+     ]
+    },
+    {
+     "name": "7a5dbaef-749a-463d-bf96-2a97c0f2fbb0.gpx",
+     "md5": "6eb80bd426e2b5206e125ab202b196ea",
+     "size": 2125373,
+     "points": 22036,
+     "timed_points": 22036,
+     "source_paths": [
+      "2026/02/7a5dbaef-749a-463d-bf96-2a97c0f2fbb0.gpx"
+     ]
+    },
+    {
+     "name": "7ca906e7-7606-4c08-9028-db287187bc18.gpx",
+     "md5": "7d43fd3abb1f93bc5b4403e4878673fa",
+     "size": 247482,
+     "points": 2627,
+     "timed_points": 2627,
+     "source_paths": [
+      "2026/02/7ca906e7-7606-4c08-9028-db287187bc18.gpx"
+     ]
+    },
+    {
+     "name": "7e0a1ee4-4611-41cc-a94a-61c0fdffef2a.gpx",
+     "md5": "36e1522fceffdb186f571e5a5b6f175f",
+     "size": 157849,
+     "points": 1551,
+     "timed_points": 1551,
+     "source_paths": [
+      "2026/08/7e0a1ee4-4611-41cc-a94a-61c0fdffef2a.gpx"
+     ]
+    },
+    {
+     "name": "80c07372-adba-4e04-99ff-988e8d66c7fe.gpx",
+     "md5": "f3d65769a0a67556705c81bc0f323b81",
+     "size": 1008741,
+     "points": 10685,
+     "timed_points": 10685,
+     "source_paths": [
+      "2026/02/80c07372-adba-4e04-99ff-988e8d66c7fe.gpx"
+     ]
+    },
+    {
+     "name": "841a051e-6121-4fac-845b-32b53ce6d234.gpx",
+     "md5": "dcb7de6aaf7ed2f2f48ae04454c39086",
+     "size": 1590910,
+     "points": 16361,
+     "timed_points": 16361,
+     "source_paths": [
+      "2026/02/841a051e-6121-4fac-845b-32b53ce6d234.gpx"
+     ]
+    },
+    {
+     "name": "84db4062-5819-4e1d-b3a2-362bd35a43c8.gpx",
+     "md5": "d80c51fb47619232f3b2fe71d1014973",
+     "size": 1776042,
+     "points": 18221,
+     "timed_points": 18221,
+     "source_paths": [
+      "2026/02/84db4062-5819-4e1d-b3a2-362bd35a43c8.gpx"
+     ]
+    },
+    {
+     "name": "85f6d382-2255-41c7-9ad5-dc0485bf96f8.gpx",
+     "md5": "1e5a3526ea7f0f2071ae0b7ca780a0f5",
+     "size": 708199,
+     "points": 7275,
+     "timed_points": 7275,
+     "source_paths": [
+      "2026/08/85f6d382-2255-41c7-9ad5-dc0485bf96f8.gpx"
+     ]
+    },
+    {
+     "name": "86724faa-6062-4d86-8e92-97203d44c48f.gpx",
+     "md5": "b7eaecd24f0cd66dd0e7f128213a3059",
+     "size": 1742856,
+     "points": 18001,
+     "timed_points": 18001,
+     "source_paths": [
+      "2026/02/86724faa-6062-4d86-8e92-97203d44c48f.gpx"
+     ]
+    },
+    {
+     "name": "8c7f0779-907e-456f-9e5b-4b594cc7cdfa.gpx",
+     "md5": "a30bc318b043e64ce9f18441c32c67c9",
+     "size": 1444553,
+     "points": 14949,
+     "timed_points": 14949,
+     "source_paths": [
+      "2026/08/8c7f0779-907e-456f-9e5b-4b594cc7cdfa.gpx"
+     ]
+    },
+    {
+     "name": "94910c69-0838-4fde-8291-3700655ffe51.gpx",
+     "md5": "2b9b5d735b4d0c9726ddf51879381ada",
+     "size": 538446,
+     "points": 5714,
+     "timed_points": 5714,
+     "source_paths": [
+      "2026/02/94910c69-0838-4fde-8291-3700655ffe51.gpx"
+     ]
+    },
+    {
+     "name": "97d8bfd6-2158-418f-8657-593edac643b0.gpx",
+     "md5": "9aa55e4cab9fa6e584177fd9e2fd9966",
+     "size": 1932669,
+     "points": 19803,
+     "timed_points": 19803,
+     "source_paths": [
+      "2026/02/97d8bfd6-2158-418f-8657-593edac643b0.gpx",
+      "2026/08/cbf7db34-458d-4678-b967-4c3b09b0025b.gpx"
+     ]
+    },
+    {
+     "name": "99f7296b-b149-4768-8b08-95d57064284e.gpx",
+     "md5": "b0c3493527be6e6188b0d7396a73a9f5",
+     "size": 1320642,
+     "points": 13625,
+     "timed_points": 13625,
+     "source_paths": [
+      "2026/08/99f7296b-b149-4768-8b08-95d57064284e.gpx"
+     ]
+    },
+    {
+     "name": "9a1fe044-3518-4fe7-90df-7a5bb2169901.gpx",
+     "md5": "a931d85399c2aeffb707973bd4bf4edc",
+     "size": 2215242,
+     "points": 22895,
+     "timed_points": 22895,
+     "source_paths": [
+      "2026/02/9a1fe044-3518-4fe7-90df-7a5bb2169901.gpx"
+     ]
+    },
+    {
+     "name": "9d42cfaf-fe39-4318-a125-1979b00b9002.gpx",
+     "md5": "169762866c92c79705839b82dddbb5c1",
+     "size": 941804,
+     "points": 9740,
+     "timed_points": 9740,
+     "source_paths": [
+      "2026/02/9d42cfaf-fe39-4318-a125-1979b00b9002.gpx"
+     ]
+    },
+    {
+     "name": "9d85c54d-4d6b-470f-9994-1e25bc7b50a0.gpx",
+     "md5": "d26237dd36ea8f326ef2ca95d74b5510",
+     "size": 1763846,
+     "points": 18176,
+     "timed_points": 18176,
+     "source_paths": [
+      "2026/08/9d85c54d-4d6b-470f-9994-1e25bc7b50a0.gpx"
+     ]
+    },
+    {
+     "name": "9f22120a-cea2-4e9c-96dd-11cd047604b3.gpx",
+     "md5": "cec4a8969cd617a7a2a23c0cf43d6804",
+     "size": 1055716,
+     "points": 7232,
+     "timed_points": 7232,
+     "source_paths": [
+      "2026/08/9f22120a-cea2-4e9c-96dd-11cd047604b3.gpx"
+     ]
+    },
+    {
+     "name": "a64987c2-de64-49cd-a76e-0526c35986df.gpx",
+     "md5": "b09fbb70d0dc1dc16d7dab745acb0493",
+     "size": 1404979,
+     "points": 14797,
+     "timed_points": 14797,
+     "source_paths": [
+      "2026/02/a64987c2-de64-49cd-a76e-0526c35986df.gpx"
+     ]
+    },
+    {
+     "name": "a74a21d5-8d16-4157-be86-daa79e97707e.gpx",
+     "md5": "bc025d0632602e3513dd92499ac9acee",
+     "size": 1384675,
+     "points": 14275,
+     "timed_points": 14275,
+     "source_paths": [
+      "2026/02/a74a21d5-8d16-4157-be86-daa79e97707e.gpx"
+     ]
+    },
+    {
+     "name": "aabbf169-c565-4464-ad9e-3424c86f1633.gpx",
+     "md5": "f1bcb7e4cfa89c99a9d8c9975de13713",
+     "size": 393741,
+     "points": 8411,
+     "timed_points": 0,
+     "source_paths": [
+      "2026/08/aabbf169-c565-4464-ad9e-3424c86f1633.gpx",
+      "2026/08/e9291469-ae59-4ed6-9e22-1afe38fb9307.gpx"
+     ]
+    },
+    {
+     "name": "ad6603ac-9587-41fb-9033-ad542ae07a0d.gpx",
+     "md5": "791965f458dabbb53c783e845c007bab",
+     "size": 2285439,
+     "points": 23470,
+     "timed_points": 23470,
+     "source_paths": [
+      "2026/02/ad6603ac-9587-41fb-9033-ad542ae07a0d.gpx"
+     ]
+    },
+    {
+     "name": "b127b5d8-b07d-4ace-b7a0-ae4938b6be9d.gpx",
+     "md5": "0e169caf4b478064201d2bf5a490aa0a",
+     "size": 1408775,
+     "points": 14426,
+     "timed_points": 14426,
+     "source_paths": [
+      "2026/02/b127b5d8-b07d-4ace-b7a0-ae4938b6be9d.gpx"
+     ]
+    },
+    {
+     "name": "b2306b08-93f3-4f11-80ca-9ae41902814f.gpx",
+     "md5": "bd8fb252d58647080b3d27f11f75e04a",
+     "size": 1837275,
+     "points": 18878,
+     "timed_points": 18878,
+     "source_paths": [
+      "2026/08/b2306b08-93f3-4f11-80ca-9ae41902814f.gpx"
+     ]
+    },
+    {
+     "name": "b405396a-25f5-4eb1-98f9-3680aa73c7cf.gpx",
+     "md5": "546fdd7ce5b76a5c8a9f8cc6e66cc12a",
+     "size": 698559,
+     "points": 4775,
+     "timed_points": 4775,
+     "source_paths": [
+      "2026/02/b405396a-25f5-4eb1-98f9-3680aa73c7cf.gpx",
+      "2026/08/dc1531a6-6838-4cb8-9469-218d380bc06b.gpx"
+     ]
+    },
+    {
+     "name": "bf32263b-34f1-4f17-8d3f-4f7af9c96afc.gpx",
+     "md5": "e53dde8bfd95bcf3e059adc428603de7",
+     "size": 1417369,
+     "points": 14547,
+     "timed_points": 14547,
+     "source_paths": [
+      "2026/08/bf32263b-34f1-4f17-8d3f-4f7af9c96afc.gpx"
+     ]
+    },
+    {
+     "name": "c030b779-bc50-46bc-ba65-67eeec1e3052.gpx",
+     "md5": "0a8f85f77625035b4abaf310f390a7a6",
+     "size": 1284892,
+     "points": 13394,
+     "timed_points": 13394,
+     "source_paths": [
+      "2026/02/c030b779-bc50-46bc-ba65-67eeec1e3052.gpx"
+     ]
+    },
+    {
+     "name": "c38efbe5-863d-4353-bf86-14316520c7e0.gpx",
+     "md5": "adabb2d8db2efcff96199e589a65aff0",
+     "size": 2290251,
+     "points": 23584,
+     "timed_points": 23584,
+     "source_paths": [
+      "2026/08/c38efbe5-863d-4353-bf86-14316520c7e0.gpx"
+     ]
+    },
+    {
+     "name": "c47b2552-0bc1-4070-b5e0-338d9f42e6ad.gpx",
+     "md5": "d9dfd1cfba052ff81f629f584f55c01a",
+     "size": 1155358,
+     "points": 11965,
+     "timed_points": 11965,
+     "source_paths": [
+      "2026/02/c47b2552-0bc1-4070-b5e0-338d9f42e6ad.gpx"
+     ]
+    },
+    {
+     "name": "c5e954a0-b50d-4af9-9ed3-2166d0a028c2.gpx",
+     "md5": "177604b3fa181ccf2c01c90da179a2eb",
+     "size": 1920030,
+     "points": 19964,
+     "timed_points": 19964,
+     "source_paths": [
+      "2026/02/c5e954a0-b50d-4af9-9ed3-2166d0a028c2.gpx"
+     ]
+    },
+    {
+     "name": "c9fb3511-fb6f-476b-beac-9760fe5a16d8.gpx",
+     "md5": "553390a3a8434ecbcd61664194d0125b",
+     "size": 887048,
+     "points": 9352,
+     "timed_points": 9352,
+     "source_paths": [
+      "2026/02/c9fb3511-fb6f-476b-beac-9760fe5a16d8.gpx"
+     ]
+    },
+    {
+     "name": "ca5192f5-c5aa-4ebc-a014-ecea3cee8108.gpx",
+     "md5": "8509bef9f14e9940c47d67e1464c0db9",
+     "size": 1604457,
+     "points": 16607,
+     "timed_points": 16607,
+     "source_paths": [
+      "2026/02/ca5192f5-c5aa-4ebc-a014-ecea3cee8108.gpx"
+     ]
+    },
+    {
+     "name": "cc5517f6-63b0-46bc-9d4d-cacbc2dcf347.gpx",
+     "md5": "aa004e61e5d6549161d4b757ba9c0d06",
+     "size": 80972,
+     "points": 859,
+     "timed_points": 859,
+     "source_paths": [
+      "2026/02/cc5517f6-63b0-46bc-9d4d-cacbc2dcf347.gpx"
+     ]
+    },
+    {
+     "name": "ccf30417-a920-4c72-b6ac-bceb2fd3a6d2.gpx",
+     "md5": "f6728fccffb9471398ca5a6e93cbc04b",
+     "size": 1771078,
+     "points": 18678,
+     "timed_points": 18678,
+     "source_paths": [
+      "2026/02/ccf30417-a920-4c72-b6ac-bceb2fd3a6d2.gpx"
+     ]
+    },
+    {
+     "name": "cebfe5fc-c25a-4393-aaba-087ac1556a14.gpx",
+     "md5": "b59a430cf9df55f4111d4b76762f3d47",
+     "size": 2170284,
+     "points": 22438,
+     "timed_points": 22438,
+     "source_paths": [
+      "2026/08/cebfe5fc-c25a-4393-aaba-087ac1556a14.gpx"
+     ]
+    },
+    {
+     "name": "cf208077-a848-4c66-ae23-9d2960c8f1d5.gpx",
+     "md5": "b7766de2f2083157261e720b99c2c4fc",
+     "size": 144335,
+     "points": 1492,
+     "timed_points": 1492,
+     "source_paths": [
+      "2026/08/cf208077-a848-4c66-ae23-9d2960c8f1d5.gpx"
+     ]
+    },
+    {
+     "name": "d03ff6c1-f1c3-46ee-ad63-c682324e275f.gpx",
+     "md5": "0be04eb806ede41ceb28cb9d99c2f924",
+     "size": 1415304,
+     "points": 14692,
+     "timed_points": 14692,
+     "source_paths": [
+      "2026/02/d03ff6c1-f1c3-46ee-ad63-c682324e275f.gpx"
+     ]
+    },
+    {
+     "name": "d63842a5-f1fb-4f47-b7dd-dc5b4de5d6ac.gpx",
+     "md5": "aef4939a0b4d1844d57424fd57ce90f5",
+     "size": 743768,
+     "points": 7688,
+     "timed_points": 7688,
+     "source_paths": [
+      "2026/02/d63842a5-f1fb-4f47-b7dd-dc5b4de5d6ac.gpx"
+     ]
+    },
+    {
+     "name": "dd2a798f-cbc4-431c-8d55-2570d516bafe.gpx",
+     "md5": "ead1427f0f5e5182f549eeb299b3a729",
+     "size": 1528450,
+     "points": 16230,
+     "timed_points": 16230,
+     "source_paths": [
+      "2026/02/dd2a798f-cbc4-431c-8d55-2570d516bafe.gpx"
+     ]
+    },
+    {
+     "name": "df356c94-f373-4147-8da3-7ef24b637195.gpx",
+     "md5": "547265acb41824cf4e7cca9c53df073c",
+     "size": 1802671,
+     "points": 18626,
+     "timed_points": 18626,
+     "source_paths": [
+      "2026/08/df356c94-f373-4147-8da3-7ef24b637195.gpx"
+     ]
+    },
+    {
+     "name": "e39efbeb-87a9-41df-ab9d-a9c2563aef56.gpx",
+     "md5": "132baa30dff33683efe9487cedf36072",
+     "size": 574430,
+     "points": 5651,
+     "timed_points": 5651,
+     "source_paths": [
+      "2026/08/e39efbeb-87a9-41df-ab9d-a9c2563aef56.gpx"
+     ]
+    },
+    {
+     "name": "e7b53d57-a85c-4c7f-859e-cb1707f0c7b7.gpx",
+     "md5": "0e668462d2c49da3b0ee2d4e890fed83",
+     "size": 312966,
+     "points": 2146,
+     "timed_points": 2146,
+     "source_paths": [
+      "2026/02/e7b53d57-a85c-4c7f-859e-cb1707f0c7b7.gpx",
+      "2026/08/3da7fac7-ef6e-4eb4-9411-a26954781818.gpx"
+     ]
+    },
+    {
+     "name": "eb8f63e6-674c-47ba-a599-b4a51c3a20fc.gpx",
+     "md5": "b05776a5ade15ba49ca2da76ddead113",
+     "size": 1160736,
+     "points": 12044,
+     "timed_points": 12044,
+     "source_paths": [
+      "2026/02/eb8f63e6-674c-47ba-a599-b4a51c3a20fc.gpx"
+     ]
+    },
+    {
+     "name": "ec8822ba-3e01-459e-b38f-3c76bb93faf4.gpx",
+     "md5": "0662baf8a26cddc53a50cd2d54cd3567",
+     "size": 494675,
+     "points": 5157,
+     "timed_points": 5157,
+     "source_paths": [
+      "2026/02/ec8822ba-3e01-459e-b38f-3c76bb93faf4.gpx"
+     ]
+    },
+    {
+     "name": "f2954361-72c0-4fc2-8aff-c1e6e1f96dea.gpx",
+     "md5": "de1abc21ad9fce0595df3acae45ef58d",
+     "size": 1402129,
+     "points": 14603,
+     "timed_points": 14603,
+     "source_paths": [
+      "2026/02/f2954361-72c0-4fc2-8aff-c1e6e1f96dea.gpx"
+     ]
+    },
+    {
+     "name": "f7a8ef5d-9340-4768-8c04-523959564189.gpx",
+     "md5": "1967f751f1bb02389c03c30716d14d56",
+     "size": 1983337,
+     "points": 20338,
+     "timed_points": 20338,
+     "source_paths": [
+      "2026/02/f7a8ef5d-9340-4768-8c04-523959564189.gpx"
+     ]
+    },
+    {
+     "name": "fa85b354-2991-4611-997e-aea9f0e59874.gpx",
+     "md5": "03af4b4f2d8399b6dcd6820b88dae94d",
+     "size": 2424411,
+     "points": 24837,
+     "timed_points": 24837,
+     "source_paths": [
+      "2026/02/fa85b354-2991-4611-997e-aea9f0e59874.gpx"
+     ]
+    },
+    {
+     "name": "fc3d9ec4-82cd-4af9-afda-8c4b994cdca6.gpx",
+     "md5": "7028ad9916a8208f525f9f1ca6bf7372",
+     "size": 2262184,
+     "points": 23169,
+     "timed_points": 23169,
+     "source_paths": [
+      "2026/02/fc3d9ec4-82cd-4af9-afda-8c4b994cdca6.gpx"
+     ]
+    }
+   ]
+  },
+  {
+   "folder": "gpx/TET",
+   "source": "Trans Euro Trail country routes from transeurotrail.org, one file per country. The original download date was not recorded; the date is that of this copy.",
+   "copied": "2026-09-24",
+   "totals": {
+    "files": 34,
+    "size": 135362854,
+    "points": 1656466,
+    "timed_points": 45741
+   },
+   "files": [
+    {
+     "name": "AL.gpx",
+     "md5": "016dc12bd73a442ceb4c7ac628332733",
+     "size": 5629618,
+     "points": 69546,
+     "timed_points": 0
+    },
+    {
+     "name": "AND.gpx",
+     "md5": "4b016dd2fc3d42a9a2af4ead8c1a9efa",
+     "size": 50830,
+     "points": 581,
+     "timed_points": 0
+    },
+    {
+     "name": "B.gpx",
+     "md5": "cd0003c982a9bbbd7bea58f87eefcd8b",
+     "size": 2771020,
+     "points": 34564,
+     "timed_points": 0
+    },
+    {
+     "name": "BG.gpx",
+     "md5": "68fbce7743f223729a5ed47ba16e8e3b",
+     "size": 5074160,
+     "points": 62646,
+     "timed_points": 0
+    },
+    {
+     "name": "BIH.gpx",
+     "md5": "6caa6ff59a5ffc153717e9f8814ee49f",
+     "size": 1149756,
+     "points": 14169,
+     "timed_points": 0
+    },
+    {
+     "name": "BY.gpx",
+     "md5": "512bbad1190bf7d6e0d84ba571681a37",
+     "size": 2541,
+     "points": 1,
+     "timed_points": 0
+    },
+    {
+     "name": "CH.gpx",
+     "md5": "a97d69a6ad40c3f871e0170dbe9ee699",
+     "size": 1948222,
+     "points": 25345,
+     "timed_points": 0
+    },
+    {
+     "name": "D.gpx",
+     "md5": "8f1011bc2a92d7753fb28d1c4de8e246",
+     "size": 1187324,
+     "points": 17114,
+     "timed_points": 0
+    },
+    {
+     "name": "DK.gpx",
+     "md5": "fe72b8d4284dcba60f7df8afcc2de3a6",
+     "size": 1024218,
+     "points": 12700,
+     "timed_points": 0
+    },
+    {
+     "name": "E.gpx",
+     "md5": "81158273fa5731a3c7a22587ce04c12a",
+     "size": 8638277,
+     "points": 107907,
+     "timed_points": 0
+    },
+    {
+     "name": "EST.gpx",
+     "md5": "fbba331f532ab841d8d08170d8fa1abc",
+     "size": 3130779,
+     "points": 19593,
+     "timed_points": 16302
+    },
+    {
+     "name": "F.gpx",
+     "md5": "14938789756ac8c3f04b6320f8b651b5",
+     "size": 14624526,
+     "points": 126546,
+     "timed_points": 0
+    },
+    {
+     "name": "FIN.gpx",
+     "md5": "48c53700745121ee159a7fb9f9038661",
+     "size": 6442479,
+     "points": 54690,
+     "timed_points": 22751
+    },
+    {
+     "name": "GB.gpx",
+     "md5": "b60cedf19350b3212ebd1e9815ea5889",
+     "size": 5091296,
+     "points": 59217,
+     "timed_points": 0
+    },
+    {
+     "name": "GE.gpx",
+     "md5": "80f335475f2b43d6006a6b44efbd4d06",
+     "size": 10902948,
+     "points": 133756,
+     "timed_points": 0
+    },
+    {
+     "name": "GR.gpx",
+     "md5": "721c9c5d48032e939fb55e9bb9542c4c",
+     "size": 5038519,
+     "points": 64594,
+     "timed_points": 0
+    },
+    {
+     "name": "H.gpx",
+     "md5": "cd7a01bacc3f3db3e100552dd8c662fe",
+     "size": 1602738,
+     "points": 12128,
+     "timed_points": 6688
+    },
+    {
+     "name": "HR.gpx",
+     "md5": "b0add7482ea7c23767951c61b4218b4d",
+     "size": 775120,
+     "points": 9883,
+     "timed_points": 0
+    },
+    {
+     "name": "I.gpx",
+     "md5": "d382ce3724926efc2ce38956b6249380",
+     "size": 9562978,
+     "points": 122766,
+     "timed_points": 0
+    },
+    {
+     "name": "L.gpx",
+     "md5": "f1ce9e3323c3230bad53f5f7c4a20782",
+     "size": 703638,
+     "points": 8784,
+     "timed_points": 0
+    },
+    {
+     "name": "LT.gpx",
+     "md5": "963e82ce822d75c8cb024383e0ad890a",
+     "size": 2458381,
+     "points": 29771,
+     "timed_points": 0
+    },
+    {
+     "name": "LV.gpx",
+     "md5": "c062bbe94a53412f1b5bc1e534880598",
+     "size": 2166895,
+     "points": 26423,
+     "timed_points": 0
+    },
+    {
+     "name": "MD.gpx",
+     "md5": "2e8110d5f68047cbd6b7fa3ff11f0b99",
+     "size": 383998,
+     "points": 5868,
+     "timed_points": 0
+    },
+    {
+     "name": "MNE.gpx",
+     "md5": "2949ceb9bdd1292f32fd08530f512a27",
+     "size": 786978,
+     "points": 11953,
+     "timed_points": 0
+    },
+    {
+     "name": "N.gpx",
+     "md5": "e45046b38743245b16661b4e361e4f63",
+     "size": 6037682,
+     "points": 124792,
+     "timed_points": 0
+    },
+    {
+     "name": "NL.gpx",
+     "md5": "92cab70a5d5e220ac378f5bf8d078f33",
+     "size": 2291958,
+     "points": 28997,
+     "timed_points": 0
+    },
+    {
+     "name": "NMK.gpx",
+     "md5": "a84b9a20c0ab2d8f58dd61128ed8058e",
+     "size": 5529115,
+     "points": 77045,
+     "timed_points": 0
+    },
+    {
+     "name": "P.gpx",
+     "md5": "ab9bcd68538a28885d421c5f3278546d",
+     "size": 2484952,
+     "points": 30263,
+     "timed_points": 0
+    },
+    {
+     "name": "PL.gpx",
+     "md5": "32a7280486e97dbc04d22bc39de8ae1e",
+     "size": 3982232,
+     "points": 48967,
+     "timed_points": 0
+    },
+    {
+     "name": "RKS.gpx",
+     "md5": "1e05247d597c717ee73c17664ca2c564",
+     "size": 3527568,
+     "points": 43473,
+     "timed_points": 0
+    },
+    {
+     "name": "S.gpx",
+     "md5": "5ba4a31e73ab3e101bba7ea99d1e5893",
+     "size": 9410162,
+     "points": 137747,
+     "timed_points": 0
+    },
+    {
+     "name": "SLO.gpx",
+     "md5": "000ef9dcff67a9ef6070a4548e436991",
+     "size": 792163,
+     "points": 9712,
+     "timed_points": 0
+    },
+    {
+     "name": "SRB.gpx",
+     "md5": "79a5ab3de358d5265a6049895a62ad31",
+     "size": 2649232,
+     "points": 32725,
+     "timed_points": 0
+    },
+    {
+     "name": "TR.gpx",
+     "md5": "0773f7eb50772de5a63f5e68ef070d9a",
+     "size": 7510551,
+     "points": 92200,
+     "timed_points": 0
+    }
+   ]
+  }
+ ]
+}

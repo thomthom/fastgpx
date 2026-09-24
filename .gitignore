@@ -27,3 +27,6 @@ LastCoverageResults.log
 
 # TET country routes, downloaded locally for benchmarking (large; get them from transeurotrail.org).
 /gpx/TET/
+# Unique files from Sleipnir's upload folder, copied locally for benchmarking (private; see
+# benchmarks/corpus_manifest.json).
+/gpx/sleipnir/

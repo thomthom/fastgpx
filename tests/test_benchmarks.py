@@ -34,3 +34,11 @@ class TestBenchmarkScripts:
 
     def test_benchmark_corpus_imports(self):
         import_script('benchmark_corpus')
+
+    def test_benchmark_ingest_imports(self):
+        import_script('benchmark_ingest')
+
+    def test_corpus_manifest_imports(self):
+        module = import_script('corpus_manifest')
+        manifest = module.load_manifest()
+        assert [c['folder'] for c in manifest['corpora']] == list(module.CORPORA)
