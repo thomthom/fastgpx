@@ -81,6 +81,27 @@ Commit `1b8881a`, #12 and #16. This is a feature, not a speed change. It is list
 changes how points compare equal. On the desktop, comparing two points with `==` stayed at about
 55–70 ns, and none of the measurements above moved outside noise.
 
+## Release build for the wheels
+
+The wheels were built as RelWithDebInfo, which on MSVC restricts inlining and on Linux ships the
+extension with about 12 MB of debug info. They are now built as Release. Desktop only; Linux is
+WSL2 on the same machine, measured in C++. Details and the other settings tried are in
+[build_settings.md](build_settings.md).
+
+| Measurement | Before | After | Speedup |
+|---|---:|---:|---:|
+| `load()`, 183 real files (Python, Windows) | 1.50 s | 1.45 s | 1.04× |
+| `time_bounds()`, 183 real files (Python, Windows) | 39.7 ms | 31.1 ms | 1.28× |
+| Reading every point's coordinates (Python, Windows) | 22.1 ms | 19.5 ms | 1.13× |
+| `polyline.encode`, all segments of one file (Python, Windows) | 2.93 ms | 2.61 ms | 1.12× |
+| `LoadGpx`, TET files (C++, Linux) | 138 ns/point | 137 ns/point | 1.01× |
+| Time bounds of a 5,189-point segment (C++, Linux) | 70 µs | 62 µs | 1.13× |
+| `polyline::decode`, 10k points (C++, Linux) | 101 µs | 60 µs | 1.67× |
+| Windows wheel (published 0.7.0 against a local Release build) | 370 KB | 203 KB | |
+
+Nothing got slower. Loading, the main cost, barely changes: most of its time is in work the compiler
+cannot remove (see [load_profile.md](load_profile.md)).
+
 ## Earlier measurements
 
 Recorded before this document existed, in their own notes:

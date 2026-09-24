@@ -86,9 +86,10 @@ minimum-version = "0.11"
 build-dir = "build/{wheel_tag}"
 
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#configuring-cmake-arguments-and-defines
-# cmake.build-type = "Debug"
-# cmake.build-type = "Release"
-cmake.build-type = "RelWithDebInfo"
+# Release rather than RelWithDebInfo: MSVC only inlines at /Ob2, and nanobind strips the Linux
+# extension only in Release, which otherwise ships ~12 MB of debug info. See
+# benchmarks/build_settings.md.
+cmake.build-type = "Release"
 
 [tool.scikit-build.cmake.define]
 # No need to build the tests in the wheel.
