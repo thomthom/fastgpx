@@ -1,5 +1,10 @@
 # nanobind 3 and split mode
 
+> **Status:** historical numbers, current configuration. Measured 2026-09-09 for `d1a2315`, MSVC
+> 19.44 x64 RelWithDebInfo under ARM64 emulation. The extension still uses nanobind 3 in split mode,
+> but the wheels have since become Release and use `NOMINSIZE` on Linux, so the absolute figures
+> are out of date.
+
 Measurements made for the nanobind 2.15 to 3.0.1 upgrade (#59). The C++ library is identical in
 every build; only the binding layer differs. Three builds of the same sources were compared:
 

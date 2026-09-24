@@ -1,5 +1,9 @@
 # ISO 8601 parser comparison (`parse_gpx_time`)
 
+> **Status:** historical. Measured 2026-09-09 at `a9ac49d`, MSVC 19.44 x64 RelWithDebInfo under
+> ARM64 emulation. `v1` to `v5` are gone, and `parse_gpx_time` itself was made faster since by
+> `8c87bf1`; see [performance.md](performance.md).
+
 `datetime.cpp` once held six parsers for the GPX `<time>` element, written to compare approaches
 against each other. Only `v6`, `parse_gpx_time`, reached the production path; `v1` to `v5` were
 removed in #47. This note keeps the comparison findable. The removed code is in the history before

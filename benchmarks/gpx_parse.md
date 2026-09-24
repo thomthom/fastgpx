@@ -1,5 +1,9 @@
 # Gpx.Parse
 
+> **Status:** historical. Measured 2024-10-27 and 2024-10-28 with a RelWithDebInfo build from the
+> `route-map` repository, while time bounds were being added. The parser, bindings and build have
+> all changed since; current numbers are in [performance.md](performance.md).
+
 ## Before Adding TimeBounds
 
 ```sh

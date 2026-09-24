@@ -1,5 +1,9 @@
 # nanobind vs pybind11
 
+> **Status:** historical. Committed 2025-11-26 (`d86973b`), on the desktop, one run of each script;
+> the build type was not recorded. Superseded by the nanobind 3 upgrade in split mode; see
+> [nanobind3.md](nanobind3.md).
+
 ## Test machine
 
 | Device name   |	HAL-9000                                      |

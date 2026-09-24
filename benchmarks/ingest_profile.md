@@ -1,5 +1,10 @@
 # Where Sleipnir's GPX upload spends fastgpx time
 
+> **Status:** historical. Measured 2026-09-24 for `f36982d`, with the earlier Linux link-time
+> optimization wheel that did not reach the parser. Its two findings became thomthom/sleipnir#596
+> and `Segment.lonlat()` (`b841e82`). Current upload-path numbers are in
+> [performance.md](performance.md#where-things-stand).
+
 Sleipnir turns an uploaded GPX file into stored tracks and segments in `create_gpx_file`
 (`apps/maps/gpx_ingest.py`). This measures the fastgpx side of that path, step by step, to see
 whether parsing or the Python work around it is worth improving. The Django `LineString`

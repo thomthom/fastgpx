@@ -1,5 +1,10 @@
 # Where `LoadGpx` spends its time
 
+> **Status:** historical. Profiled 2026-09-24 at `1b8881a` (committed in `6d4e491`), RelWithDebInfo
+> with MSVC 19.51 and GCC 14.2. Not re-profiled since the wheels became Release (`4c0b6be`), the
+> trim it flagged was rewritten (`441ba44`), and Linux gained link-time optimization that reaches
+> the parser (`7a03e1d`).
+
 A CPU profile of loading GPX files, made to find what is worth improving next. It was taken on
 Windows and on Linux (WSL) on the same machine, because the answer turned out to depend on the
 platform. It records the starting point: the builds profiled here are RelWithDebInfo, as the
