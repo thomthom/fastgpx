@@ -114,6 +114,11 @@ with no polyline cost. The `parse_gpx_time` slowdown does not show in bulk times
 is faster. On Windows, which is used for development, polyline decoding would be about a quarter
 slower.
 
+**Reversed** after measuring Sleipnir's upload path from Python, where link-time optimization made
+parsing slower on Linux, not faster, with the extension built as it is (nanobind's `-Os` and
+interposable pugixml symbols block the inlining). The wheels are now Release everywhere; see
+[review_decisions.md](review_decisions.md).
+
 A Linux wheel built with the override: Release with link-time optimization, stripped, a 493 KB
 extension and a 208 KB wheel (the published 0.7.0 wheel is 3.6 MB).
 
