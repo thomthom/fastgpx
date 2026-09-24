@@ -1,3 +1,5 @@
+import pytest
+
 import fastgpx
 
 
@@ -97,6 +99,21 @@ class TestBounds:
 
         assert bounds1 == bounds2
         assert bounds1 != bounds3
+
+    # fastgpx.Bounds.__hash__
+
+    def test_unhashable(self):
+        # Mutable with value equality, so unhashable, as `LatLong` is.
+        bounds = fastgpx.Bounds((-10, -5), (30, 25))
+        assert fastgpx.Bounds.__hash__ is None
+        with pytest.raises(TypeError):
+            hash(bounds)
+        with pytest.raises(TypeError):
+            set([bounds])
+        with pytest.raises(TypeError):
+            {bounds: 'value'}
+        assert bounds == fastgpx.Bounds((-10, -5), (30, 25))
+        assert fastgpx.Bounds() == fastgpx.Bounds()
 
     # fastgpx.Bounds.add
 

@@ -18,19 +18,25 @@ point on the upload path after thomthom/sleipnir#596 (`no_copy`), median of 5 al
 | Link-time optimization that reaches the parser | `7a03e1d` | pugixml and core library built with hidden visibility, `NOMINSIZE` on (except MSVC), LTO back on for Linux. Windows unchanged | Linux parse 167.4 → 136.6 (−18%), total 359.4 → 322.4 (−10%). `manylinux_2_28`: parse 175.1 → 144.8. `parse_gpx_time` 23.6 → 35.0 ns (C++, not on the upload path) |
 | Copying a point allocates; `LatLong` equality and hashing | `24b3d2f` | Timestamp text stored inline; equality at microseconds; `LatLong.__hash__`; `time` accepts only `datetime.datetime` | Linux total 338.0 → 307.5 (−9%), `list(points)` 55.2 → 40.1, free 20.9 → 13.3. Windows total 686 → 622 (quiet runs). C++ copy+free of 19,962 points: 525 → 81 µs Linux, 1,489 → 374 µs Windows |
 | Docs in line with the branch | `4c6284a` | Stale build types, collection sizes, wrong ratios and the fuzz instructions fixed; `performance.md` gained sections for the last two items | – |
-| Unhashable `LatLong`; link-time optimization only where supported; strict `TimeBounds` | 9a39c91 | `LatLong.__hash__` is `None` and `LatLong::Hash()` is gone; `FASTGPX_LTO` asks for link-time optimization and falls back with a warning; `TimeBounds` takes only `datetime.datetime` (behaviour change) | – (GCC 14 wheel flags identical to before) |
+| Unhashable `LatLong`; link-time optimization only where supported; strict `TimeBounds` | `9a39c91` | `LatLong.__hash__` is `None` and `LatLong::Hash()` is gone; `FASTGPX_LTO` asks for link-time optimization and falls back with a warning; `TimeBounds` takes only `datetime.datetime` (behaviour change) | – (GCC 14 wheel flags identical to before) |
+| CI fix, not a review item: the wheel workflow failed on 32-bit builds | `efdcdf3` | No more `win32` and `i686` wheels (user-visible: 0.5.0–0.7.0 shipped `win32`) | – |
+| Unhashable `TimeBounds` and `Bounds`; tests off in any scikit-build-core build | uncommitted | `TimeBounds.__hash__` and `Bounds.__hash__` are `None` (behaviour change); CMake defaults `BUILD_TESTING` to off when `SKBUILD` is set, and `pyproject.toml` no longer defines it | – (build configuration only) |
 
 Open for the user, most production impact first:
 
 - **Measure Linux ARM, and build a wheel with cibuildwheel itself.** Neither was done. The
   link-time optimization build was checked in the `manylinux_2_28` image; the inline-text change
   was not.
+- **Run the wheel workflow on `efdcdf3` or later, and say in the next release notes that 32-bit
+  Windows wheels are gone.** See the CI fix section; the fix itself has not run in CI yet.
 - ~~Decide whether a mutable `LatLong` should stay hashable.~~ Resolved: unhashable, option (a).
-  See the last item.
+  See the item making `LatLong` unhashable.
 - ~~Decide whether the Linux override should force link-time optimization.~~ Resolved: it asks
-  for it only where the compiler supports it. See the last item.
-- **Keep `inherit.cmake.define = "append"`** in any future platform override of `cmake.define` in
-  `pyproject.toml`. Without it the override silently turns `BUILD_TESTING` back on.
+  for it only where the compiler supports it. See the item making `LatLong`
+  unhashable.
+- ~~Keep `inherit.cmake.define = "append"` in any future platform override of `cmake.define`.~~
+  Resolved: CMake now keeps the tests out of a scikit-build-core build by itself, so an override
+  can no longer turn them back on. See the last item.
 - **Look at the bulk coordinate accessor (#73).** It would save creating a wrapper per point on
   the upload path; it was not looked at.
 - **Re-run the Windows numbers for the inline timestamp storage in a quiet session.** The machine
@@ -40,11 +46,10 @@ Open for the user, most production impact first:
 - **Revisit link-time optimization on Windows if the Windows upload path starts to matter.** It
   makes that path about 11% faster but polyline work 4–33% slower in C++.
 - ~~Decide whether `TimeBounds` should stop accepting `datetime.date` and `datetime.time`.~~
-  Resolved: it stops, as a behaviour change. See the last item.
-- **Decide whether `TimeBounds` and `Bounds` should become unhashable too.** They compare by value
-  but hash by identity, the same inconsistency `LatLong` had on `main`: `TimeBounds() ==
-  TimeBounds()` is true, yet a set holds both. This predates the branch. The same reasoning as for
-  `LatLong` applies.
+  Resolved: it stops, as a behaviour change. See the item making `LatLong`
+  unhashable.
+- ~~Decide whether `TimeBounds` and `Bounds` should become unhashable too.~~ Resolved:
+  unhashable, as a behaviour change. See the last item.
 - **Re-read GCC's inlining report for the shipped build** to confirm how `NOMINSIZE` helps. The
   mechanism is plausible, not verified.
 - **Explain the MSVC `polyline::decode` Catch2 figures** (250–330 µs, very noisy), far above the
@@ -55,8 +60,8 @@ Open for the user, most production impact first:
 
 ## Final verification (4c6284a)
 
-Run over the branch as it stood after the docs item. The item at the end of this file came later
-and records its own checks.
+Run over the branch as it stood after the docs item. The last two items came later
+and record their own checks.
 
 - **Sanitized Clang 18 build** (address and undefined, `FASTGPX_BUILD_FUZZERS=ON`), following
   `Development.md`: all 62 CTest tests pass, which are the 58 Catch2 cases plus the four
@@ -89,7 +94,7 @@ and records its own checks.
   keep their single-run numbers.
 - **LatLong equality** will compare at microsecond resolution and gain a value hash (option b),
   provided that costs nothing measurable on the production path. Done in a later item. The hash
-  was later dropped for option (a), unhashable; see the last item.
+  was later dropped for option (a), unhashable; see the item making `LatLong` unhashable.
 - **Link-time optimization on Linux.** Sleipnir's upload path never reads a point's `.time`, so
   the `parse_gpx_time` slowdown under LTO does not reach production. To be confirmed by
   measurement in a later item. Linux ARM wheels remain unmeasured.
@@ -450,7 +455,8 @@ before. It is worth revisiting if the Windows upload path ever matters more.
 - With link-time optimization forced on, a Linux build from the sdist with a compiler CMake
   cannot do it for (for example Clang without `llvm-ar`) stops at configure. The earlier
   link-time optimization commit had the same exposure; not addressed. *(Superseded: addressed in
-  the last item, which also found that such a build fails while building, not at configure.)*
+  the item making `LatLong` unhashable, which also found that such a build fails while building,
+  not at configure.)*
 - Clang was checked only in the sanitized fuzz build, not with link-time optimization. The
   Linux wheels are built with GCC.
 - GCC's inlining report was not re-read for the new build, so the stated `NOMINSIZE` mechanism
@@ -622,7 +628,8 @@ to follow equality, and computing it only on request keeps it off the load path.
   less, but it would still save creating a wrapper per point.
 - Linux ARM remains unmeasured, and the wheels were not built in the `manylinux_2_28` image.
 - `TimeBounds` still accepts `datetime.date` and `datetime.time`. Changing that would break an API
-  that is older than this branch. *(Superseded: changed in the last item, at the user's decision.)*
+  that is older than this branch. *(Superseded: changed in the item making `LatLong` unhashable,
+  at the user's decision.)*
 - The unexplained 10 ns per point from the second item was not re-checked on its own: copying
   freshly parsed points was slower on the branch than on `main`. Copying and freeing are now at or
   below `main`'s figures, so it no longer shows.
@@ -777,3 +784,110 @@ a single rule for every `datetime` argument in the module.
 - The no-archiver case is a simulation. A real toolchain without link-time optimization support
   was not tried.
 - Linux ARM remains unmeasured.
+
+## CI fix: no 32-bit wheels (`efdcdf3`)
+
+Not a review item; it came up when the wheel workflow was run on this branch.
+
+**Found.**
+
+- The wheel workflow (run 36051117010, on `8722e06`) failed building `cp312-win32`: the build
+  environment could not install `nanobind-backend>=1.0`. The other three jobs were cancelled by
+  the failed one, so they never got as far as building.
+- `nanobind-backend` 1.0.0 on PyPI has no sdist, only wheels. Those are per Python version
+  (cp310–cp315) for `win_amd64`, `win_arm64`, `manylinux` x86_64 and aarch64, riscv64 and macOS.
+  There is nothing for `win32`, `i686`, `musllinux` or `armv7l`.
+- `main`'s wheel workflow is broken the same way since split mode landed there (`d1a2315`,
+  2026-09-09). It only runs by hand, and it last ran on `main` on 2026-01-18, for 0.7.0.
+- fastgpx 0.5.0 to 0.7.0 on PyPI each ship a `cp312-abi3-win32` wheel. No release had `i686`.
+
+**Done.** `CIBW_SKIP` also skips `*-win32` and `*_i686`. What remains is cp312 on `manylinux_2_28`
+x86_64 and aarch64, Windows AMD64 and Windows ARM64, and `nanobind-backend` has a cp312 wheel for
+each. **User-visible:** the next release has no 32-bit Windows wheel. On 32-bit Windows pip falls
+back to the fastgpx sdist, and that cannot install `nanobind-backend` either, so fastgpx stops
+installing there at all.
+
+**Not done.** The workflow has not been run on `efdcdf3`, so the four remaining builds are
+unverified. They are expected to work because the same four built for 0.7.0 and each has a backend
+wheel, but that is inferred.
+
+## Item: unhashable `TimeBounds` and `Bounds`, and tests off in any scikit-build-core build
+
+Two follow-ups the user decided from the open points above.
+
+**Found.**
+
+- `TimeBounds` and `Bounds` compared by value but kept Python's identity hash, so
+  `TimeBounds() == TimeBounds()` was true while a set held both. Both are mutable: `TimeBounds` has
+  `start_time` and `end_time` setters and `add()`, `Bounds` has `min` and `max`, the four gpxpy
+  `min_`/`max_` latitude and longitude setters, and `add()`. This predates the branch.
+- No other bound class has the same mismatch. `Segment`, `Track` and `Gpx` define no `__eq__`, so
+  they compare and hash by identity, which agrees. `SegmentList` and `TrackList` define no `__eq__`
+  either (their `in`, `count` and `index` compare identity on purpose). `LatLongList` and, since
+  the previous item, `LatLong` are already unhashable. `polyline.Precision` is an enum.
+- `pyproject.toml` kept the tests out of the wheel with `BUILD_TESTING = false` in its
+  `cmake.define` table. That was the only entry in the table. An override of `cmake.define`
+  replaces the table unless it says `inherit.cmake.define = "append"`, and once that dropped
+  `BUILD_TESTING` and turned the tests back on in the Linux wheels. scikit-build-core (1.0.3 in
+  the WSL build) writes `set(SKBUILD 2 CACHE STRING "" FORCE)` into its initial cache file, so
+  CMake can tell it is building a package.
+
+**Done.**
+
+- `TimeBounds.__hash__` and `Bounds.__hash__` are `None`, set the same way as for `LatLong`.
+  `hash(x)`, `set([x])` and `{x: …}` raise `TypeError`; equality is unchanged. **Behaviour change
+  against `main`:** sets and dict keys of these types used to work, by identity, and now raise
+  `TypeError`. Sleipnir does not hash them. It gets them from `bounds()` and `time_bounds()`,
+  merges `Bounds` with `add()`, and reads their fields; nothing puts them in a set, uses them as
+  dict keys or passes them to a cache. The two test files each gained an unhashability test. The
+  stubs changed only by `__hash__: None = None` on the two classes.
+- `CMakeLists.txt` defaults `BUILD_TESTING` to off when `SKBUILD` is set and `BUILD_TESTING` is not
+  already defined, before `include(CTest)` would default it to on. It also prints `BUILD_TESTING`
+  at configure. An explicit `-DBUILD_TESTING=ON` still wins, and plain CMake builds are unchanged.
+- `BUILD_TESTING = false` is removed from `pyproject.toml`, which leaves the base `cmake.define`
+  table empty and a comment in its place. Keeping it as a second guard would leave two places
+  that decide the same thing, and a wheel configure would no longer show whether the CMake
+  default works on its own.
+- `inherit.cmake.define = "append"` stays on the Linux override. Nothing depends on it now, since
+  the base table is empty, but it costs nothing and carries any define added there later. Its
+  comment says so instead of warning about `BUILD_TESTING`.
+
+Checked in WSL2 with GCC 14.2 (`CC=gcc-14 CXX=g++-14`) and CMake 4.4.3, on a copy of the working
+tree:
+
+| Build | Defines passed to CMake | `BUILD_TESTING` | Catch2 fetched |
+|---|---|---|---|
+| `uv build --wheel` | `-DFASTGPX_LTO=ON` (link-time optimization enabled) | OFF | no |
+| the same, with the old base `BUILD_TESTING = false` restored and `inherit` removed (temporary) | `-DFASTGPX_LTO=ON`; the base define is dropped, as before | OFF | no |
+| `uv build --wheel -C cmake.define.BUILD_TESTING=ON` | `-DFASTGPX_LTO=ON -DBUILD_TESTING=ON` | ON | yes, `fastgpx_test` built |
+| plain `cmake` configure | none | ON | yes |
+| `cmake` configure with `-DSKBUILD=2` | none | OFF | no |
+
+Verified:
+
+- Windows editable build, reconfigured from scratch (`CMakeCache.txt` removed): configure prints
+  `BUILD_TESTING: OFF` with no `BUILD_TESTING` define passed. `uv run --reinstall-package fastgpx
+  pytest`: 207 passed.
+- MSVC 19.51, configured per `Development.md` with `FASTGPX_BUILD_FUZZERS=ON`: `BUILD_TESTING: ON`,
+  and Catch2 plus the corpus replays through CTest pass, 62/62.
+- Sphinx with `-W --keep-going --fresh-env` builds clean.
+
+Raw logs are outside the repository, in `~/fastgpx-review/v7/` (`build-wheel.log`,
+`build-noinherit.log`, `build-on.log`, `plain.log`, `skb-on.log`, `skb-def.log`).
+
+**Why.** Unhashable `TimeBounds` and `Bounds` cannot be lost in a set or dict after a change, and
+they now follow the same rule as `LatLong` and `LatLongList`. Deciding the test default in CMake
+removes the trap rather than documenting it: no pyproject override, with or without `inherit`,
+can turn the tests on by accident, while asking for them explicitly still works.
+
+**Not done.**
+
+- The sanitized Clang build and a fuzz run were not repeated. Neither change touches the parsers,
+  and the fuzz build sets no `SKBUILD`, which the plain configure above covers.
+- No wheel was built with cibuildwheel. It drives scikit-build-core the same way, so the default
+  should hold there, but that is inferred.
+- `BUILD_TESTING` now sticks in a reused build directory. scikit-build-core keeps its build
+  directory (`build/{wheel_tag}`), and the default applies only when the cache has no
+  `BUILD_TESTING` yet. After one build with `-C cmake.define.BUILD_TESTING=ON`, later builds in
+  that directory keep the tests until it is deleted. The old `BUILD_TESTING = false` define reset
+  it on every configure. CI builds start from scratch and are not affected.

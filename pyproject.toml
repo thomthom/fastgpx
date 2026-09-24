@@ -91,9 +91,9 @@ build-dir = "build/{wheel_tag}"
 # benchmarks/build_settings.md.
 cmake.build-type = "Release"
 
-[tool.scikit-build.cmake.define]
-# No need to build the tests in the wheel.
-BUILD_TESTING = false
+# No cmake.define table here on purpose. The tests are left out of the wheel by CMakeLists.txt,
+# which defaults BUILD_TESTING to off when scikit-build-core drives the build, so no define is
+# needed for that and an override below cannot lose it.
 
 # Link-time optimization for the Linux wheels, which is what production runs. It pays off only
 # because pugixml and the core library are built with hidden visibility (src/cpp/CMakeLists.txt),
@@ -103,6 +103,7 @@ BUILD_TESTING = false
 # sdist with a compiler that cannot do it warns and builds without it instead of failing.
 [[tool.scikit-build.overrides]]
 if.platform-system = "^linux"
-# Add to the cmake.define table above instead of replacing it, which would drop BUILD_TESTING.
+# An override's cmake.define replaces the base table unless it appends. The base table is empty
+# today, so nothing depends on this, but any define added there later reaches Linux too.
 inherit.cmake.define = "append"
 cmake.define.FASTGPX_LTO = "ON"

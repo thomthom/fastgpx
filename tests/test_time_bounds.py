@@ -250,6 +250,22 @@ class TestTimeBounds:
         assert bounds1 == bounds2
         assert bounds1 != bounds3
 
+    # fastgpx.TimeBounds.__hash__
+
+    def test_unhashable(self):
+        # Mutable with value equality, so unhashable, as `LatLong` is.
+        start_time = datetime.fromisoformat("2025-06-20 08:07:28+00:00")
+        bounds = fastgpx.TimeBounds(start_time=start_time, end_time=None)
+        assert fastgpx.TimeBounds.__hash__ is None
+        with pytest.raises(TypeError):
+            hash(bounds)
+        with pytest.raises(TypeError):
+            set([bounds])
+        with pytest.raises(TypeError):
+            {bounds: 'value'}
+        assert bounds == fastgpx.TimeBounds(start_time=start_time, end_time=None)
+        assert fastgpx.TimeBounds() == fastgpx.TimeBounds()
+
     # fastgpx.TimeBounds.__repr__
 
     def test_repr(self):
