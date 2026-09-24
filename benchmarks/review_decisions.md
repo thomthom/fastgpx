@@ -46,6 +46,8 @@ Open for the user, most production impact first:
   was noisy. The two quiet runs show `no_copy` 686 → 622 ns per point, and all 5 run pairs favoured
   the change. But over all 5 runs the median `current` total and parse got slightly worse. Linux
   is unaffected and is the production figure.
+  The machine was in normal use throughout the review, for Windows and WSL runs alike. The runs
+  alternated builds, so ratios hold; absolute figures, Windows especially, may be high.
 - **Revisit link-time optimization on Windows if the Windows upload path starts to matter.** It
   makes that path about 11% faster but polyline work 4–33% slower in C++.
 - ~~Decide whether `TimeBounds` should stop accepting `datetime.date` and `datetime.time`.~~
