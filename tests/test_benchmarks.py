@@ -31,3 +31,6 @@ class TestBenchmarkScripts:
         pytest.importorskip('lxml')
         pytest.importorskip('gpxpy')
         import_script('benchmark_gpx')
+
+    def test_benchmark_corpus_imports(self):
+        import_script('benchmark_corpus')
