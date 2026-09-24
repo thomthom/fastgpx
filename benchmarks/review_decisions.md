@@ -22,7 +22,7 @@ point on the upload path after thomthom/sleipnir#596 (`no_copy`), median of 5 al
 | CI fix, not a review item: the wheel workflow failed on 32-bit builds | `efdcdf3` | No more `win32` and `i686` wheels (user-visible: 0.5.0–0.7.0 shipped `win32`) | – |
 | Unhashable `TimeBounds` and `Bounds`; tests off in any scikit-build-core build | `e3f3651` | `TimeBounds.__hash__` and `Bounds.__hash__` are `None` (behaviour change); CMake defaults `BUILD_TESTING` to off when `SKBUILD` is set, and `pyproject.toml` no longer defines it | – (build configuration only) |
 | Bulk coordinate accessor (#73) | `b841e82` | `Segment.lonlat()` returns a new list of `(longitude, latitude)` float tuples, built in C++; `benchmark_ingest.py` gained a `lonlat` variant. Sleipnir not changed | Total, `no_copy` → `lonlat`: Linux 297.7 → 214.3 (−28%), Windows 777.9 → 625.0 (−20%). Coordinates (list, tuples, free) Linux 120.6 → 37.2 |
-| Current and historical benchmark numbers | `53731ec` | `performance.md` and `build_settings.md` put current, verified numbers first and move the rest below a line as historical; the older notes got a status line; `README.md` indexes the notes and scripts | – (nothing re-measured) |
+| Current and historical benchmark numbers | `cbe1668` | `performance.md` and `build_settings.md` put current, verified numbers first and move the rest below a line as historical; the older notes got a status line; `README.md` indexes the notes and scripts | – (nothing re-measured) |
 
 Open for the user, most production impact first:
 
