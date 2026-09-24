@@ -27,8 +27,8 @@ Open for the user, most production impact first:
 - **Measure Linux ARM, and build a wheel with cibuildwheel itself.** Neither was done. The
   link-time optimization build was checked in the `manylinux_2_28` image; the inline-text change
   was not.
-- **Run the wheel workflow on `efdcdf3` or later, and say in the next release notes that 32-bit
-  Windows wheels are gone.** See the CI fix section; the fix itself has not run in CI yet.
+- **Run the wheel workflow on `efdcdf3` or later.** See the CI fix section; the fix itself has not
+  run in CI yet.
 - ~~Decide whether a mutable `LatLong` should stay hashable.~~ Resolved: unhashable, option (a).
   See the item making `LatLong` unhashable.
 - ~~Decide whether the Linux override should force link-time optimization.~~ Resolved: it asks
@@ -805,7 +805,8 @@ Not a review item; it came up when the wheel workflow was run on this branch.
 x86_64 and aarch64, Windows AMD64 and Windows ARM64, and `nanobind-backend` has a cp312 wheel for
 each. **User-visible:** the next release has no 32-bit Windows wheel. On 32-bit Windows pip falls
 back to the fastgpx sdist, and that cannot install `nanobind-backend` either, so fastgpx stops
-installing there at all.
+installing there at all. The user does not want 32-bit wheels, on Windows especially, so this is
+accepted.
 
 **Not done.** The workflow has not been run on `efdcdf3`, so the four remaining builds are
 unverified. They are expected to work because the same four built for 0.7.0 and each has a backend
