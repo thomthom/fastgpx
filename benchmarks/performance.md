@@ -158,7 +158,9 @@ Recorded before this document existed, in their own notes:
 - [nanobind_vs_pybind11.md](nanobind_vs_pybind11.md): the move from pybind11 to nanobind.
 - [gpx_parse.md](gpx_parse.md): parse times while time bounds were being added.
 
-For where load time goes today on Windows and Linux, see [load_profile.md](load_profile.md).
+For where load time goes today on Windows and Linux, see [load_profile.md](load_profile.md). For
+the fastgpx side of Sleipnir's GPX upload, including the Python work around parsing, see
+[ingest_profile.md](ingest_profile.md).
 
 ## How the desktop numbers were measured
 
