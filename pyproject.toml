@@ -94,3 +94,10 @@ cmake.build-type = "Release"
 [tool.scikit-build.cmake.define]
 # No need to build the tests in the wheel.
 BUILD_TESTING = false
+
+# Link-time optimization for the Linux wheels, which is what production runs: loading is about 22%
+# faster with GCC. Not on Windows, where it made polyline decoding slower. See
+# benchmarks/build_settings.md.
+[[tool.scikit-build.overrides]]
+if.platform-system = "^linux"
+cmake.define.CMAKE_INTERPROCEDURAL_OPTIMIZATION = "ON"

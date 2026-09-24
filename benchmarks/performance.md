@@ -133,6 +133,22 @@ machine.
 On Linux the rounds varied by about 25%, and no gain could be seen. GCC may already have made the
 old search cheap; that has not been checked.
 
+## Link-time optimization for the Linux wheels
+
+The Linux wheels are now built with link-time optimization, which lets the compiler inline across
+source files, for example pugixml's lookups into fastgpx's loop. Windows wheels are not, because
+there it made polyline decoding slower. Linux is WSL2 on the desktop, GCC 14, measured in C++.
+Details are in [build_settings.md](build_settings.md).
+
+| Measurement | Before | After | Speedup |
+|---|---:|---:|---:|
+| `LoadGpx`, TET files | 137 ns/point | 112 ns/point | 1.22× |
+| Parse a 20k-point file | 3.94 ms | 3.18 ms | 1.24× |
+| Time bounds of a 5,189-point segment | 61.6 µs | 55.3 µs | 1.12× |
+| `parse_gpx_time`, one timestamp | 24 ns | 35 ns | 0.69× |
+
+Single-timestamp parsing gets slower, but bulk timestamp work (time bounds) is still faster.
+
 ## Earlier measurements
 
 Recorded before this document existed, in their own notes:

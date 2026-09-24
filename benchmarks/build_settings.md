@@ -90,3 +90,32 @@ as such. The encoder now writes the characters straight into the result string, 
 temporary per value. After that change, encoding 10k points on Windows takes 74 µs in Release and
 81 µs with link-time optimization, down from 165 µs and 484 µs (see
 [performance.md](performance.md)).
+
+## Link-time optimization after the encoder change
+
+Measured again at `e66b8a2`, Release (B) against Release + link-time optimization (C). Median of
+five runs, alternated; Windows had background load, so smaller Windows differences are uncertain.
+
+| Measurement | Windows C/B | Linux C/B |
+|---|---:|---:|
+| `LoadGpx`, TET files (C++) | 1.16× | 1.22× |
+| `load()`, 183 real files (Python) | 1.08× | – |
+| Time bounds of a 5,189-point segment (C++) | within noise | 1.12× |
+| `polyline::encode`, 10k points (C++) | within noise | within noise |
+| `polyline::decode`, 10k points (C++) | **0.73×** | within noise |
+| `parse_gpx_time` (C++) | **0.93×** | **0.69×** |
+| `polyline.encode`, one file (Python) | 0.94× | – |
+
+Above 1× is faster with link-time optimization.
+
+**Decision:** link-time optimization for the Linux wheels only, through a platform override in
+`pyproject.toml`. Linux is where production runs, and there it speeds up loading and time bounds
+with no polyline cost. The `parse_gpx_time` slowdown does not show in bulk timestamp work, which
+is faster. On Windows, which is used for development, polyline decoding would be about a quarter
+slower.
+
+A Linux wheel built with the override: Release with link-time optimization, stripped, a 493 KB
+extension and a 208 KB wheel (the published 0.7.0 wheel is 3.6 MB).
+
+Not yet explained: why link-time optimization slows `parse_gpx_time` on both compilers and
+polyline decoding on MSVC.
