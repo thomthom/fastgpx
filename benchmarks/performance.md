@@ -15,6 +15,21 @@ Desktop numbers are the median of five runs, with the before and after builds ru
 Surface numbers are the median of three runs, taken from the commit messages; a dash means that
 measurement was not made on that machine.
 
+## Test files
+
+Single-file rows use `gpx/2024 TopCamp/Connected_20240518_094959_.gpx` (1.9 MB, 20k points).
+Rows marked "109 real files" use a wider collection, so that no change is tuned to one file:
+
+| | |
+|---|---|
+| Files | 154 unique GPX files, 150 MB, 1.5 million track points; 109 of them have 1,000 points or more |
+| Sources | This repository's `gpx/` folder, plus tracks uploaded to the Sleipnir dev server and the TET country routes |
+| Written by | About 20 apps and devices; mostly BMW Motorrad Connected, also Garmin, Beeline, GPSBabel, gpxpy, Runkeeper and others |
+| Timestamps | 97% `2024-05-18T06:50:01Z`; the rest with milliseconds, seven fraction digits, a UTC offset or no time zone. The TET routes carry timestamps on only some of their points |
+
+The speedups for that collection are the total over the 109 larger files. Smaller files take
+microseconds, so their ratios are mostly noise.
+
 ## Faster timestamp parsing (`dev/faster-time-bounds`)
 
 Commit `8c87bf1`, #19. Timestamps are converted to a time point with plain date arithmetic instead
@@ -25,6 +40,7 @@ of a call into the C runtime. This also makes dates before 1970 parse on Windows
 | Parse one `<time>` string (C++) | 88 ns | 69 ns | 1.28× | 309 ns | 287 ns | 1.08× |
 | Time bounds of a 5,189-point segment (C++) | 595 µs | 485 µs | 1.23× | – | – | – |
 | `gpx.time_bounds()` on a 20k-point file (Python) | 4.57 ms | 3.76 ms | 1.22× | – | – | – |
+| `gpx.time_bounds()`, 109 real files (Python) | 366 ms | 314 ms | 1.17× | – | – | – |
 
 ## Time bounds without parsing every timestamp (`dev/faster-time-bounds`)
 
@@ -36,7 +52,12 @@ latest are parsed. Anything unusual falls back to the old path.
 |-------------|---------------:|--------------:|--------:|---------------:|--------------:|--------:|
 | Time bounds of a 5,189-point segment (C++) | 485 µs | 143 µs | 3.4× | 1.60 ms | 0.22 ms | 7.4× |
 | `gpx.time_bounds()` on a 20k-point file (Python) | 3.76 ms | 0.71 ms | 5.3× | 6.4 ms | 0.80 ms | 8.0× |
+| `gpx.time_bounds()`, 109 real files (Python) | 314 ms | 49 ms | 6.4× | – | – | – |
 | `load()` + `time_bounds()`, 24 files (Python) | 243 ms | 196 ms | 1.24× | – | – | – |
+
+Across the 109 real files, the speedup per file ranges from 3.7× to 12× wherever every point has a
+timestamp. The single test file sits below the middle of that range. The TET routes gain little,
+since most of their points have no timestamp to parse in the first place.
 
 ## Both changes together
 
@@ -47,8 +68,12 @@ timestamps, so load time itself is unchanged within noise (about 12 ms for the 2
 |-------------|-------:|------:|--------:|
 | Parse one `<time>` string (C++) | 88 ns | 65 ns | 1.35× |
 | `gpx.time_bounds()` on a 20k-point file (Python) | 4.57 ms | 0.71 ms | 6.5× |
+| `gpx.time_bounds()`, 109 real files (Python) | 366 ms | 49 ms | 7.5× |
 | `load()` + `time_bounds()`, 20k-point file (Python) | 16.1 ms | 12.6 ms | 1.27× |
 | `load()` + `time_bounds()`, 24 files (Python) | 272 ms | 196 ms | 1.39× |
+
+Every one of the 154 files gives the same time bounds before and after, with one intended
+exception. `Mojstrovka.gpx` has timestamps from 1901, which the old code rejected on Windows.
 
 ## Regression check: `LatLong.time` (`dev/latlong-time`)
 
@@ -72,3 +97,7 @@ The time bounds benchmark was added in `9b94af8`, so it was copied into the olde
 measure them. The 20k-point file is `gpx/2024 TopCamp/Connected_20240518_094959_.gpx`, and the
 24 files are `gpx/2024 Great Roadtrip`. The Python rows use `timeit`, taking the best of 15 repeats,
 with `time_bounds()` called on freshly loaded documents, since it caches its result.
+
+The "109 real files" rows come from [benchmark_corpus.py](benchmark_corpus.py). It runs one build
+over any set of folders and compares two runs, including whether the time bounds agree. To check a
+change against your own GPX files, use it the same way.
