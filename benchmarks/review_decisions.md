@@ -28,9 +28,9 @@ Open for the user, most production impact first:
 - **Release fastgpx with `Segment.lonlat()`, then switch Sleipnir to it (thomthom/sleipnir#597).**
   Production gains nothing until Sleipnir uses it and raises its `fastgpx>=0.7.0,<0.8` pin. The
   issue also covers sleipnir#596.
-- **Measure Linux ARM, and build a wheel with cibuildwheel itself.** Neither was done. The
-  link-time optimization build was checked in the `manylinux_2_28` image; the inline-text change
-  was not.
+- ~~Measure Linux ARM, and build a wheel with cibuildwheel itself.~~ Resolved: production runs
+  x86_64 (`uname -m` on the Sleipnir server), so the ARM wheel's speed does not matter there. The
+  CI wheel build (see the CI fix section) built all four wheels with cibuildwheel.
 - ~~Decide whether a mutable `LatLong` should stay hashable.~~ Resolved: unhashable, option (a).
   See the item making `LatLong` unhashable.
 - ~~Decide whether the Linux override should force link-time optimization.~~ Resolved: it asks
