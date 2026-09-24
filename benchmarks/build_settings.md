@@ -117,5 +117,31 @@ slower.
 A Linux wheel built with the override: Release with link-time optimization, stripped, a 493 KB
 extension and a 208 KB wheel (the published 0.7.0 wheel is 3.6 MB).
 
-Not yet explained: why link-time optimization slows `parse_gpx_time` on both compilers and
-polyline decoding on MSVC.
+Not yet explained: why link-time optimization slows polyline decoding on MSVC.
+
+## Why link-time optimization slows `parse_gpx_time` on GCC
+
+Timestamps are read field by field through a small helper, `StringParser::ExtractInt`, which
+takes the number of digits as an argument. In a plain Release build, GCC inlines five of its six
+calls in the date and time part, so each copy sees a fixed digit count. With link-time
+optimization, none of them are inlined. GCC's own report gives the reason: its limit on how much
+a unit may grow through inlining (`inline-unit-growth`). A single source file stays under the
+threshold where that limit applies, but the whole program does not.
+
+In a tight loop that only parses timestamps, this costs about 11 ns per call, 25 against 36 ns.
+It does not show in real use. Time bounds, which parse only the first and last timestamp of a
+segment, are faster with link-time optimization, and reading every point's time costs the same
+(about 49 against 50 ns per point, one round each). Loading does not parse timestamps at all.
+
+Two fixes were tried and reverted, both on GCC 14 in WSL2, median of five alternated runs:
+
+| Attempt | Release | Release + link-time optimization |
+|---|---:|---:|
+| Before either | 24 ns | 36 ns |
+| Digit count as a template parameter, `ExtractInt<N>()` | 28 ns | 31 ns |
+| Force-inlining `ExtractInt` | 38 ns | 45 ns |
+
+The template kept the calls out of line and made the Release build slower (MSVC too, by 20%).
+Force-inlining did inline every call, but made both builds slower. So inlining alone was not what
+made the Release build fast: even there, one call stays out of line. The machine code of the fast
+build was not examined; that would be the next step if this path ever matters.
