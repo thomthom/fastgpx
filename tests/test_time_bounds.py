@@ -1,5 +1,5 @@
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 
 import pytest
 
@@ -41,6 +41,42 @@ class TestTimeBounds:
         assert bounds.is_range()
         assert bounds.start_time == start_time
         assert bounds.end_time == end_time
+
+    @pytest.mark.parametrize('value', [
+        date(2025, 6, 20),
+        time(8, 7, 28),
+        time(8, 7, 28, tzinfo=timezone.utc),
+        '2025-06-20T08:07:28Z',
+        1750406848,
+    ])
+    def test_rejects_anything_but_a_datetime(self, value):
+        # A date or a time of day is not a point in time, and converting one would silently make
+        # up the missing part (midnight, or 1970-01-01).
+        with pytest.raises(TypeError):
+            fastgpx.TimeBounds(start_time=value, end_time=None)
+        with pytest.raises(TypeError):
+            fastgpx.TimeBounds(start_time=None, end_time=value)
+        bounds = fastgpx.TimeBounds()
+        with pytest.raises(TypeError):
+            bounds.start_time = value
+        with pytest.raises(TypeError):
+            bounds.end_time = value
+        with pytest.raises(TypeError):
+            bounds.add(value)
+        assert bounds.is_empty()
+
+    def test_accepts_a_datetime_subclass(self):
+        class MyDateTime(datetime):
+            pass
+
+        start_time = MyDateTime(2025, 6, 20, 8, 7, 28, tzinfo=timezone.utc)
+        bounds = fastgpx.TimeBounds(start_time=start_time, end_time=None)
+        assert bounds.start_time == start_time
+        bounds.end_time = start_time
+        assert bounds.end_time == start_time
+        bounds = fastgpx.TimeBounds()
+        bounds.add(start_time)
+        assert bounds.start_time == start_time
 
     # fastgpx.TimeBounds.add
 

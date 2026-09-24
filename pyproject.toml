@@ -99,8 +99,10 @@ BUILD_TESTING = false
 # because pugixml and the core library are built with hidden visibility (src/cpp/CMakeLists.txt),
 # which lets GCC inline pugixml into the parse loop inside the extension. Not on Windows, where it
 # made polyline decoding slower. See benchmarks/review_decisions.md.
+# FASTGPX_LTO asks for it only if the compiler supports it (CheckIPOSupported), so a build from the
+# sdist with a compiler that cannot do it warns and builds without it instead of failing.
 [[tool.scikit-build.overrides]]
 if.platform-system = "^linux"
 # Add to the cmake.define table above instead of replacing it, which would drop BUILD_TESTING.
 inherit.cmake.define = "append"
-cmake.define.CMAKE_INTERPROCEDURAL_OPTIMIZATION = "ON"
+cmake.define.FASTGPX_LTO = "ON"

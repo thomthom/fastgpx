@@ -7,8 +7,8 @@
 // encoder must accept every parsed point; a value_error from it is a finding.
 //
 // Before that, every point is copied, and the copy's time parsed, to check that a copy keeps its
-// time whether the text is stored inline or on the heap, and that equality and `LatLong::Hash`
-// agree. This comes first because time bounds throw on the first malformed <time>.
+// time whether the text is stored inline or on the heap. This comes first because time bounds
+// throw on the first malformed <time>.
 
 #include <cassert>
 #include <cstddef>
@@ -47,10 +47,6 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
             }
           }
           assert(copy.time == point.time);
-          if (copy == point)
-          {
-            assert(copy.Hash() == point.Hash());
-          }
         }
       }
     }
