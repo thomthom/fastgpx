@@ -24,3 +24,6 @@ env39/
 LastCoverageResults.log
 
 /docs/build/
+
+# TET country routes, downloaded locally for benchmarking (large; get them from transeurotrail.org).
+/gpx/TET/
