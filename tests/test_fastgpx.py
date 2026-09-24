@@ -175,6 +175,24 @@ class TestGpx:
         gpx = fastgpx.parse(xml)
         assert gpx.tracks[0].segments[0].points[0] == fastgpx.LatLong(60.5, 10.5, 0.0)
 
+    def test_parse_whitespace_padded_coordinates(self):
+        # The schema types lat, lon and ele as xsd:decimal, whose whitespace is collapsed, so a
+        # pretty-printed document may pad them. A leading '+' is allowed too.
+        xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+               '<gpx version="1.1" creator="test">\n'
+               '  <trk>\n'
+               '    <trkseg>\n'
+               '      <trkpt lat=" 61.5 " lon="\t10.25\n">\n'
+               '        <ele>\n          123.5\n        </ele>\n'
+               '      </trkpt>\n'
+               '      <trkpt lat="\r\n+61.75" lon="  -10.5  "/>\n'
+               '    </trkseg>\n'
+               '  </trk>\n'
+               '</gpx>\n')
+        points = fastgpx.parse(xml).tracks[0].segments[0].points
+        assert points[0] == fastgpx.LatLong(61.5, 10.25, 123.5)
+        assert points[1] == fastgpx.LatLong(61.75, -10.5, 0.0)
+
     @pytest.mark.parametrize('trkpt, message', [
         ('<trkpt lon="10.5"/>', 'missing the lat attribute'),
         ('<trkpt lat="60.5"/>', 'missing the lon attribute'),
@@ -570,6 +588,18 @@ class TestErrors:
                             f'<time>{time}</time></trkpt></trkseg></trk></gpx>')
         assert gpx.time_bounds().start_time == datetime.datetime(
             2024, 5, 18, 7, 50, 0, microsecond, tzinfo=datetime.timezone.utc)
+
+    @pytest.mark.parametrize('time, expected', [
+        ('2023-12-31T23:00:00-02:00', datetime.datetime(2024, 1, 1, 1, 0, 0)),
+        ('2024-01-01T01:00:00+02:00', datetime.datetime(2023, 12, 31, 23, 0, 0)),
+    ])
+    def test_time_with_an_offset_across_a_year_boundary(self, time: str,
+                                                        expected: datetime.datetime):
+        gpx = fastgpx.parse('<gpx><trk><trkseg><trkpt lat="60" lon="10">'
+                            f'<time>{time}</time></trkpt></trkseg></trk></gpx>')
+        expected = expected.replace(tzinfo=datetime.timezone.utc)
+        assert gpx.time_bounds().start_time == expected
+        assert gpx.tracks[0].segments[0].points[0].time == expected
 
     @pytest.mark.parametrize('time, message', [
         ('2024-05-18T07:50:00.Z', 'expected fractional second digits'),

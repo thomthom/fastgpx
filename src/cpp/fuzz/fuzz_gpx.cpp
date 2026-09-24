@@ -5,7 +5,12 @@
 // on-demand <time> parsing. Each segment's points are then passed to polyline::encode, as a
 // user converting a track to a polyline would. The parser range-checks coordinates, so the
 // encoder must accept every parsed point; a value_error from it is a finding.
+//
+// Before that, every point is copied, and the copy's time parsed, to check that a copy keeps its
+// time whether the text is stored inline or on the heap, and that equality and `LatLong::Hash`
+// agree. This comes first because time bounds throw on the first malformed <time>.
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -21,6 +26,34 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
   try
   {
     const fastgpx::Gpx gpx = fastgpx::ParseGpx(input);
+
+    for (const auto& track : gpx.tracks)
+    {
+      for (const auto& segment : track.segments)
+      {
+        for (const auto& point : segment.points)
+        {
+          fastgpx::LatLong copy = point;
+          assert(copy.time == point.time);
+          if (copy.time.has_value())
+          {
+            try
+            {
+              (void)copy.time->value();
+            }
+            catch (const fastgpx::parse_error&)
+            {
+              // Left as text; still equal to the original, checked below.
+            }
+          }
+          assert(copy.time == point.time);
+          if (copy == point)
+          {
+            assert(copy.Hash() == point.Hash());
+          }
+        }
+      }
+    }
 
     // The derived values are computed lazily and cached per level, so ask every level.
     (void)gpx.GetBounds();

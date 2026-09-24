@@ -2,9 +2,11 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <limits>
 #include <ratio>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <catch2/benchmark/catch_benchmark.hpp>
@@ -291,7 +293,7 @@ TEST_CASE("TimePoint equality", "[timepoint]")
     // two threads is not a data race.
     const TimePoint time_point("2024-05-18T07:50:01Z");
     CHECK(time_point == TimePoint(instant));
-    CHECK(time_point.raw() != nullptr);
+    CHECK(time_point.raw().has_value());
   }
   SECTION("a timestamp that cannot be parsed compares by its text")
   {
@@ -323,6 +325,238 @@ TEST_CASE("LatLong equality", "[timepoint]")
   CHECK(parsed != built);
 }
 
+TEST_CASE("Copying a TimePoint keeps its time", "[timepoint]")
+{
+  // Unparsed text up to `TimePoint::kInlineCapacity` characters is stored in the object, longer
+  // text on the heap, and a parsed time as the instant. Every copy and move has to keep all three.
+  const std::string short_text = "2024-05-18T07:50:01.123Z";
+  const std::string long_text = "2024-05-18T07:50:01.123000000000000000000000Z";
+  REQUIRE(short_text.size() <= TimePoint::kInlineCapacity);
+  REQUIRE(long_text.size() > TimePoint::kInlineCapacity);
+  const auto instant = parse_gpx_time(short_text);
+  REQUIRE(parse_gpx_time(long_text) == instant);
+
+  const auto make = [&](int which) {
+    switch (which)
+    {
+    case 0:
+      return TimePoint(short_text);
+    case 1:
+      return TimePoint(long_text);
+    default:
+      return TimePoint(instant);
+    }
+  };
+  const int which = GENERATE(0, 1, 2);
+  CAPTURE(which);
+  const TimePoint original = make(which);
+  const auto original_raw = original.raw();
+
+  SECTION("copy construction")
+  {
+    const TimePoint copy(original);
+    CHECK(copy.raw() == original_raw);
+    CHECK(copy.value() == instant);
+    CHECK(original.raw() == original_raw);
+  }
+  SECTION("copy assignment over each kind")
+  {
+    for (int target = 0; target < 3; ++target)
+    {
+      TimePoint copy = make(target);
+      copy = original;
+      CHECK(copy.raw() == original_raw);
+      CHECK(copy.value() == instant);
+    }
+  }
+  SECTION("self assignment")
+  {
+    TimePoint copy = original;
+    const TimePoint& alias = copy;
+    copy = alias;
+    CHECK(copy.raw() == original_raw);
+    CHECK(copy.value() == instant);
+  }
+  SECTION("move construction and assignment")
+  {
+    TimePoint source = original;
+    TimePoint moved(std::move(source));
+    CHECK(moved.raw() == original_raw);
+    for (int target = 0; target < 3; ++target)
+    {
+      TimePoint assigned = make(target);
+      TimePoint again = moved;
+      assigned = std::move(again);
+      CHECK(assigned.raw() == original_raw);
+      CHECK(assigned.value() == instant);
+    }
+    CHECK(moved.value() == instant);
+  }
+  SECTION("parsing a copy leaves the original unparsed")
+  {
+    const TimePoint copy = original;
+    CHECK(copy.value() == instant);
+    CHECK(original.raw() == original_raw);
+    CHECK(original == copy);
+  }
+  SECTION("points in a copied vector")
+  {
+    std::vector<LatLong> points(3, LatLong{60.5, 10.5, 1.0, original});
+    const auto copies = points;
+    for (const auto& point : copies)
+    {
+      REQUIRE(point.time.has_value());
+      CHECK(point.time->raw() == original_raw);
+      CHECK(point.time->value() == instant);
+    }
+  }
+}
+
+TEST_CASE("TimePoint storage edge cases", "[timepoint]")
+{
+  SECTION("text exactly at and one past the inline capacity")
+  {
+    const std::string at(TimePoint::kInlineCapacity, 'x');
+    const std::string past(TimePoint::kInlineCapacity + 1, 'x');
+    const TimePoint inline_text(at);
+    const TimePoint heap_text(past);
+    CHECK((inline_text.raw() == std::string_view(at)));
+    CHECK((heap_text.raw() == std::string_view(past)));
+    CHECK((TimePoint(inline_text).raw() == std::string_view(at)));
+    CHECK((TimePoint(heap_text).raw() == std::string_view(past)));
+    CHECK_FALSE(inline_text == heap_text);
+  }
+  SECTION("empty text, including a view with no data")
+  {
+    const TimePoint empty{std::string_view{}};
+    CHECK((empty.raw() == std::string_view()));
+    CHECK(empty == TimePoint(""));
+    CHECK_THROWS_AS(empty.value(), parse_error);
+  }
+  SECTION("a failed parse leaves heap text in place")
+  {
+    const std::string long_garbage(TimePoint::kInlineCapacity + 10, 'x');
+    const TimePoint point(long_garbage);
+    CHECK_THROWS_AS(point.value(), parse_error);
+    CHECK((point.raw() == std::string_view(long_garbage)));
+    const TimePoint copy = point;
+    CHECK(copy == point);
+    CHECK(LatLong{0, 0, 0, copy}.Hash() == LatLong{0, 0, 0, point}.Hash());
+  }
+  SECTION("self move assignment keeps heap text")
+  {
+    const std::string long_text = "2024-05-18T07:50:01.123000000000000000000000Z";
+    TimePoint point(long_text);
+    TimePoint& alias = point;
+    point = std::move(alias);
+    CHECK((point.raw() == std::string_view(long_text)));
+  }
+}
+
+TEST_CASE("TimePoint equality is at microsecond resolution", "[timepoint]")
+{
+  // What `datetime.datetime` can hold, and the same on every platform whatever the resolution of
+  // `system_clock` (100 ns with MSVC, 1 ns with libstdc++).
+  CHECK(TimePoint("2024-05-18T07:50:01.0000001Z") == TimePoint("2024-05-18T07:50:01.0000009Z"));
+  CHECK(TimePoint("2024-05-18T07:50:01.0000001Z") == TimePoint("2024-05-18T07:50:01Z"));
+  CHECK_FALSE(TimePoint("2024-05-18T07:50:01.000001Z") == TimePoint("2024-05-18T07:50:01.000002Z"));
+
+  // Truncated towards the past, as the conversion to `datetime.datetime` does, also before 1970.
+  CHECK(TimePoint("1969-12-31T23:59:59.9999999Z") == TimePoint("1969-12-31T23:59:59.999999Z"));
+  CHECK_FALSE(TimePoint("1969-12-31T23:59:59.9999999Z") == TimePoint("1970-01-01T00:00:00Z"));
+
+  // A point rebuilt from the microseconds its `time` reports equals the point it came from.
+  const LatLong parsed{60.5, 10.5, 100.0, TimePoint("2024-05-18T07:50:01.1234567Z")};
+  const auto microseconds =
+      std::chrono::floor<std::chrono::microseconds>(parse_gpx_time("2024-05-18T07:50:01.1234567Z"));
+  const LatLong rebuilt{60.5, 10.5, 100.0,
+                        TimePoint(std::chrono::system_clock::time_point(
+                            std::chrono::duration_cast<std::chrono::system_clock::duration>(
+                                microseconds.time_since_epoch())))};
+  CHECK(parsed == rebuilt);
+  CHECK(parsed.Hash() == rebuilt.Hash());
+}
+
+TEST_CASE("LatLong hash is consistent with equality", "[timepoint]")
+{
+  const auto check_equal = [](const LatLong& a, const LatLong& b) {
+    CHECK(a == b);
+    CHECK(a.Hash() == b.Hash());
+  };
+  const auto instant = parse_gpx_time("2024-05-18T07:50:01Z");
+
+  SECTION("text and the instant it parses to")
+  {
+    check_equal({60.5, 10.5, 1.0, TimePoint("2024-05-18T07:50:01Z")},
+                {60.5, 10.5, 1.0, TimePoint(instant)});
+  }
+  SECTION("the same instant written differently")
+  {
+    const LatLong zulu{60.5, 10.5, 1.0, TimePoint("2024-05-18T07:50:01Z")};
+    check_equal(zulu, {60.5, 10.5, 1.0, TimePoint("2024-05-18T09:50:01+02:00")});
+    check_equal(zulu, {60.5, 10.5, 1.0, TimePoint("2024-05-18T07:50:01.000Z")});
+    check_equal(zulu, {60.5, 10.5, 1.0, TimePoint("2024-05-18T07:50:01.0000009Z")});
+  }
+  SECTION("text that does not parse")
+  {
+    check_equal({60.5, 10.5, 1.0, TimePoint("not a time")},
+                {60.5, 10.5, 1.0, TimePoint("not a time")});
+  }
+  SECTION("no time")
+  {
+    check_equal({60.5, 10.5, 1.0}, {60.5, 10.5, 1.0});
+  }
+  SECTION("a parsed copy")
+  {
+    const LatLong point{60.5, 10.5, 1.0, TimePoint("2024-05-18T07:50:01Z")};
+    const LatLong copy = point;
+    (void)copy.time->value();
+    check_equal(point, copy);
+  }
+  SECTION("negative zero")
+  {
+    check_equal({0.0, -0.0, 0.0}, {-0.0, 0.0, -0.0});
+  }
+  SECTION("NaN hashes the same every time")
+  {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const LatLong point{nan, 10.5, -nan};
+    CHECK(point != point);
+    CHECK(point.Hash() == point.Hash());
+    CHECK(point.Hash() == LatLong{-nan, 10.5, nan}.Hash());
+  }
+  SECTION("different points usually differ")
+  {
+    // Not a requirement of a hash, but these would all collide if a field were left out.
+    const LatLong point{60.5, 10.5, 1.0, TimePoint(instant)};
+    CHECK(point.Hash() != LatLong{60.6, 10.5, 1.0, TimePoint(instant)}.Hash());
+    CHECK(point.Hash() != LatLong{60.5, 10.6, 1.0, TimePoint(instant)}.Hash());
+    CHECK(point.Hash() != LatLong{60.5, 10.5, 1.1, TimePoint(instant)}.Hash());
+    CHECK(point.Hash() != LatLong{60.5, 10.5, 1.0, TimePoint("2024-05-18T07:50:02Z")}.Hash());
+    CHECK(point.Hash() != LatLong{60.5, 10.5, 1.0}.Hash());
+  }
+}
+
+TEST_CASE("Parse <time> text longer than the inline buffer", "[parse][simple]")
+{
+  const auto gpx = fastgpx::ParseGpx("<gpx><trk><trkseg>"
+                                     "<trkpt lat=\"60.5\" lon=\"10.5\">"
+                                     "<time>2024-05-18T07:50:01.1000000000000000000000000Z</time>"
+                                     "</trkpt>"
+                                     "<trkpt lat=\"60.5\" lon=\"10.5\">"
+                                     "<time>2024-05-18T07:50:03Z</time>"
+                                     "</trkpt>"
+                                     "</trkseg></trk></gpx>");
+  const auto& points = gpx.tracks[0].segments[0].points;
+  REQUIRE(points.size() == 2);
+  REQUIRE(points[0].time->raw()->size() > TimePoint::kInlineCapacity);
+  const auto copies = points;
+  CHECK(copies == points);
+  CHECK(copies[0].time->value() ==
+        parse_gpx_time("2024-05-18T07:50:01Z") + std::chrono::milliseconds(100));
+  CHECK(gpx.GetTimeBounds().start_time == copies[0].time->value());
+}
+
 TEST_CASE("Segment points compare equal after their times have been parsed", "[timepoint]")
 {
   // The one route that converts the *stored* points rather than a copy: a segment whose timestamps
@@ -333,8 +567,8 @@ TEST_CASE("Segment points compare equal after their times have been parsed", "[t
       MakeTimedSegment({"2024-05-18T09:50:01+02:00", "2024-05-18T09:50:02+02:00"});
 
   (void)segment.GetTimeBounds();
-  REQUIRE(segment.points.front().time->raw() == nullptr);
-  REQUIRE(expected.points.front().time->raw() != nullptr);
+  REQUIRE_FALSE(segment.points.front().time->raw().has_value());
+  REQUIRE(expected.points.front().time->raw().has_value());
 
   CHECK(segment.points == expected.points);
 }
@@ -378,7 +612,7 @@ TEST_CASE("Segment time bounds", "[timebounds]")
     (void)segment.GetTimeBounds();
     for (const auto& point : segment.points)
     {
-      CHECK(point.time->raw() != nullptr);
+      CHECK(point.time->raw().has_value());
     }
   }
   SECTION("the fallback parses every point")
@@ -389,7 +623,7 @@ TEST_CASE("Segment time bounds", "[timebounds]")
     (void)segment.GetTimeBounds();
     for (const auto& point : segment.points)
     {
-      CHECK(point.time->raw() == nullptr);
+      CHECK_FALSE(point.time->raw().has_value());
     }
   }
   SECTION("milliseconds, out of order")
@@ -532,6 +766,29 @@ TEST_CASE("Benchmark time bounds", "[!benchmark][timebounds]")
   {
     std::vector<Segment> segments(static_cast<size_t>(meter.runs()), *largest);
     meter.measure([&segments](int i) { return segments[static_cast<size_t>(i)].GetTimeBounds(); });
+  };
+}
+
+TEST_CASE("Benchmark copying points", "[!benchmark][latlong]")
+{
+  // What `list(segment.points)` does per point, before any time has been read, so every point
+  // still holds its <time> text.
+  const auto path = project_path / "gpx/2024 TopCamp/Connected_20240518_094959_.gpx";
+  const auto gpx = fastgpx::LoadGpx(path);
+
+  std::vector<LatLong> points;
+  for (const auto& track : gpx.tracks)
+  {
+    for (const auto& segment : track.segments)
+    {
+      points.insert(points.end(), segment.points.begin(), segment.points.end());
+    }
+  }
+  WARN("Points: " << points.size());
+
+  BENCHMARK("copy and free the points")
+  {
+    return std::vector<LatLong>(points).size();
   };
 }
 
