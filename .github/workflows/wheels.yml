@@ -48,7 +48,9 @@ jobs:
           CIBW_BUILD_FRONTEND: "build[uv]"
           CIBW_BUILD: cp312-*
           # CIBW_SKIP: cp39-* cp310-* cp311-*
-          CIBW_SKIP: "*-musllinux*"
+          # No 32-bit wheels: the split-mode extension needs nanobind-backend, which publishes
+          # none for win32 or i686, so those builds cannot install their build requirements.
+          CIBW_SKIP: "*-musllinux* *-win32 *_i686"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_ENVIRONMENT: FASTGPX_WARNINGS_AS_ERRORS=ON
 
