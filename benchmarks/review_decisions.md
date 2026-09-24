@@ -21,10 +21,13 @@ point on the upload path after thomthom/sleipnir#596 (`no_copy`), median of 5 al
 | Unhashable `LatLong`; link-time optimization only where supported; strict `TimeBounds` | `9a39c91` | `LatLong.__hash__` is `None` and `LatLong::Hash()` is gone; `FASTGPX_LTO` asks for link-time optimization and falls back with a warning; `TimeBounds` takes only `datetime.datetime` (behaviour change) | – (GCC 14 wheel flags identical to before) |
 | CI fix, not a review item: the wheel workflow failed on 32-bit builds | `efdcdf3` | No more `win32` and `i686` wheels (user-visible: 0.5.0–0.7.0 shipped `win32`) | – |
 | Unhashable `TimeBounds` and `Bounds`; tests off in any scikit-build-core build | `e3f3651` | `TimeBounds.__hash__` and `Bounds.__hash__` are `None` (behaviour change); CMake defaults `BUILD_TESTING` to off when `SKBUILD` is set, and `pyproject.toml` no longer defines it | – (build configuration only) |
-| Bulk coordinate accessor (#73) | uncommitted | `Segment.lonlat()` returns a new list of `(longitude, latitude)` float tuples, built in C++; `benchmark_ingest.py` gained a `lonlat` variant. Sleipnir not changed | Total, `no_copy` → `lonlat`: Linux 297.7 → 214.3 (−28%), Windows 777.9 → 625.0 (−20%). Coordinates (list, tuples, free) Linux 120.6 → 37.2 |
+| Bulk coordinate accessor (#73) | `b841e82` | `Segment.lonlat()` returns a new list of `(longitude, latitude)` float tuples, built in C++; `benchmark_ingest.py` gained a `lonlat` variant. Sleipnir not changed | Total, `no_copy` → `lonlat`: Linux 297.7 → 214.3 (−28%), Windows 777.9 → 625.0 (−20%). Coordinates (list, tuples, free) Linux 120.6 → 37.2 |
 
 Open for the user, most production impact first:
 
+- **Release fastgpx with `Segment.lonlat()`, then switch Sleipnir to it (thomthom/sleipnir#597).**
+  Production gains nothing until Sleipnir uses it and raises its `fastgpx>=0.7.0,<0.8` pin. The
+  issue also covers sleipnir#596.
 - **Measure Linux ARM, and build a wheel with cibuildwheel itself.** Neither was done. The
   link-time optimization build was checked in the `manylinux_2_28` image; the inline-text change
   was not.
