@@ -27,8 +27,6 @@ Open for the user, most production impact first:
 - **Measure Linux ARM, and build a wheel with cibuildwheel itself.** Neither was done. The
   link-time optimization build was checked in the `manylinux_2_28` image; the inline-text change
   was not.
-- **Run the wheel workflow on `efdcdf3` or later.** See the CI fix section; the fix itself has not
-  run in CI yet.
 - ~~Decide whether a mutable `LatLong` should stay hashable.~~ Resolved: unhashable, option (a).
   See the item making `LatLong` unhashable.
 - ~~Decide whether the Linux override should force link-time optimization.~~ Resolved: it asks
@@ -808,9 +806,10 @@ back to the fastgpx sdist, and that cannot install `nanobind-backend` either, so
 installing there at all. The user does not want 32-bit wheels, on Windows especially, so this is
 accepted.
 
-**Not done.** The workflow has not been run on `efdcdf3`, so the four remaining builds are
-unverified. They are expected to work because the same four built for 0.7.0 and each has a backend
-wheel, but that is inferred.
+**Verified.** Wheel workflow run 36052648596 on `6b5aac1` (publishing off) built the sdist and all
+four wheels: manylinux_2_28 x86_64 (408 KB) and aarch64 (370 KB), Windows AMD64 and ARM64. Both Linux
+builds configured with `BUILD_TESTING: OFF`, `FASTGPX_LTO: ON` and `FASTGPX_NOMINSIZE: ON`. The
+workflow does not run the tests against the built wheels, so they were built, not tested there.
 
 ## Item: unhashable `TimeBounds` and `Bounds`, and tests off in any scikit-build-core build
 
