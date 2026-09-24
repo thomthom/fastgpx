@@ -95,6 +95,12 @@ cmake.build-type = "Release"
 # No need to build the tests in the wheel.
 BUILD_TESTING = false
 
-# No link-time optimization, on any platform. On Linux, with the extension built as it is now
-# (nanobind's -Os, interposable pugixml symbols), it made parsing from Python slower, not faster.
-# On Windows it made polyline decoding slower. See benchmarks/review_decisions.md.
+# Link-time optimization for the Linux wheels, which is what production runs. It pays off only
+# because pugixml and the core library are built with hidden visibility (src/cpp/CMakeLists.txt),
+# which lets GCC inline pugixml into the parse loop inside the extension. Not on Windows, where it
+# made polyline decoding slower. See benchmarks/review_decisions.md.
+[[tool.scikit-build.overrides]]
+if.platform-system = "^linux"
+# Add to the cmake.define table above instead of replacing it, which would drop BUILD_TESTING.
+inherit.cmake.define = "append"
+cmake.define.CMAKE_INTERPROCEDURAL_OPTIMIZATION = "ON"
