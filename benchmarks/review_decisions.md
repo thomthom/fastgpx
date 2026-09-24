@@ -21,6 +21,7 @@ point on the upload path after thomthom/sleipnir#596 (`no_copy`), median of 5 al
 | Unhashable `LatLong`; link-time optimization only where supported; strict `TimeBounds` | `9a39c91` | `LatLong.__hash__` is `None` and `LatLong::Hash()` is gone; `FASTGPX_LTO` asks for link-time optimization and falls back with a warning; `TimeBounds` takes only `datetime.datetime` (behaviour change) | – (GCC 14 wheel flags identical to before) |
 | CI fix, not a review item: the wheel workflow failed on 32-bit builds | `efdcdf3` | No more `win32` and `i686` wheels (user-visible: 0.5.0–0.7.0 shipped `win32`) | – |
 | Unhashable `TimeBounds` and `Bounds`; tests off in any scikit-build-core build | `e3f3651` | `TimeBounds.__hash__` and `Bounds.__hash__` are `None` (behaviour change); CMake defaults `BUILD_TESTING` to off when `SKBUILD` is set, and `pyproject.toml` no longer defines it | – (build configuration only) |
+| Bulk coordinate accessor (#73) | uncommitted | `Segment.lonlat()` returns a new list of `(longitude, latitude)` float tuples, built in C++; `benchmark_ingest.py` gained a `lonlat` variant. Sleipnir not changed | Total, `no_copy` → `lonlat`: Linux 297.7 → 214.3 (−28%), Windows 777.9 → 625.0 (−20%). Coordinates (list, tuples, free) Linux 120.6 → 37.2 |
 
 Open for the user, most production impact first:
 
@@ -34,9 +35,9 @@ Open for the user, most production impact first:
   unhashable.
 - ~~Keep `inherit.cmake.define = "append"` in any future platform override of `cmake.define`.~~
   Resolved: CMake now keeps the tests out of a scikit-build-core build by itself, so an override
-  can no longer turn them back on. See the last item.
-- **Look at the bulk coordinate accessor (#73).** It would save creating a wrapper per point on
-  the upload path; it was not looked at.
+  can no longer turn them back on. See the item on unhashable `TimeBounds` and `Bounds`.
+- ~~Look at the bulk coordinate accessor (#73).~~ Done as `Segment.lonlat()`; Sleipnir still
+  has to switch to it. See the item on the bulk coordinate accessor.
 - **Re-run the Windows numbers for the inline timestamp storage in a quiet session.** The machine
   was noisy. The two quiet runs show `no_copy` 686 → 622 ns per point, and all 5 run pairs favoured
   the change. But over all 5 runs the median `current` total and parse got slightly worse. Linux
@@ -47,7 +48,7 @@ Open for the user, most production impact first:
   Resolved: it stops, as a behaviour change. See the item making `LatLong`
   unhashable.
 - ~~Decide whether `TimeBounds` and `Bounds` should become unhashable too.~~ Resolved:
-  unhashable, as a behaviour change. See the last item.
+  unhashable, as a behaviour change. See the item on unhashable `TimeBounds` and `Bounds`.
 - **Re-read GCC's inlining report for the shipped build** to confirm how `NOMINSIZE` helps. The
   mechanism is plausible, not verified.
 - **Explain the MSVC `polyline::decode` Catch2 figures** (250–330 µs, very noisy), far above the
@@ -58,7 +59,7 @@ Open for the user, most production impact first:
 
 ## Final verification (4c6284a)
 
-Run over the branch as it stood after the docs item. The last two items came later
+Run over the branch as it stood after the docs item. The items after it came later
 and record their own checks.
 
 - **Sanitized Clang 18 build** (address and undefined, `FASTGPX_BUILD_FUZZERS=ON`), following
@@ -891,3 +892,141 @@ can turn the tests on by accident, while asking for them explicitly still works.
   `BUILD_TESTING` yet. After one build with `-C cmake.define.BUILD_TESTING=ON`, later builds in
   that directory keep the tests until it is deleted. The old `BUILD_TESTING = false` define reset
   it on every configure. CI builds start from scratch and are not affected.
+
+## Item: a bulk coordinate accessor for segments (#73)
+
+The user asked for #73's accessor, for Sleipnir's upload path only.
+
+**Found.** After thomthom/sleipnir#596, the upload path (`create_gpx_file` in
+`apps/maps/gpx_ingest.py`, through `latlong_list_to_linestring` in `apps/maps/gpx.py`) does, per
+segment:
+
+```python
+coords = [(p.longitude, p.latitude) for p in list(segment.points)]
+LineString(coords, srid=4326)
+```
+
+That makes one `LatLong` wrapper per point, reads two attributes from each through the binding
+layer, and frees the wrappers again. On Linux this was about 120 ns per point, against 131 for
+parsing the file.
+
+**Decided with the user.**
+
+- **Name and shape.** `Segment.lonlat()`, a method because it builds a new list on every call.
+  It returns a Python `list` of `(longitude, latitude)` tuples of floats, in point order. The
+  name states the order, because it is the reverse of the rest of fastgpx: GEOS, Shapely and
+  GeoJSON take longitude first, while fastgpx's own API is latitude first. #73's working name,
+  `coordinates()`, did not say which.
+- **Scope.** Only this use case: no NumPy or buffer variant, no elevation variant, and no
+  `Track` or `Gpx` versions. #73 lists those as possible follow-ups; nothing here needs them.
+
+**Done.**
+
+- `Segment.lonlat()` builds the list in one pass with the C API, as `LatLongsToList` does: the
+  list is created at the segment's size, and each slot gets a new 2-tuple of two new floats. No
+  `LatLong` wrapper is created. The only new error path is allocation failure, which raises
+  `MemoryError` without leaking the objects made so far. An empty segment gives an empty list.
+- The docstring says the order and shows the comprehension it replaces. `api.rst` documents
+  `fastgpx` with `automodule`, so the method appears there without an edit.
+- The stubs gained the method (`def lonlat(self) -> list[tuple[float, float]]`) and nothing
+  else.
+- Python tests: `lonlat()` equals `[(p.longitude, p.latitude) for p in segment.points]` exactly
+  on every segment of four files (the TopCamp file and three in `gpx/test`). The elements are
+  `tuple`s of two `float`s, longitude first. An empty segment gives `[]`, each call returns a new
+  list, and the list follows edits to the points.
+- `benchmark_ingest.py` has a third variant, `lonlat`: `no_copy` with `segment.lonlat()` in place
+  of `list(segment.points)` and the comprehension, followed by the same `len(...) < 2` check. It
+  has no step for freeing point lists, because it makes none. The tuple lists are freed untimed
+  in every variant, as before. `current` and `no_copy` are unchanged. `compare` leaves out a
+  variant missing from either output, so older outputs still compare, and `run` skips `lonlat`
+  on a fastgpx without it.
+- Tried and dropped: untracking each tuple from the garbage collector as it is made
+  (`PyObject_GC_UnTrack`; tuples of floats cannot form cycles). On one 17,009-point segment it
+  looked about 10 ns per point faster. Over the corpus (5 alternated runs against the build
+  without it) the `lonlat()` step went 36.9 → 31.0, but the total did not improve (214.0 →
+  221.0, with parsing slower in that build). The simpler code stays.
+
+Upload path on `gpx/sleipnir` (106 files, 1,349,258 points), ns per point, median of 5 runs. The
+three variants alternate within each run, so `no_copy` and `lonlat` come from the same build and
+the same runs:
+
+| Step | Linux `no_copy` | Linux `lonlat` | Windows `no_copy` | Windows `lonlat` |
+|---|---:|---:|---:|---:|
+| `content.decode("utf-8")` | 5.7 | 5.7 | 20.3 | 20.4 |
+| `fastgpx.parse(text)` | 131.5 | 131.5 | 504.1 | 507.6 |
+| `track.time_bounds()` and its start/end | 9.8 | 9.8 | 16.3 | 16.4 |
+| `list(segment.points)` | 39.4 | – | 73.6 | – |
+| `(lon, lat)` tuples from the points | 68.2 | – | 109.2 | – |
+| `segment.lonlat()` | – | 37.2 | – | 46.1 |
+| segment bounds, `length_2d`, time bounds | 30.1 | 29.8 | 33.8 | 32.6 |
+| freeing the point lists | 13.0 | – | 20.2 | – |
+| merge bounds | 0.3 | 0.3 | 0.5 | 0.5 |
+| **total** | **297.7** | **214.3** | **777.9** | **625.0** |
+
+Per-run totals: Linux `no_copy` 296.6–317.8 and `lonlat` 213.5–229.8; Windows `no_copy`
+762.9–795.2 and `lonlat` 609.1–632.2. Every run favoured `lonlat`.
+
+- **Linux** is the wheel configuration from `pyproject.toml`: WSL2, GCC 14.2 with `CC=gcc-14
+  CXX=g++-14`, CMake 4.4.3, `uv build --wheel` (`FASTGPX_LTO: ON`, `BUILD_TESTING: OFF`), Python
+  3.12.3. The corpus is on WSL's own file system and passed `corpus_manifest.py verify`. The
+  `no_copy` total is in line with the 307.5 of the inline-timestamp item.
+- **Windows** is the editable Release build (MSVC 19.51, Python 3.12). Its parse figures are well
+  above the earlier Windows items' in both variants alike, so the machine was probably busy.
+  Compare its two columns with each other, not with older Windows numbers.
+
+One segment of 17,009 points (the largest in `gpx/sleipnir`), ns per point, median of 7 repeats
+of 5 calls with the garbage collector on:
+
+| | Linux | Windows |
+|---|---:|---:|
+| `[(p.longitude, p.latitude) for p in segment.points]` | 135.3 | 177.2 |
+| the same over `list(segment.points)` | 156.6 | 174.1 |
+| `segment.lonlat()` | 61.3 | 57.9 |
+
+`lonlat()` costs more per point on this segment than over the corpus (61 against 37 on Linux).
+With the garbage collector off it drops to 47 on Linux. The new tuples are tracked by the
+collector. No collection runs inside the call (Python 3.12 defers it until the interpreter's next
+check), and exactly one young-generation collection follows it, walking all 17,009 new tuples; the
+comprehension instead sets off 24 small ones as it goes (counted with `gc.callbacks` on Windows,
+Python 3.12.7). Why the one walk costs more per point on this segment than on the corpus's shorter
+ones is not established.
+
+**What Sleipnir would change.** Not done here; the Sleipnir repository is untouched. In
+`create_gpx_file`, build the coordinates from the segment and hand them to the `LineString`
+directly, in place of `list(segment.points)` and `latlong_list_to_linestring`:
+
+```python
+coords = segment.lonlat()
+segment_geometry = LineString(coords, srid=4326) if len(coords) >= 2 else None
+```
+
+Sleipnir then needs a fastgpx with `Segment.lonlat()` as its minimum version.
+
+Verified:
+
+- MSVC 19.51, configured per `Development.md` with `FASTGPX_BUILD_FUZZERS=ON`: Catch2 and the
+  corpus replays through CTest pass, 62/62. No C++ outside the bindings changed.
+- Python on Windows, `uv run --reinstall-package fastgpx pytest`: 216 passed.
+- Sphinx with `-W --keep-going --fresh-env` builds clean, and the API page lists `lonlat`.
+- `benchmark_ingest.py compare` of an older Linux output against a new one prints `current` and
+  `no_copy` and leaves `lonlat` out.
+
+Raw outputs are outside the repository, in `~/fastgpx-review/v8/` (`linux-{1..5}.json`,
+`ab-venv*-{1..5}.json` for the untracking trial, `build-wheel*.log`, and `windows/win-{1..5}.json`
+for Windows).
+
+**Why.** A list of tuples is what GEOS's `LineString` takes, so Sleipnir can pass the result on
+unchanged. Building it in C++ removes a Python object and two binding-layer attribute reads per
+point, and the step that freed those objects. That saves about 83 ns per point on the production
+platform. A method rather than a property makes it plain that each call allocates.
+
+**Not done.**
+
+- Sleipnir is not changed, so production gains nothing until it switches and requires the new
+  fastgpx.
+- The `LineString` constructor was not timed. It reads the same list of tuples in both variants,
+  so the saving should carry over; that is inferred.
+- No sanitized Clang build or fuzz run: the parsers did not change, and the new code is only in
+  the Python bindings, which the fuzz build does not compile.
+- The Linux wheel ran the benchmark and a manual `lonlat()` check, not pytest.
+- Linux ARM remains unmeasured.

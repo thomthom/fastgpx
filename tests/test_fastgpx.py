@@ -270,6 +270,60 @@ class TestSegment:
         repr_str = repr(segment)
         assert repr_str == "<fastgpx.Segment(points: 1326)>"
 
+    # fastgpx.Segment.lonlat
+
+    @pytest.mark.parametrize('path', [
+        'gpx/2024 TopCamp/Connected_20240518_094959_.gpx',
+        'gpx/test/debug-segment.gpx',
+        'gpx/test/two-points.gpx',
+        'gpx/test/テスト.gpx',
+    ])
+    def test_lonlat_matches_points(self, path: str):
+        gpx = fastgpx.load(path)
+        segments = [s for t in gpx.tracks for s in t.segments]
+        assert segments
+        for segment in segments:
+            expected = [(p.longitude, p.latitude) for p in segment.points]
+            # Tuples of floats compare exactly, so this checks every coordinate bit for bit.
+            assert segment.lonlat() == expected
+
+    def test_lonlat_types(self, gpx_path: str):
+        segment = fastgpx.load(gpx_path).tracks[0].segments[0]
+        coords = segment.lonlat()
+        assert type(coords) is list
+        assert len(coords) == len(segment.points) == 1326
+        for pair in coords:
+            assert type(pair) is tuple
+            assert len(pair) == 2
+            assert type(pair[0]) is float
+            assert type(pair[1]) is float
+
+    def test_lonlat_order(self):
+        segment = fastgpx.Segment()
+        segment.points.append(fastgpx.LatLong(latitude=60.5, longitude=10.25))
+        assert segment.lonlat() == [(10.25, 60.5)]
+
+    def test_lonlat_empty(self):
+        assert fastgpx.Segment().lonlat() == []
+
+    def test_lonlat_new_list_each_call(self, gpx_path: str):
+        segment = fastgpx.load(gpx_path).tracks[0].segments[0]
+        first = segment.lonlat()
+        second = segment.lonlat()
+        assert first == second
+        assert first is not second
+        first.clear()
+        assert len(segment.lonlat()) == 1326
+        assert len(segment.points) == 1326
+
+    def test_lonlat_follows_edits(self):
+        segment = fastgpx.Segment()
+        segment.points.append(fastgpx.LatLong(latitude=1.0, longitude=2.0))
+        before = segment.lonlat()
+        segment.points[0] = fastgpx.LatLong(latitude=3.0, longitude=4.0)
+        assert before == [(2.0, 1.0)]
+        assert segment.lonlat() == [(4.0, 3.0)]
+
 
 class TestContainers:
     # points, segments and tracks expose the C++ vectors directly instead of converting them to a

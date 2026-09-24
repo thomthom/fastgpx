@@ -343,6 +343,18 @@ class Segment:
     def length_3d(self) -> float:
         """Distance in meters."""
 
+    def lonlat(self) -> list[tuple[float, float]]:
+        """
+        The points' coordinates as a new list of ``(longitude, latitude)`` tuples of floats, in point order.
+
+        Note the order: longitude first, as GEOS, Shapely and GeoJSON expect, while the rest of fastgpx is latitude first. The list is built in one pass without creating a :class:`LatLong` per point, so it is the fast way to hand a segment to those libraries::
+
+            coords = segment.lonlat()
+            # the same as [(p.longitude, p.latitude) for p in segment.points]
+
+        Each call builds a new list; elevation and time are left out.
+        """
+
     def __repr__(self) -> str: ...
 
 class SegmentList(Sequence[Segment]):

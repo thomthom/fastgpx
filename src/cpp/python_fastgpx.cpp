@@ -3,6 +3,7 @@
 #include <format>
 #include <limits>
 #include <stdexcept>
+#include <tuple>
 #include <utility>
 
 #include <nanobind/make_iterator.h>
@@ -307,6 +308,28 @@ nb::typed<nb::list, LatLong> LatLongsToList(const std::vector<LatLong>& points)
     PyList_SetItem(result.ptr(), i, nb::cast(points[static_cast<size_t>(i)]).release().ptr());
   }
   return nb::typed<nb::list, LatLong>(std::move(result));
+}
+
+// `Segment.lonlat()`: the points as `(longitude, latitude)` tuples of floats, for GEOS, Shapely
+// and GeoJSON, without a LatLong wrapper per point. Built straight from the C API in one pass,
+// like `LatLongsToList`. The floats are owned by `nb::object`s until their tuple takes them, so
+// an allocation failure part way through leaks nothing and surfaces as the pending MemoryError.
+nb::typed<nb::list, std::tuple<double, double>> SegmentLonLat(const Segment& segment)
+{
+  const auto& points = segment.points;
+  const auto size = static_cast<Py_ssize_t>(points.size());
+  nb::list result = nb::steal<nb::list>(nb::detail::raise_if_null(PyList_New(size)));
+  for (Py_ssize_t i = 0; i < size; ++i)
+  {
+    const LatLong& point = points[static_cast<size_t>(i)];
+    nb::object lon = nb::steal(nb::detail::raise_if_null(PyFloat_FromDouble(point.longitude)));
+    nb::object lat = nb::steal(nb::detail::raise_if_null(PyFloat_FromDouble(point.latitude)));
+    PyObject* pair = nb::detail::raise_if_null(PyTuple_New(2));
+    PyTuple_SetItem(pair, 0, lon.release().ptr());
+    PyTuple_SetItem(pair, 1, lat.release().ptr());
+    PyList_SetItem(result.ptr(), i, pair);
+  }
+  return nb::typed<nb::list, std::tuple<double, double>>(std::move(result));
 }
 
 } // namespace
@@ -644,6 +667,16 @@ NB_MODULE(fastgpx, m)
            "   Prefer :func:`time_bounds` instead.\n") // gpxpy compatiblity
       .def("length_2d", &Segment::GetLength2D, "Distance in meters.")
       .def("length_3d", &Segment::GetLength3D, "Distance in meters.")
+      .def("lonlat", &SegmentLonLat,
+           "The points' coordinates as a new list of ``(longitude, latitude)`` tuples of "
+           "floats, in point order.\n\n"
+           "Note the order: longitude first, as GEOS, Shapely and GeoJSON expect, while the "
+           "rest of fastgpx is latitude first. The list is built in one pass without creating "
+           "a :class:`LatLong` per point, so it is the fast way to hand a segment to those "
+           "libraries::\n\n"
+           "    coords = segment.lonlat()\n"
+           "    # the same as [(p.longitude, p.latitude) for p in segment.points]\n\n"
+           "Each call builds a new list; elevation and time are left out.")
       .def("__repr__",
            [](const Segment& s) {
              return std::format("<fastgpx.Segment(points: {})>", s.points.size());
