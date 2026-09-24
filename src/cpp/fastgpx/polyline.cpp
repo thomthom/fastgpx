@@ -35,28 +35,39 @@ std::string encode(std::span<const LatLong> locations, Precision precision)
   int last_lat = 0;
   int last_lng = 0;
 
+  // Appends straight to the result rather than building a temporary string per value. With the
+  // temporary inlined, MSVC read its pointer field right after writing characters into the same
+  // bytes (they share storage while the string is short), which stalled on every character and
+  // made encoding 2-3x slower under link-time optimization. See benchmarks/build_settings.md.
+  //
+  // `value` is the difference to the previous point in fixed-point units (1e-5 or 1e-6 degrees).
+  // The encoding is Google's: the value is written as 5-bit chunks, least significant first, each
+  // turned into one printable character.
+  const auto append_value = [&encoded_polyline](int value) {
+    // Move the sign into the lowest bit: shift left one, and for a negative value invert all bits,
+    // so -1 becomes 1, 1 becomes 2, -2 becomes 3 and so on. Small values of either sign then need
+    // few chunks. The result is never negative, so the shifts below see no sign bit.
+    value = (value < 0) ? ~(value << 1) : (value << 1);
+    // Loop while the value needs more than five bits.
+    while (value >= 0x20)
+    {
+      // The low five bits, with bit 0x20 set to tell the decoder another chunk follows. Adding 63
+      // turns the 0-63 chunk into a printable character, '?' to '~'.
+      encoded_polyline.push_back(static_cast<char>((0x20 | (value & 0x1f)) + 63));
+      // Drop the five bits just written.
+      value >>= 5;
+    }
+    // The last chunk: at most five bits, no continuation mark.
+    encoded_polyline.push_back(static_cast<char>(value + 63));
+  };
+
   for (const auto& coord : locations)
   {
     const int lat = to_fixed(coord.latitude, lat_limit, "latitude");
     const int lng = to_fixed(coord.longitude, lng_limit, "longitude");
 
-    const int delta_lat = lat - last_lat;
-    const int delta_lng = lng - last_lng;
-
-    auto encode_value = [](int value) -> std::string {
-      std::string encoded_latlong;
-      value = (value < 0) ? ~(value << 1) : (value << 1);
-      while (value >= 0x20)
-      {
-        encoded_latlong += static_cast<char>((0x20 | (value & 0x1f)) + 63);
-        value >>= 5;
-      }
-      encoded_latlong += static_cast<char>(value + 63);
-      return encoded_latlong;
-    };
-
-    encoded_polyline += encode_value(delta_lat);
-    encoded_polyline += encode_value(delta_lng);
+    append_value(lat - last_lat);
+    append_value(lng - last_lng);
 
     last_lat = lat;
     last_lng = lng;

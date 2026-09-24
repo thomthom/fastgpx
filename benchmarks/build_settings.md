@@ -86,5 +86,7 @@ once per encoded character. Without link-time optimization the same read sits be
 that skips it for short strings.
 
 So the regression comes from how the encoder builds its output, not from link-time optimization
-as such. Writing the characters straight into the result string, without a temporary per value,
-would avoid it. Link-time optimization is to be reconsidered once the encoder is changed.
+as such. The encoder now writes the characters straight into the result string, without a
+temporary per value. After that change, encoding 10k points on Windows takes 74 µs in Release and
+81 µs with link-time optimization, down from 165 µs and 484 µs (see
+[performance.md](performance.md)).
