@@ -102,6 +102,20 @@ WSL2 on the same machine, measured in C++. Details and the other settings tried 
 Nothing got slower. Loading, the main cost, barely changes: most of its time is in work the compiler
 cannot remove (see [load_profile.md](load_profile.md)).
 
+## Polyline encoding without a temporary string per value
+
+The encoder built a small temporary string for every value and appended it to the result. It now
+appends the characters to the result directly. This also removes the slowdown link-time
+optimization caused on MSVC, which is explained in [build_settings.md](build_settings.md). Release
+builds, desktop; Linux is WSL2 on the same machine.
+
+| Measurement | Before | After | Speedup |
+|---|---:|---:|---:|
+| `polyline::encode`, 10k points (C++, Windows) | 165 µs | 74 µs | 2.2× |
+| `polyline::encode`, 10k points (C++, Linux) | 142 µs | 72 µs | 2.0× |
+| `polyline.encode`, all segments of one file (Python, Windows) | 2.86 ms | 1.49 ms | 1.9× |
+| `polyline::encode` with link-time optimization (C++, Windows) | 484 µs | 81 µs | 6.0× |
+
 ## Earlier measurements
 
 Recorded before this document existed, in their own notes:
