@@ -365,6 +365,8 @@ NB_MODULE(fastgpx, m)
         const auto end_time = FormatTimePointAsISO8601(tb.end_time);
         return std::format("TimeBounds({} to {})", start_time, end_time);
       });
+  // Value equality on a mutable object: unhashable, as `LatLong` is.
+  nb::type<TimeBounds>().attr("__hash__") = nb::none();
 
   nb::class_<LatLong>(m, "LatLong")
       .def(nb::init<>())
@@ -619,6 +621,8 @@ NB_MODULE(fastgpx, m)
         const auto max = FormatLatLongAsTuples(ll.max);
         return std::format("Bounds(min={}, max={})", min, max);
       });
+  // Value equality on a mutable object: unhashable, as `LatLong` is.
+  nb::type<Bounds>().attr("__hash__") = nb::none();
 
   nb::class_<Segment>(m, "Segment")
       .def(nb::init<>()) // Default constructor

@@ -98,8 +98,15 @@ endif()
 # > to build, this can be a useful way to avoid adding them to the build when
 # > they are not needed.
 #
-# The BUILD_TESTING is set to false in pyproject.toml, so the tests will not build
-# when building the Python package.
+# The tests are not needed in a Python package build. scikit-build-core defines SKBUILD, so default
+# BUILD_TESTING to off there, before CTest's option() would default it to on. This lives here
+# rather than in pyproject.toml's cmake.define table, which a platform override there replaces
+# unless it says `inherit.cmake.define = "append"`; that once turned the tests back on in the Linux
+# wheels. An explicit -DBUILD_TESTING=ON still wins, and plain CMake builds keep the tests on.
+if(SKBUILD AND NOT DEFINED BUILD_TESTING)
+  set(BUILD_TESTING OFF CACHE BOOL "Build the testing tree.")
+endif()
 include(CTest)
+message(STATUS "BUILD_TESTING: ${BUILD_TESTING}")
 
 add_subdirectory(src/cpp)

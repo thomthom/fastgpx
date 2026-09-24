@@ -58,6 +58,8 @@ class TimeBounds:
 
     def __str__(self) -> str: ...
 
+    __hash__: None = None
+
 class LatLong:
     """Represent ``<trkpt>`` data in GPX files."""
 
@@ -300,6 +302,8 @@ class Bounds:
     def __repr__(self) -> str: ...
 
     def __str__(self) -> str: ...
+
+    __hash__: None = None
 
 class Segment:
     """Represent ``<trkseg>`` data in GPX files."""
