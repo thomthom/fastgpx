@@ -119,8 +119,15 @@ parsing slower on Linux, not faster, with the extension built as it is (nanobind
 interposable pugixml symbols block the inlining). The wheels are now Release everywhere; see
 [review_decisions.md](review_decisions.md).
 
-A Linux wheel built with the override: Release with link-time optimization, stripped, a 493 KB
-extension and a 208 KB wheel (the published 0.7.0 wheel is 3.6 MB).
+**Restored for Linux** once those two blocks were removed: pugixml and the core library are now
+built with hidden visibility, and the Linux extension with nanobind's `NOMINSIZE`. With link-time
+optimization, Sleipnir's upload path is 10% faster than the Release build and parsing 18% faster.
+Windows is unchanged. See the item "build the Linux wheels so that link-time optimization reaches
+the parser" in [review_decisions.md](review_decisions.md).
+
+A Linux wheel built with the restored override: a 377 KB extension and a 173 KB wheel with
+Ubuntu's GCC 14, and 899 KB and 410 KB from the `manylinux_2_28` image, which links parts of
+libstdc++ statically (the published 0.7.0 wheel is 3.6 MB).
 
 Not yet explained: why link-time optimization slows polyline decoding on MSVC.
 

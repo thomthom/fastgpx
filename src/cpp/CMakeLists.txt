@@ -11,6 +11,17 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(pugixml)
 
+# pugixml and fastgpx-static are linked only into the extension and the executables in this tree,
+# so nothing outside needs their symbols. With default visibility, a -fPIC build makes every
+# function interposable at load time, and GCC then refuses to inline pugixml into the parse loop
+# under link-time optimization ("function body can be overwritten at link time"). Hidden
+# visibility makes the functions local to the extension. No effect with MSVC.
+# See benchmarks/review_decisions.md.
+set_target_properties(pugixml-static PROPERTIES
+  CXX_VISIBILITY_PRESET hidden
+  VISIBILITY_INLINES_HIDDEN ON
+)
+
 if(BUILD_TESTING)
 
   FetchContent_Declare(
@@ -91,6 +102,9 @@ target_link_libraries(fastgpx-static PRIVATE pugixml)
 set_target_properties(fastgpx-static PROPERTIES
   # Need -fPIC for linking static library into shared library on Linux (and macOS?).
   POSITION_INDEPENDENT_CODE ON
+  # Not interposable, like pugixml above.
+  CXX_VISIBILITY_PRESET hidden
+  VISIBILITY_INLINES_HIDDEN ON
 )
 target_sources(fastgpx-static
   PUBLIC
@@ -153,9 +167,29 @@ else()
   set(FASTGPX_NANOBIND_BACKEND nanobind_backend)
 endif()
 
+# nanobind compiles the binding code for size. With GCC, the libstdc++ helpers the linker keeps
+# then come from the -Os object and cannot be inlined into the -O3 parser under link-time
+# optimization; compiling for speed makes the Linux wheel's upload path about 7% faster. With MSVC
+# it made parsing slightly slower, so it stays off there. See benchmarks/review_decisions.md.
+if(MSVC)
+  set(FASTGPX_NOMINSIZE_DEFAULT OFF)
+else()
+  set(FASTGPX_NOMINSIZE_DEFAULT ON)
+endif()
+option(FASTGPX_NOMINSIZE "Compile the binding code for speed instead of size (nanobind's -Os)"
+  ${FASTGPX_NOMINSIZE_DEFAULT})
+message(STATUS "FASTGPX_NOMINSIZE: ${FASTGPX_NOMINSIZE}")
+if(FASTGPX_NOMINSIZE)
+  set(FASTGPX_NB_SIZE_OPTION NOMINSIZE)
+else()
+  set(FASTGPX_NB_SIZE_OPTION "")
+endif()
+
 nanobind_add_module(
   # Name of the extension:
   fastgpx
+
+  ${FASTGPX_NB_SIZE_OPTION}
 
   # nanobind split mode: libnanobind is not linked into the extension but provided at runtime by
   # a backend module, which ships the Python-version-specific fast paths. The extension itself is
