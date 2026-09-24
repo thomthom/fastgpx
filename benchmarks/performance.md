@@ -90,6 +90,8 @@ Recorded before this document existed, in their own notes:
 - [nanobind_vs_pybind11.md](nanobind_vs_pybind11.md): the move from pybind11 to nanobind.
 - [gpx_parse.md](gpx_parse.md): parse times while time bounds were being added.
 
+For where load time goes today on Windows and Linux, see [load_profile.md](load_profile.md).
+
 ## How the desktop numbers were measured
 
 The C++ rows are the Catch2 benchmarks `[!benchmark][datetime]` and `[!benchmark][timebounds]`.
