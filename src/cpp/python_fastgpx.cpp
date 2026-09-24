@@ -74,7 +74,6 @@ std::string FormatTimePointAsISO8601(const std::optional<chrono_timepoint>& tp)
   return tp.has_value() ? FormatTimePointAsISO8601(*tp) : "None";
 }
 
-// Format as a python datetime string
 // `LatLong::time` holds a `TimePoint`, which has no nanobind caster: it is either the unparsed
 // `<time>` text or the instant it parses to. These convert between it and the optional datetime
 // the bindings expose.
@@ -117,6 +116,7 @@ std::string FormatLatLongTime(const std::optional<fastgpx::TimePoint>& time, FOR
   return format_time(time->value());
 }
 
+// Format as a python datetime string
 std::string FormatTimePointAsDateTime(const chrono_timepoint& tp)
 {
   nb::object py = nb::cast(tp);

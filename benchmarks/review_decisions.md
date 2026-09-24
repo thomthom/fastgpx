@@ -6,6 +6,53 @@ of items. They are handled one at a time on `dev/latlong-time-review`. This file
 item, what was found, what was done and why, and what was left alone on purpose, so the reasoning
 survives into later sessions.
 
+## Summary
+
+Linux figures are WSL2 with GCC 14.2 on `gpx/sleipnir` (106 files, 1.35 million points), ns per
+point on the upload path after thomthom/sleipnir#596 (`no_copy`), median of 5 alternated runs.
+
+| Item | Commit | Outcome | Headline numbers |
+|---|---|---|---|
+| Benchmarks cannot be traced to their files | `3b35bae` | `corpus_manifest.json` lists `gpx/sleipnir` and `gpx/TET` by MD5; `benchmark_corpus.py` records the build and files; `benchmark_ingest.py` replaces the lost upload-path script | – |
+| Is the branch a win for the upload path; does link-time optimization help | `b01d107` | Branch is faster than `main` on both platforms. Link-time optimization as built made Linux parsing slower, so the wheels became Release everywhere | Total, `main` → branch built alike: Linux 423.6 → 382.6 (−10%, both Release+LTO), Windows 808.6 → 647.3 (−20%, both Release). Linux parse 186 with LTO, 169 without |
+| Link-time optimization that reaches the parser | `7a03e1d` | pugixml and core library built with hidden visibility, `NOMINSIZE` on (except MSVC), LTO back on for Linux. Windows unchanged | Linux parse 167.4 → 136.6 (−18%), total 359.4 → 322.4 (−10%). `manylinux_2_28`: parse 175.1 → 144.8. `parse_gpx_time` 23.6 → 35.0 ns (C++, not on the upload path) |
+| Copying a point allocates; `LatLong` equality and hashing | `24b3d2f` | Timestamp text stored inline; equality at microseconds; `LatLong.__hash__`; `time` accepts only `datetime.datetime` | Linux total 338.0 → 307.5 (−9%), `list(points)` 55.2 → 40.1, free 20.9 → 13.3. Windows total 686 → 622 (quiet runs). C++ copy+free of 19,962 points: 525 → 81 µs Linux, 1,489 → 374 µs Windows |
+| Docs in line with the branch | uncommitted | Stale build types, collection sizes, wrong ratios and the fuzz instructions fixed; `performance.md` gained sections for the last two items | – |
+
+Open for the user, most production impact first:
+
+- **Run the sanitizer and fuzz checks over the whole branch.** They were deferred to a final pass
+  after the last item. Use the Clang instructions in `Development.md`, which were corrected but
+  not yet run as written. (The inline-text item ran them before the deferral was decided.)
+- **Measure Linux ARM, and build a wheel with cibuildwheel itself.** Neither was done. The
+  link-time optimization build was checked in the `manylinux_2_28` image; the inline-text change
+  was not.
+- **Decide whether a mutable `LatLong` should stay hashable.** It is hashable now, as chosen up
+  front (option (b)), so a point changed while in a set or dict is lost there. The alternative is
+  to make it unhashable (option (a)).
+- **Decide whether the Linux override should force link-time optimization.** Forced on, a build
+  from the sdist stops at configure when CMake cannot do it for the compiler (for example Clang
+  without `llvm-ar`). Clang with link-time optimization was not checked either.
+- **Keep `inherit.cmake.define = "append"`** in any future platform override of `cmake.define` in
+  `pyproject.toml`. Without it the override silently turns `BUILD_TESTING` back on.
+- **Look at the bulk coordinate accessor (#73).** It would save creating a wrapper per point on
+  the upload path; it was not looked at.
+- **Re-run the Windows numbers for the inline timestamp storage in a quiet session.** The machine
+  was noisy. The two quiet runs show `no_copy` 686 → 622 ns per point, and all 5 run pairs favoured
+  the change. But over all 5 runs the median `current` total and parse got slightly worse. Linux
+  is unaffected and is the production figure.
+- **Revisit link-time optimization on Windows if the Windows upload path starts to matter.** It
+  makes that path about 11% faster but polyline work 4–33% slower in C++.
+- **Decide whether `TimeBounds` should stop accepting `datetime.date` and `datetime.time`.** It
+  was left alone because the API is older than this branch.
+- **Re-read GCC's inlining report for the shipped build** to confirm how `NOMINSIZE` helps. The
+  mechanism is plausible, not verified.
+- **Explain the MSVC `polyline::decode` Catch2 figures** (250–330 µs, very noisy), far above the
+  139 µs in `build_settings.md`.
+- **Re-measure the old figures if they are to be trusted as absolutes:** the C++ figures in
+  `build_settings.md`, the 154- and 183-file rows, and the 88 → 65 ns `parse_gpx_time` row. The
+  183-file makeup is unconfirmed, and the manifest does not cover Sleipnir's `gpx/tet`.
+
 ## Decisions made up front
 
 - **The 183-file figure.** `performance.md` and `build_settings.md` quote a 183-file collection
@@ -550,3 +597,49 @@ to follow equality, and computing it only on request keeps it off the load path.
 - The unexplained 10 ns per point from the second item was not re-checked on its own: copying
   freshly parsed points was slower on the branch than on `main`. Copying and freeing are now at or
   below `main`'s figures, so it no longer shows.
+
+## Item: bring the benchmark and build docs in line with the branch
+
+**Found.** Several write-ups still said the wheels were RelWithDebInfo, or that nothing had been
+changed yet (`build_settings.md`, `load_profile.md`, the machine table of `performance.md`). The
+collection sizes quoted (154, 140 and 183 files) were not related to the manifest. A few figures
+in `performance.md` were wrong or unsupported: the combined table credited `9b94af8` with a
+`parse_gpx_time` gain (1.35× against the 1.28× measured for `8c87bf1`), 4.57 / 0.71 was given as
+6.5× (it is 6.4×) and 16.1 / 12.6 as 1.27× (1.28×), the `LatLong ==` note left out the 475 ns
+text-against-instant case, and the reason given for the trim's missing Linux gain ignored
+`load_profile.md`'s 13%. The Clang fuzz instructions in `Development.md` configured with
+`BUILD_TESTING=OFF`; configuring that way registers no tests at all (`ctest -N`: 0). The "Format as
+a python datetime string" comment in `python_fastgpx.cpp` still sat above the time conversion
+helpers.
+
+**Done.** Nothing was re-measured; every figure comes from this file or the existing docs.
+
+- Build type: the older docs now say RelWithDebInfo was the setting at the time and point to the
+  current one (Release everywhere; on Linux, link-time optimization with hidden visibility and
+  `NOMINSIZE`). `performance.md` says per section which build type applies.
+- Collections: `performance.md` and `build_settings.md` label the 154- and 183-file rows as
+  untraceable, give the most likely makeup of the 183, say to compare them by ratio only, and point
+  to `corpus_manifest.json` (`gpx/sleipnir` 106 files, 1.35 million points; `gpx/TET` 34 files,
+  1.66 million). `ingest_profile.md` already related its 140 files to the manifest; it now also says
+  its Linux wheel was the earlier link-time optimization build.
+- `performance.md`: the ratios fixed; the 69 → 65 ns gap footnoted as between sessions, not from
+  `9b94af8`; the 475 ns case added, with a pointer to the later microsecond equality; the trim note
+  now names the `-O2` profile against the `-O3` measurement as the likely reason, unconfirmed; the
+  `parse_gpx_time` pairs (24 → 35, 24 → 36, 25 → 36, 23.6 → 35.0) noted as different sessions, here
+  and in `build_settings.md`. Two sections added, for the build change and for inline timestamp
+  text, with numbers from the items above, and a note that multi-run numbers live in this file,
+  not in old commit messages (decision (b) up front).
+- `Development.md`: the Clang fuzz build leaves `BUILD_TESTING` on and runs `ctest`.
+- The comment moved above `FormatTimePointAsDateTime`.
+
+Verified: Sphinx with `-W --keep-going --fresh-env` (`sphinx-build -M html docs/source docs/build`,
+what `make html` runs) builds clean on Windows against the local extension, which is the current
+one (its `time` setter rejects a `date`). A Windows configure with `BUILD_TESTING=OFF` and
+`FASTGPX_BUILD_FUZZERS=ON` lists 0 tests.
+
+**Not done.**
+
+- The Clang instructions as now written were not run; the previous items did run the replays with
+  `BUILD_TESTING=ON`.
+- The 88 → 65 ns row was footnoted rather than changed, since which session is right is unknown.
+- The Surface rows in `performance.md` were left as they are, from the commit messages.

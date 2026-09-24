@@ -213,15 +213,18 @@ The parsers have libFuzzer targets in `src/cpp/fuzz`:
 | `fuzz_datetime`        | `parse_gpx_time`                          |
 
 libFuzzer needs Clang. On Windows, use WSL. Configure a dedicated build directory with
-`FASTGPX_BUILD_FUZZERS=ON`; the Python module and Catch2 are not needed:
+`FASTGPX_BUILD_FUZZERS=ON`; the Python module is not needed. Leave `BUILD_TESTING` on, as it is by
+default. With it off, CTest does not enable testing, so the `fuzz_<target>_corpus` replays are not
+registered and `ctest` finds nothing. With it on, the Catch2 suite is also built against the
+sanitized core library, which is the sanitized run CLAUDE.md asks for:
 
 ```sh
 CC=clang CXX=clang++ cmake -S . -B build-fuzz -G Ninja \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   -DFASTGPX_BUILD_FUZZERS=ON \
-  -DFASTGPX_BUILD_PYTHON_MODULE=OFF \
-  -DBUILD_TESTING=OFF
+  -DFASTGPX_BUILD_PYTHON_MODULE=OFF
 cmake --build build-fuzz --parallel
+ctest --test-dir build-fuzz --output-on-failure
 ```
 
 The binaries are instrumented with AddressSanitizer and UndefinedBehaviorSanitizer, and `assert`
