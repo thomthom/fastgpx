@@ -10,11 +10,13 @@ database work are left out, but the Python objects handed to them are still buil
     uv run benchmarks/benchmark_ingest.py run DIR [DIR ...] -o after.json
     uv run benchmarks/benchmark_ingest.py compare before.json after.json
 
-Two variants are timed, each on its own fresh parse:
+Three variants are timed, each on its own fresh parse:
 
-- `current`: what Sleipnir does today, copying every point into a new `fastgpx.LatLong` and
-  building the `(lon, lat)` tuples from the copies.
+- `current`: what Sleipnir did before thomthom/sleipnir#596, copying every point into a new
+  `fastgpx.LatLong` and building the `(lon, lat)` tuples from the copies.
 - `no_copy`: the path after thomthom/sleipnir#596, building the tuples from the parsed points.
+- `lonlat`: `no_copy` with the tuples built by `segment.lonlat()` (#73) instead of from
+  `list(segment.points)`. Needs a fastgpx that has it; older builds time the other two only.
 
 Each file's bytes are read once up front, as the upload view has them in memory. Every step is
 timed per file on each round; a file's best and median over the rounds are kept, and the summary
@@ -39,6 +41,8 @@ VARIANTS = {
                 'coords_from_copy', 'segment_summary', 'free_lists', 'merge_bounds'),
     'no_copy': ('decode', 'parse', 'track_time_bounds', 'list_points', 'coords_from_points',
                 'segment_summary', 'free_lists', 'merge_bounds'),
+    'lonlat': ('decode', 'parse', 'track_time_bounds', 'coords_lonlat', 'segment_summary',
+               'merge_bounds'),
 }
 
 STEP_LABELS = {
@@ -49,6 +53,7 @@ STEP_LABELS = {
     'latlong_copy': 'a new LatLong per point',
     'coords_from_copy': '(lon, lat) tuples from the copies',
     'coords_from_points': '(lon, lat) tuples from the points',
+    'coords_lonlat': 'segment.lonlat()',
     'segment_summary': 'segment bounds, length_2d, time bounds',
     'free_lists': 'freeing the point lists',
     'merge_bounds': 'merge bounds per track and file',
@@ -80,9 +85,15 @@ def merge_bounds(bounds_list: list) -> tuple | None:
     return bounds_corners(merged)
 
 
-def ingest(content: bytes, copy: bool) -> dict[str, int]:
+def available_variants() -> list[str]:
+    """The variants this fastgpx can run: `lonlat` needs `Segment.lonlat()`."""
+    return [v for v in VARIANTS if v != 'lonlat' or hasattr(fastgpx.Segment, 'lonlat')]
+
+
+def ingest(content: bytes, variant: str) -> dict[str, int]:
     """One pass of the upload path over `content`; returns nanoseconds per step."""
-    times = dict.fromkeys(VARIANTS['current' if copy else 'no_copy'], 0)
+    times = dict.fromkeys(VARIANTS[variant], 0)
+    copy = variant == 'current'
 
     t0 = perf_counter_ns()
     text = content.decode('utf-8')
@@ -100,24 +111,32 @@ def ingest(content: bytes, copy: bool) -> dict[str, int]:
 
         track_bounds = []
         for segment in track.segments:
-            t0 = perf_counter_ns()
-            segment_points = list(segment.points)
-            t1 = perf_counter_ns()
-            times['list_points'] += t1 - t0
-            if copy:
-                latlongs = [fastgpx.LatLong(latitude=p.latitude, longitude=p.longitude)
-                            for p in segment_points]
-                t2 = perf_counter_ns()
-                # latlong_list_to_linestring
-                coords = [(p.longitude, p.latitude) for p in latlongs] if len(latlongs) >= 2 else None
-                t3 = perf_counter_ns()
-                times['latlong_copy'] += t2 - t1
-                times['coords_from_copy'] += t3 - t2
+            if variant == 'lonlat':
+                t0 = perf_counter_ns()
+                coords = segment.lonlat()
+                # latlong_list_to_linestring, given the coordinates instead of the points
+                if len(coords) < 2:
+                    coords = None
+                times['coords_lonlat'] += perf_counter_ns() - t0
             else:
-                coords = ([(p.longitude, p.latitude) for p in segment_points]
-                          if len(segment_points) >= 2 else None)
-                t3 = perf_counter_ns()
-                times['coords_from_points'] += t3 - t1
+                t0 = perf_counter_ns()
+                segment_points = list(segment.points)
+                t1 = perf_counter_ns()
+                times['list_points'] += t1 - t0
+                if copy:
+                    latlongs = [fastgpx.LatLong(latitude=p.latitude, longitude=p.longitude)
+                                for p in segment_points]
+                    t2 = perf_counter_ns()
+                    # latlong_list_to_linestring
+                    coords = [(p.longitude, p.latitude) for p in latlongs] if len(latlongs) >= 2 else None
+                    t3 = perf_counter_ns()
+                    times['latlong_copy'] += t2 - t1
+                    times['coords_from_copy'] += t3 - t2
+                else:
+                    coords = ([(p.longitude, p.latitude) for p in segment_points]
+                              if len(segment_points) >= 2 else None)
+                    t3 = perf_counter_ns()
+                    times['coords_from_points'] += t3 - t1
             del coords
 
             t0 = perf_counter_ns()
@@ -130,11 +149,13 @@ def ingest(content: bytes, copy: bool) -> dict[str, int]:
 
             # Free the point lists here, so their clean-up is timed on its own instead of
             # landing in the next segment's steps (or, after the last segment, not at all).
-            t0 = perf_counter_ns()
-            del segment_points
-            if copy:
-                del latlongs
-            times['free_lists'] += perf_counter_ns() - t0
+            # `lonlat` has no point list to free; the tuple lists are freed untimed in every variant.
+            if variant != 'lonlat':
+                t0 = perf_counter_ns()
+                del segment_points
+                if copy:
+                    del latlongs
+                times['free_lists'] += perf_counter_ns() - t0
 
         t0 = perf_counter_ns()
         merge_bounds(track_bounds)
@@ -166,13 +187,15 @@ def run(args: argparse.Namespace) -> None:
             continue
         contents[digest] = content
 
-    samples = {d: {v: {s: [] for s in steps} for v, steps in VARIANTS.items()} for d in contents}
+    variants = available_variants()
+    samples = {d: {v: {s: [] for s in VARIANTS[v]} for v in variants} for d in contents}
     for round_ in range(args.rounds):
         for digest, content in contents.items():
-            # Alternate which variant goes first, so neither always runs on the other's warm caches.
-            order = list(VARIANTS) if round_ % 2 == 0 else list(reversed(VARIANTS))
+            # Reverse the order of the variants every other round. With two variants neither always
+            # runs on the other's warm caches; with three, the middle one always runs second.
+            order = variants if round_ % 2 == 0 else list(reversed(variants))
             for variant in order:
-                for step, ns in ingest(content, copy=variant == 'current').items():
+                for step, ns in ingest(content, variant).items():
                     samples[digest][variant][step].append(ns)
         print(f'round {round_ + 1} of {args.rounds} done', file=sys.stderr)
 
@@ -198,6 +221,8 @@ def print_summary(rows: dict, digests: list[str]) -> None:
     points = sum(rows[d]['points'] for d in digests)
     print(f'ns per track point over {len(digests)} files, {points} points (best / median):')
     for variant, steps in VARIANTS.items():
+        if not all(variant in rows[d]['steps'] for d in digests):
+            continue
         print(f'  {variant}')
         totals = [0.0, 0.0]
         for step in steps:
@@ -231,6 +256,10 @@ def compare(args: argparse.Namespace) -> None:
     print(f'\nns per track point over the {len(common)} files in both runs, {points} points '
           f'(sum of per-file best, before -> after):')
     for variant, steps in VARIANTS.items():
+        # Outputs from before `lonlat` existed, or from a build without it, lack that variant.
+        if not all(variant in run_rows[d]['steps'] for run_rows in (before, after) for d in common):
+            print(f'  {variant}: not in both runs, left out')
+            continue
         print(f'  {variant}')
         total_before = total_after = 0.0
         for step in steps:
