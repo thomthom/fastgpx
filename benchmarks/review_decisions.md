@@ -22,6 +22,7 @@ point on the upload path after thomthom/sleipnir#596 (`no_copy`), median of 5 al
 | CI fix, not a review item: the wheel workflow failed on 32-bit builds | `efdcdf3` | No more `win32` and `i686` wheels (user-visible: 0.5.0–0.7.0 shipped `win32`) | – |
 | Unhashable `TimeBounds` and `Bounds`; tests off in any scikit-build-core build | `e3f3651` | `TimeBounds.__hash__` and `Bounds.__hash__` are `None` (behaviour change); CMake defaults `BUILD_TESTING` to off when `SKBUILD` is set, and `pyproject.toml` no longer defines it | – (build configuration only) |
 | Bulk coordinate accessor (#73) | `b841e82` | `Segment.lonlat()` returns a new list of `(longitude, latitude)` float tuples, built in C++; `benchmark_ingest.py` gained a `lonlat` variant. Sleipnir not changed | Total, `no_copy` → `lonlat`: Linux 297.7 → 214.3 (−28%), Windows 777.9 → 625.0 (−20%). Coordinates (list, tuples, free) Linux 120.6 → 37.2 |
+| Current and historical benchmark numbers | `53731ec` | `performance.md` and `build_settings.md` put current, verified numbers first and move the rest below a line as historical; the older notes got a status line; `README.md` indexes the notes and scripts | – (nothing re-measured) |
 
 Open for the user, most production impact first:
 
@@ -56,9 +57,12 @@ Open for the user, most production impact first:
   mechanism is plausible, not verified.
 - **Explain the MSVC `polyline::decode` Catch2 figures** (250–330 µs, very noisy), far above the
   139 µs in `build_settings.md`.
-- **Re-measure the old figures if they are to be trusted as absolutes:** the C++ figures in
+- ~~**Re-measure the old figures if they are to be trusted as absolutes:** the C++ figures in
   `build_settings.md`, the 154- and 183-file rows, and the 88 → 65 ns `parse_gpx_time` row. The
-  183-file makeup is unconfirmed, and the manifest does not cover Sleipnir's `gpx/tet`.
+  183-file makeup is unconfirmed, and the manifest does not cover Sleipnir's `gpx/tet`.~~ Not
+  re-measured. They are labelled historical instead, under "Historical measurements" in
+  `performance.md` and "Historical experiments" in `build_settings.md`. See the item on current
+  and historical benchmark numbers.
 
 ## Final verification (4c6284a)
 
@@ -1033,3 +1037,43 @@ platform. A method rather than a property makes it plain that each call allocate
   the Python bindings, which the fuzz build does not compile.
 - The Linux wheel ran the benchmark and a manual `lonlat()` check, not pytest.
 - Linux ARM remains unmeasured.
+
+## Item: current and historical benchmark numbers
+
+**Found.** The benchmark notes mixed figures of very different standing. Multi-run numbers on the
+manifest folders sat next to rows over the unrecorded 154- and 183-file collections, a
+`parse_gpx_time` row that mixes two sessions, and single-run figures from commit messages. No
+note said how fast Sleipnir's upload path is now, and the older notes did not say whether they
+still describe current code.
+
+**Done.** Nothing was re-measured; every figure comes from this file or the existing notes.
+
+- `performance.md` opens with "Where things stand": Sleipnir's upload path on `gpx/sleipnir`,
+  `main` as shipped (from the item on whether the branch is a win) beside the branch at `b841e82`
+  (from the bulk coordinate accessor item), labelled as two sessions. A second table chains the
+  measured totals item by item. It says production is x86_64 Linux. Then come the verified
+  results per change, newest first, with a new section for `Segment.lonlat()`.
+- Below a `---` line, "Historical measurements" holds, verbatim, what falls short of the bar: the
+  154- and 183-file rows and their description, the 88 → 65 ns row, the single-run Surface
+  Python figure of `9b94af8`, and the `LatLong.time` regression check of `1b8881a` (55–70 ns with
+  no recorded run count, 475 ns from one run, and an equality since replaced). Each block says
+  why it is there.
+- The Windows Python rows of `4c0b6be` (reading coordinates, `polyline.encode`) and `e66b8a2`
+  (`polyline.encode`) first went below the line because their file was not recorded. The
+  earlier session's transcript shows it: `gpx/TET/F.gpx`, median of 5 runs, each the best of 7.
+  They are back among the verified results, with a line saying so.
+- `build_settings.md` opens with the current configuration and its evidence from the items above.
+  The experiments at `6d4e491` and `e66b8a2` and the two link-time optimization explanations are
+  below the line as "Historical experiments", each with a note.
+- `datetime_parse.md`, `gpx_parse.md`, `nanobind3.md`, `nanobind_vs_pybind11.md`,
+  `load_profile.md` and `ingest_profile.md` each gained a status line: when, on what build, and
+  what superseded them.
+- `README.md` in this folder indexes the notes and the scripts.
+
+The bar for a verified result: measured on the commit it describes or on current code, on files
+that can be identified, over several runs, with the build recorded.
+
+**Not done.**
+
+- The Surface rows of `8c87bf1` and `9b94af8` are counted as verified because their commit
+  messages give three runs; the Surface Python figure gives one and moved.
