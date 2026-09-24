@@ -255,6 +255,12 @@ if(BUILD_TESTING)
   set_common_properties(fastgpxcli)
   target_link_libraries(fastgpxcli PRIVATE fastgpx-static)
 
+  # Profiling workload for LoadGpx, see benchmarks/load_profile.md
+
+  add_executable(profile_load profile_load.cpp)
+  set_common_properties(profile_load)
+  target_link_libraries(profile_load PRIVATE fastgpx-static)
+
   # fastgpx tests
 
   set(TEST_UTILS
