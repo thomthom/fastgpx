@@ -441,7 +441,6 @@ TEST_CASE("TimePoint storage edge cases", "[timepoint]")
     CHECK((point.raw() == std::string_view(long_garbage)));
     const TimePoint copy = point;
     CHECK(copy == point);
-    CHECK(LatLong{0, 0, 0, copy}.Hash() == LatLong{0, 0, 0, point}.Hash());
   }
   SECTION("self move assignment keeps heap text")
   {
@@ -474,15 +473,11 @@ TEST_CASE("TimePoint equality is at microsecond resolution", "[timepoint]")
                             std::chrono::duration_cast<std::chrono::system_clock::duration>(
                                 microseconds.time_since_epoch())))};
   CHECK(parsed == rebuilt);
-  CHECK(parsed.Hash() == rebuilt.Hash());
 }
 
-TEST_CASE("LatLong hash is consistent with equality", "[timepoint]")
+TEST_CASE("LatLong equality in edge cases", "[timepoint]")
 {
-  const auto check_equal = [](const LatLong& a, const LatLong& b) {
-    CHECK(a == b);
-    CHECK(a.Hash() == b.Hash());
-  };
+  const auto check_equal = [](const LatLong& a, const LatLong& b) { CHECK(a == b); };
   const auto instant = parse_gpx_time("2024-05-18T07:50:01Z");
 
   SECTION("text and the instant it parses to")
@@ -517,23 +512,20 @@ TEST_CASE("LatLong hash is consistent with equality", "[timepoint]")
   {
     check_equal({0.0, -0.0, 0.0}, {-0.0, 0.0, -0.0});
   }
-  SECTION("NaN hashes the same every time")
+  SECTION("NaN is equal to nothing")
   {
     const double nan = std::numeric_limits<double>::quiet_NaN();
     const LatLong point{nan, 10.5, -nan};
     CHECK(point != point);
-    CHECK(point.Hash() == point.Hash());
-    CHECK(point.Hash() == LatLong{-nan, 10.5, nan}.Hash());
   }
-  SECTION("different points usually differ")
+  SECTION("every field takes part")
   {
-    // Not a requirement of a hash, but these would all collide if a field were left out.
     const LatLong point{60.5, 10.5, 1.0, TimePoint(instant)};
-    CHECK(point.Hash() != LatLong{60.6, 10.5, 1.0, TimePoint(instant)}.Hash());
-    CHECK(point.Hash() != LatLong{60.5, 10.6, 1.0, TimePoint(instant)}.Hash());
-    CHECK(point.Hash() != LatLong{60.5, 10.5, 1.1, TimePoint(instant)}.Hash());
-    CHECK(point.Hash() != LatLong{60.5, 10.5, 1.0, TimePoint("2024-05-18T07:50:02Z")}.Hash());
-    CHECK(point.Hash() != LatLong{60.5, 10.5, 1.0}.Hash());
+    CHECK(point != LatLong{60.6, 10.5, 1.0, TimePoint(instant)});
+    CHECK(point != LatLong{60.5, 10.6, 1.0, TimePoint(instant)});
+    CHECK(point != LatLong{60.5, 10.5, 1.1, TimePoint(instant)});
+    CHECK(point != LatLong{60.5, 10.5, 1.0, TimePoint("2024-05-18T07:50:02Z")});
+    CHECK(point != LatLong{60.5, 10.5, 1.0});
   }
 }
 

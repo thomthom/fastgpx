@@ -64,6 +64,32 @@ if(FASTGPX_BUILD_FUZZERS)
   endif()
 endif()
 
+# Link-time optimization, requested by the Linux wheel build in pyproject.toml. It is enabled only
+# if CMake can do it for this compiler (not, for example, for Clang without llvm-ar), so a build
+# from the sdist with such a compiler warns and continues without it. A value given for
+# CMAKE_INTERPROCEDURAL_OPTIMIZATION takes precedence, and fails the build if it is unsupported.
+option(FASTGPX_LTO "Build with link-time optimization if the compiler supports it" OFF)
+
+if(DEFINED CMAKE_INTERPROCEDURAL_OPTIMIZATION)
+  message(STATUS "FASTGPX_LTO: ignored, CMAKE_INTERPROCEDURAL_OPTIMIZATION is set to "
+                 "${CMAKE_INTERPROCEDURAL_OPTIMIZATION}")
+elseif(FASTGPX_LTO)
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT FASTGPX_LTO_SUPPORTED OUTPUT FASTGPX_LTO_ERROR)
+  if(FASTGPX_LTO_SUPPORTED)
+    message(STATUS "FASTGPX_LTO: ON, link-time optimization enabled")
+    # Before any target is defined, including the fetched dependencies, so it reaches all of them.
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+  else()
+    message(WARNING "FASTGPX_LTO is ON, but link-time optimization is not supported with "
+                    "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}; building without "
+                    "it.
+${FASTGPX_LTO_ERROR}")
+  endif()
+else()
+  message(STATUS "FASTGPX_LTO: OFF")
+endif()
+
 # > The CTest module defines a BUILD_TESTING cache variable which defaults to true.
 # > It is used to decide whether the module calls enable_testing() or not, so the
 # > project does not have to make its own explicit call to enable_testing(). The

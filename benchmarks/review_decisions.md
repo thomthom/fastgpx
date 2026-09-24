@@ -17,19 +17,18 @@ point on the upload path after thomthom/sleipnir#596 (`no_copy`), median of 5 al
 | Is the branch a win for the upload path; does link-time optimization help | `b01d107` | Branch is faster than `main` on both platforms. Link-time optimization as built made Linux parsing slower, so the wheels became Release everywhere | Total, `main` → branch built alike: Linux 423.6 → 382.6 (−10%, both Release+LTO), Windows 808.6 → 647.3 (−20%, both Release). Linux parse 186 with LTO, 169 without |
 | Link-time optimization that reaches the parser | `7a03e1d` | pugixml and core library built with hidden visibility, `NOMINSIZE` on (except MSVC), LTO back on for Linux. Windows unchanged | Linux parse 167.4 → 136.6 (−18%), total 359.4 → 322.4 (−10%). `manylinux_2_28`: parse 175.1 → 144.8. `parse_gpx_time` 23.6 → 35.0 ns (C++, not on the upload path) |
 | Copying a point allocates; `LatLong` equality and hashing | `24b3d2f` | Timestamp text stored inline; equality at microseconds; `LatLong.__hash__`; `time` accepts only `datetime.datetime` | Linux total 338.0 → 307.5 (−9%), `list(points)` 55.2 → 40.1, free 20.9 → 13.3. Windows total 686 → 622 (quiet runs). C++ copy+free of 19,962 points: 525 → 81 µs Linux, 1,489 → 374 µs Windows |
-| Docs in line with the branch | uncommitted | Stale build types, collection sizes, wrong ratios and the fuzz instructions fixed; `performance.md` gained sections for the last two items | – |
+| Docs in line with the branch | `4c6284a` | Stale build types, collection sizes, wrong ratios and the fuzz instructions fixed; `performance.md` gained sections for the last two items | – |
+| Unhashable `LatLong`; link-time optimization only where supported; strict `TimeBounds` | uncommitted | `LatLong.__hash__` is `None` and `LatLong::Hash()` is gone; `FASTGPX_LTO` asks for link-time optimization and falls back with a warning; `TimeBounds` takes only `datetime.datetime` (behaviour change) | – (GCC 14 wheel flags identical to before) |
 
 Open for the user, most production impact first:
 
 - **Measure Linux ARM, and build a wheel with cibuildwheel itself.** Neither was done. The
   link-time optimization build was checked in the `manylinux_2_28` image; the inline-text change
   was not.
-- **Decide whether a mutable `LatLong` should stay hashable.** It is hashable now, as chosen up
-  front (option (b)), so a point changed while in a set or dict is lost there. The alternative is
-  to make it unhashable (option (a)).
-- **Decide whether the Linux override should force link-time optimization.** Forced on, a build
-  from the sdist stops at configure when CMake cannot do it for the compiler (for example Clang
-  without `llvm-ar`). Clang with link-time optimization was not checked either.
+- ~~Decide whether a mutable `LatLong` should stay hashable.~~ Resolved: unhashable, option (a).
+  See the last item.
+- ~~Decide whether the Linux override should force link-time optimization.~~ Resolved: it asks
+  for it only where the compiler supports it. See the last item.
 - **Keep `inherit.cmake.define = "append"`** in any future platform override of `cmake.define` in
   `pyproject.toml`. Without it the override silently turns `BUILD_TESTING` back on.
 - **Look at the bulk coordinate accessor (#73).** It would save creating a wrapper per point on
@@ -40,8 +39,12 @@ Open for the user, most production impact first:
   is unaffected and is the production figure.
 - **Revisit link-time optimization on Windows if the Windows upload path starts to matter.** It
   makes that path about 11% faster but polyline work 4–33% slower in C++.
-- **Decide whether `TimeBounds` should stop accepting `datetime.date` and `datetime.time`.** It
-  was left alone because the API is older than this branch.
+- ~~Decide whether `TimeBounds` should stop accepting `datetime.date` and `datetime.time`.~~
+  Resolved: it stops, as a behaviour change. See the last item.
+- **Decide whether `TimeBounds` and `Bounds` should become unhashable too.** They compare by value
+  but hash by identity, the same inconsistency `LatLong` had on `main`: `TimeBounds() ==
+  TimeBounds()` is true, yet a set holds both. This predates the branch. The same reasoning as for
+  `LatLong` applies.
 - **Re-read GCC's inlining report for the shipped build** to confirm how `NOMINSIZE` helps. The
   mechanism is plausible, not verified.
 - **Explain the MSVC `polyline::decode` Catch2 figures** (250–330 µs, very noisy), far above the
@@ -52,7 +55,8 @@ Open for the user, most production impact first:
 
 ## Final verification (4c6284a)
 
-Run over the finished branch, after the last item:
+Run over the branch as it stood after the docs item. The item at the end of this file came later
+and records its own checks.
 
 - **Sanitized Clang 18 build** (address and undefined, `FASTGPX_BUILD_FUZZERS=ON`), following
   `Development.md`: all 62 CTest tests pass, which are the 58 Catch2 cases plus the four
@@ -84,7 +88,8 @@ Run over the finished branch, after the last item:
 - **Multi-run numbers go into `performance.md`**, not into rewritten commit messages. Old commits
   keep their single-run numbers.
 - **LatLong equality** will compare at microsecond resolution and gain a value hash (option b),
-  provided that costs nothing measurable on the production path. Done in a later item.
+  provided that costs nothing measurable on the production path. Done in a later item. The hash
+  was later dropped for option (a), unhashable; see the last item.
 - **Link-time optimization on Linux.** Sleipnir's upload path never reads a point's `.time`, so
   the `parse_gpx_time` slowdown under LTO does not reach production. To be confirmed by
   measurement in a later item. Linux ARM wheels remain unmeasured.
@@ -444,7 +449,8 @@ before. It is worth revisiting if the Windows upload path ever matters more.
   unmeasured.
 - With link-time optimization forced on, a Linux build from the sdist with a compiler CMake
   cannot do it for (for example Clang without `llvm-ar`) stops at configure. The earlier
-  link-time optimization commit had the same exposure; not addressed.
+  link-time optimization commit had the same exposure; not addressed. *(Superseded: addressed in
+  the last item, which also found that such a build fails while building, not at configure.)*
 - Clang was checked only in the sanitized fuzz build, not with link-time optimization. The
   Linux wheels are built with GCC.
 - GCC's inlining report was not re-read for the new build, so the stated `NOMINSIZE` mechanism
@@ -596,7 +602,9 @@ The new tests cover text at the 38/39-character edge between inline and heap sto
 parse of heap text, and self-move. The reviewer then passed the Catch2 suite on MSVC, GCC 14 and
 sanitized Clang 18, all four corpus replays, and a 90-second `fuzz_gpx` run.
 
-**Open for the user: a mutable object is now hashable.** `latitude`, `longitude`, `elevation` and
+**Open for the user: a mutable object is now hashable.** *(Superseded: the user chose option (a),
+and `LatLong` is unhashable since the item "make `LatLong` unhashable, …" below. Kept for the
+record.)* `latitude`, `longitude`, `elevation` and
 `time` can all be assigned. A point changed while it is in a set or used as a dict key is no
 longer found there. This is the trade-off of option (b), which was chosen up front. `LatLongList`
 went the other way (`__hash__ = None`, like `list`). The alternative is to drop `__hash__` and make
@@ -614,7 +622,7 @@ to follow equality, and computing it only on request keeps it off the load path.
   less, but it would still save creating a wrapper per point.
 - Linux ARM remains unmeasured, and the wheels were not built in the `manylinux_2_28` image.
 - `TimeBounds` still accepts `datetime.date` and `datetime.time`. Changing that would break an API
-  that is older than this branch.
+  that is older than this branch. *(Superseded: changed in the last item, at the user's decision.)*
 - The unexplained 10 ns per point from the second item was not re-checked on its own: copying
   freshly parsed points was slower on the branch than on `main`. Copying and freeing are now at or
   below `main`'s figures, so it no longer shows.
@@ -664,3 +672,108 @@ one (its `time` setter rejects a `date`). A Windows configure with `BUILD_TESTIN
   `BUILD_TESTING=ON`.
 - The 88 → 65 ns row was footnoted rather than changed, since which session is right is unknown.
 - The Surface rows in `performance.md` were left as they are, from the commit messages.
+
+## Item: make `LatLong` unhashable, ask for link-time optimization only where supported, and a strict `TimeBounds`
+
+Three follow-ups the user decided from the open points above.
+
+**Found.**
+
+- `LatLong` compared by value and was hashable, while all four of its fields can be assigned. A
+  point changed while it sat in a set or served as a dict key was lost there. Python's convention
+  for a mutable object with value equality is `__hash__ = None`, as for `list` and, already,
+  `LatLongList`. Nothing but the Python `__hash__` and the checks written for it used
+  `LatLong::Hash()`. `fuzz_gpx` asserted it agreed with equality; the Catch2 tests tested it.
+- The Linux override set `CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON` outright. The earlier note said a
+  compiler CMake cannot do link-time optimization for makes the sdist build stop at configure.
+  Checked here, that is not quite what happens. For Clang, CMake always assumes support, so
+  configure passes. With Ubuntu's Clang 18 the build then works, because CMake finds `llvm-ar-18`.
+  With the archiver missing (simulated by pointing it at a path that does not exist), the build
+  fails at the first static library, pugixml. Either way the sdist build failed.
+- `TimeBounds(...)`, its `start_time` and `end_time` setters and `add(...)` accepted
+  `datetime.date` (as midnight) and `datetime.time` (on 1970-01-01), which the previous item had
+  already ruled out for `LatLong.time`.
+
+**Done.**
+
+- `LatLong.__hash__` is `None`, set the same way as for `LatLongList`. `hash(p)`, `set([p])` and
+  `{p: …}` raise `TypeError`; equality is unchanged. **Behaviour change against `main` too:** there,
+  `LatLong` compared by value but kept the identity hash, so sets and dict keys of points worked
+  (by identity). They now raise `TypeError`. Sleipnir does not hash points. `LatLong::Hash()`, `TimePoint::Hash()` and
+  their helpers are removed, with their Catch2 checks and the hash assertion in `fuzz_gpx`. The
+  Catch2 test "LatLong hash is consistent with equality" became "LatLong equality in edge cases".
+  It keeps the equality checks and turns the "different points differ" hash checks into
+  inequality checks. The Python hash tests became equality tests or went; one new test covers
+  unhashability.
+- A new CMake option, `FASTGPX_LTO` (default off), asks for link-time optimization. With it on,
+  `check_ipo_supported` decides. If that passes, `CMAKE_INTERPROCEDURAL_OPTIMIZATION` is set before
+  any target is defined, so it reaches pugixml, nanobind and the core library as before. If it
+  fails, CMake prints a warning with the reason and builds without. The Linux override now sets
+  `FASTGPX_LTO=ON`. `inherit.cmake.define = "append"` and `BUILD_TESTING=false` are unchanged.
+  A value given for `CMAKE_INTERPROCEDURAL_OPTIMIZATION` takes precedence over `FASTGPX_LTO`, and
+  configure says so. The review found that an explicit `OFF` was ignored and an explicit `ON` was
+  reported as `FASTGPX_LTO: OFF`. After the fix, a GCC 14 configure without the Python module gives
+  the following:
+
+  | Setting | Compile commands with `-flto` |
+  |---|---:|
+  | `FASTGPX_LTO=ON` | 6 of 6 |
+  | the same, plus `CMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF` | 0 of 6 |
+  | `CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON` alone | 6 of 6 |
+  | default | 0 of 6 |
+- The UTC `system_clock::time_point` caster now accepts only `datetime.datetime` and its
+  subclasses; anything else is a `TypeError`. That makes the separate `utc_datetime` type from the
+  previous item redundant, so it is gone and `LatLong` uses the same caster again. This covers the
+  `TimeBounds` constructor, both setters and `add(datetime)`. **Behaviour change:** code that passed
+  a `date` or `time` to `TimeBounds` now gets a `TypeError`. That API is older than this branch.
+- The stubs changed only for the bindings: the four `TimeBounds` signatures lose
+  `datetime.date | datetime.time`, and `LatLong` has `__hash__: None = None` instead of
+  `def __hash__`.
+
+Linux wheel (WSL2, GCC 14.2 pinned with `CC=gcc-14 CXX=g++-14`, `uv build --wheel` with the
+scikit-build-core that uv installs, CMake 4.4.3). Built from the previous commit (`35bb46d`) and
+from this change:
+
+- Configure passes `-DBUILD_TESTING=FALSE -DFASTGPX_LTO=ON` and prints `FASTGPX_LTO: ON,
+  link-time optimization enabled`.
+- The 19 build commands (`ninja -t commands`, paths normalised) are identical between the two,
+  including `-flto=auto -fno-fat-lto-objects` on the 14 compile and link lines that had them. The
+  extension's MD5 differs because the code changed (removed hash, stricter caster). With the flags
+  identical, the benchmarks were not re-run.
+
+Fallback, Clang 18 building from the sdist (`uv build`), with `CMAKE_C_COMPILER_AR` and
+`CMAKE_CXX_COMPILER_AR` pointed at `/nonexistent/llvm-ar`:
+
+| Tree | Configure | Build |
+|---|---|---|
+| this change | warning `FASTGPX_LTO is ON, but link-time optimization is not supported with Clang 18.1.3; building without it`, followed by the failed check's output | succeeds; no `-flto` in any build command |
+| `35bb46d` | passes | fails archiving `libpugixml.a` (`/nonexistent/llvm-ar: not found`) |
+
+The same Clang with its archiver found builds this change with `-flto=thin`.
+
+Verified:
+
+- MSVC 19.51: Catch2 and the corpus replays through CTest, 62/62.
+- Python on Windows, `uv run --reinstall-package fastgpx pytest`: 205 passed.
+- Sphinx with `-W --keep-going --fresh-env` builds clean. No docstrings changed.
+- Sanitized Clang 18 build with `FASTGPX_BUILD_FUZZERS=ON`: all 62 CTest tests pass (Catch2 and the four
+  `fuzz_*_corpus` replays, including `fuzz_gpx`), with no sanitizer reports. A 2-minute
+  `fuzz_gpx` run: 960k runs, no crashes, leaks or timeouts.
+
+Raw logs are outside the repository, in `~/fastgpx-review/v5/` (`build-{prev,cand}-gcc.log`,
+`build-{prev,cand}-noar.log`, `build-cand-clang.log`, `cmds-{prev,cand}.txt`, `fuzz-*.log`).
+
+**Why.** An unhashable `LatLong` cannot be silently lost in a set or dict, and it matches `list`
+and `LatLongList`. Keeping `LatLong::Hash()` would mean maintaining a function, its tests and a
+fuzz check for something nothing calls. Asking for link-time optimization rather than forcing it
+keeps the production wheel as it was, while a build from the sdist with an unusual toolchain now
+succeeds. Making the one caster strict, rather than adding `utc_datetime` to `TimeBounds`, leaves
+a single rule for every `datetime` argument in the module.
+
+**Not done.**
+
+- No wheel was built with cibuildwheel or in the `manylinux_2_28` image. The configure and flag
+  checks there should match GCC 14 on Ubuntu, but that is inferred.
+- The no-archiver case is a simulation. A real toolchain without link-time optimization support
+  was not tried.
+- Linux ARM remains unmeasured.

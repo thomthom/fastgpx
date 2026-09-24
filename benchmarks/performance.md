@@ -207,8 +207,9 @@ showed the same gain (parse 175.1 → 144.8, total 392.1 → 347.9). Linux ARM i
 Commit `24b3d2f`. Since `9b94af8`, points keep their `<time>` text, and a timestamp is too long for
 `std::string`'s built-in buffer, so parsing, copying and freeing a point each allocated. The text
 is now stored inside the point (up to 38 characters). Equality now compares at microsecond
-resolution and `LatLong` gained a matching hash. Linux as in the previous section; Windows is
-Release, runs 3–4 of 5 (the session was noisy; medians are in the decision log):
+resolution and `LatLong` gained a matching hash (since dropped: `LatLong` is now unhashable).
+Linux as in the previous section; Windows is Release, runs 3–4 of 5 (the session was noisy;
+medians are in the decision log):
 
 | Measurement | Before | After | Speedup |
 |---|---:|---:|---:|

@@ -47,10 +47,6 @@ public:
   // strings correctly and nothing else, and nothing in the library orders time points.
   bool operator==(const TimePoint& other) const;
 
-  // A hash consistent with `operator==`: the instant truncated to microseconds, or the text when
-  // it cannot be parsed. Parses the text each time without storing the result, like `==`.
-  std::size_t Hash() const;
-
   std::chrono::system_clock::time_point value() const;
 
   // The unparsed source text, or nullopt once `value()` has replaced it with the time point it
@@ -108,10 +104,6 @@ struct LatLong
 
   // Equality only: `time` has no ordering. See `TimePoint::operator==`.
   bool operator==(const LatLong&) const = default;
-
-  // A hash consistent with `operator==`, for Python's `__hash__`. Not computed or stored while
-  // parsing; each call hashes the point afresh.
-  std::size_t Hash() const;
 };
 
 struct Bounds

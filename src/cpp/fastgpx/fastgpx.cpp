@@ -3,7 +3,6 @@
 #include <pugixml.hpp>
 
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cerrno>
 #include <charconv>
@@ -16,8 +15,6 @@
 #include <cstdlib>
 #include <filesystem>
 #include <format>
-#include <functional>
-#include <limits>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -201,27 +198,6 @@ std::optional<std::chrono::sys_time<std::chrono::microseconds>> TryInstant(
   return std::chrono::floor<std::chrono::microseconds>(*time_point);
 }
 
-// Folds `value` into `seed`, the combining step of boost::hash_combine with a 64-bit constant.
-std::size_t HashCombine(std::size_t seed, std::size_t value)
-{
-  return seed ^ (value + 0x9e3779b97f4a7c15ull + (seed << 6) + (seed >> 2));
-}
-
-// Hashes a double consistently with `==`: 0.0 and -0.0 compare equal, so they hash alike. NaN is
-// equal to nothing, so any value is consistent; a fixed one keeps a point's hash stable.
-std::size_t HashDouble(double value)
-{
-  if (value == 0.0)
-  {
-    value = 0.0;
-  }
-  if (std::isnan(value))
-  {
-    value = std::numeric_limits<double>::quiet_NaN();
-  }
-  return std::hash<std::uint64_t>{}(std::bit_cast<std::uint64_t>(value));
-}
-
 } // namespace
 
 bool TimePoint::operator==(const TimePoint& other) const
@@ -243,28 +219,6 @@ bool TimePoint::operator==(const TimePoint& other) const
   const auto time = TryInstant(text, *this);
   const auto other_time = TryInstant(other_text, other);
   return time.has_value() && other_time.has_value() && *time == *other_time;
-}
-
-std::size_t TimePoint::Hash() const
-{
-  // Equal time points either name the same instant, or have identical text that does not parse.
-  const auto text = raw();
-  if (const auto instant = TryInstant(text, *this); instant.has_value())
-  {
-    return HashCombine(1, std::hash<std::int64_t>{}(instant->time_since_epoch().count()));
-  }
-  return HashCombine(2, std::hash<std::string_view>{}(*text));
-}
-
-// LatLong
-
-std::size_t LatLong::Hash() const
-{
-  std::size_t seed = HashDouble(latitude);
-  seed = HashCombine(seed, HashDouble(longitude));
-  seed = HashCombine(seed, HashDouble(elevation));
-  seed = HashCombine(seed, time.has_value() ? time->Hash() : 0);
-  return seed;
 }
 
 // TimeBounds
