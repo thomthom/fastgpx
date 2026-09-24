@@ -21,9 +21,6 @@ point on the upload path after thomthom/sleipnir#596 (`no_copy`), median of 5 al
 
 Open for the user, most production impact first:
 
-- **Run the sanitizer and fuzz checks over the whole branch.** They were deferred to a final pass
-  after the last item. Use the Clang instructions in `Development.md`, which were corrected but
-  not yet run as written. (The inline-text item ran them before the deferral was decided.)
 - **Measure Linux ARM, and build a wheel with cibuildwheel itself.** Neither was done. The
   link-time optimization build was checked in the `manylinux_2_28` image; the inline-text change
   was not.
@@ -52,6 +49,30 @@ Open for the user, most production impact first:
 - **Re-measure the old figures if they are to be trusted as absolutes:** the C++ figures in
   `build_settings.md`, the 154- and 183-file rows, and the 88 → 65 ns `parse_gpx_time` row. The
   183-file makeup is unconfirmed, and the manifest does not cover Sleipnir's `gpx/tet`.
+
+## Final verification (4c6284a)
+
+Run over the finished branch, after the last item:
+
+- **Sanitized Clang 18 build** (address and undefined, `FASTGPX_BUILD_FUZZERS=ON`), following
+  `Development.md`: all 62 CTest tests pass, which are the 58 Catch2 cases plus the four
+  `fuzz_*_corpus` replays. No sanitizer reports.
+- **Fuzz runs.** No crashes, leaks or timeouts:
+
+  | Target | Time | Runs |
+  |---|---:|---:|
+  | `fuzz_gpx` | 6 min | 2.0M |
+  | `fuzz_datetime` | 6 min | 9.3M |
+  | `fuzz_polyline` | 2 min | 2.3M |
+  | `fuzz_polyline_encode` | 2 min | 2.2M |
+
+- **MSVC 19.51:** Catch2 and CTest pass (62/62).
+- **Python on Windows:** 200 passed, and the stubs did not drift.
+- **Linux wheel** (GCC 14): configures as Release with link-time optimization, `BUILD_TESTING`
+  off, `NOMINSIZE` and hidden visibility. Installed into a clean venv, its tests give 197 passed
+  and 3 skipped, all for environmental reasons.
+- **The fuzz instructions** worked as written once a newer CMake was on PATH. Ubuntu's 3.28 is
+  below the project's minimum of 3.30.2, and `Development.md` now says so.
 
 ## Decisions made up front
 
