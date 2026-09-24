@@ -212,7 +212,8 @@ The parsers have libFuzzer targets in `src/cpp/fuzz`:
 | `fuzz_polyline_encode` | `polyline::encode` checked against decode |
 | `fuzz_datetime`        | `parse_gpx_time`                          |
 
-libFuzzer needs Clang. On Windows, use WSL. Configure a dedicated build directory with
+libFuzzer needs Clang. On Windows, use WSL. The project needs CMake 3.30.2 or later; Ubuntu 24.04's
+system CMake is older, so install a newer one (for example `pip install cmake` in a venv). Configure a dedicated build directory with
 `FASTGPX_BUILD_FUZZERS=ON`; the Python module is not needed. Leave `BUILD_TESTING` on, as it is by
 default. With it off, CTest does not enable testing, so the `fuzz_<target>_corpus` replays are not
 registered and `ctest` finds nothing. With it on, the Catch2 suite is also built against the
