@@ -1,8 +1,17 @@
 # Build settings
 
-The release wheels are built as RelWithDebInfo (`cmake.build-type` in `pyproject.toml`). This
-compares that with Release and with link-time optimization, on the same code (commit `6d4e491`),
-to decide what the wheels should use. See [load_profile.md](load_profile.md) for why it came up.
+When this was written, the release wheels were built as RelWithDebInfo (`cmake.build-type` in
+`pyproject.toml`). This compares that with Release and with link-time optimization, on the same
+code (commit `6d4e491`), to decide what the wheels should use. See [load_profile.md](load_profile.md)
+for why it came up.
+
+The wheels are now Release on every platform. On Linux they also use link-time optimization, with
+pugixml and the core library built with hidden visibility and the extension with nanobind's
+`NOMINSIZE`; see the decision at the end of "Link-time optimization after the encoder change".
+
+The "183 real files" below were not recorded. They were most likely all 145 files of Sleipnir's
+upload folder, duplicates included, plus the 34 TET routes and the 4 in Sleipnir's `gpx/tet`;
+that is unconfirmed. New measurements use the folders in [corpus_manifest.json](corpus_manifest.json).
 
 ## Variants
 
@@ -141,6 +150,9 @@ a unit may grow through inlining (`inline-unit-growth`). A single source file st
 threshold where that limit applies, but the whole program does not.
 
 In a tight loop that only parses timestamps, this costs about 11 ns per call, 25 against 36 ns.
+Other sessions measured 24 against 36 ns (the table below), 24 against 35 ns
+([performance.md](performance.md)) and 23.6 against 35.0 ns with the current Linux wheel settings
+([review_decisions.md](review_decisions.md)); the differences are between sessions.
 It does not show in real use. Time bounds, which parse only the first and last timestamp of a
 segment, are faster with link-time optimization, and reading every point's time costs the same
 (about 49 against 50 ns per point, one round each). Loading does not parse timestamps at all.

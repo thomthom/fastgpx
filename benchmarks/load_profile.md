@@ -2,7 +2,9 @@
 
 A CPU profile of loading GPX files, made to find what is worth improving next. It was taken on
 Windows and on Linux (WSL) on the same machine, because the answer turned out to depend on the
-platform. Nothing was changed as a result yet; this records the starting point.
+platform. It records the starting point: the builds profiled here are RelWithDebInfo, as the
+wheels were then. Since then the wheels became Release (with link-time optimization on Linux) and
+the whitespace trim was rewritten; see [performance.md](performance.md).
 
 ## Setup
 
@@ -13,7 +15,8 @@ platform. Nothing was changed as a result yet; this records the starting point.
 | Build | RelWithDebInfo: `/O2 /Ob1`, linked `/INCREMENTAL` | RelWithDebInfo: `-O2 -g` |
 | Profiler | Windows Performance Recorder, CPU sampling with stacks | `perf record`, user code only |
 
-Both builds use the build type the release wheels use (`cmake.build-type` in `pyproject.toml`).
+Both builds use the build type the release wheels used at the time (`cmake.build-type` in
+`pyproject.toml`).
 The code is commit `1b8881a`. The workload is `profile_load` (`src/cpp/profile_load.cpp`, built
 along with the tests), which calls `LoadGpx` on the 34 TET country routes (135 MB, 1.66 million
 track points), 20 passes: `profile_load gpx/TET 20`. It measures `LoadGpx` alone, without the
@@ -66,11 +69,12 @@ without the profiler. The Linux profile could not see kernel time, so its rows a
 
 ## Build settings of the release wheels
 
-The wheels are built as RelWithDebInfo. On MSVC that means `/Ob1`, so only functions marked
-`inline` are inlined, and the extension is linked `/INCREMENTAL`. The profile shows the effect:
+At the time, the wheels were built as RelWithDebInfo. On MSVC that means `/Ob1`, so only functions
+marked `inline` are inlined, and the extension is linked `/INCREMENTAL`. The profile shows the effect:
 `ParseCoordinate`, `TryParseDouble` and the `LatLong` constructor are real calls for every point,
 and incremental-link thunks take about 1%. On GCC, RelWithDebInfo is `-O2` against Release's
-`-O3`. How much a Release build would gain has not been measured.
+`-O3`. [build_settings.md](build_settings.md) has since measured Release, and the wheels are now
+built that way.
 
 ## Where to look next
 
@@ -78,9 +82,9 @@ In order of what they would save on Linux, where production runs:
 
 1. The pugixml tree build, about a third.
 2. `std::from_chars`, about a quarter. On Windows, by far the largest cost.
-3. The whitespace trim in `TryParseDouble`, 13%.
+3. The whitespace trim in `TryParseDouble`, 13%. Since rewritten.
 4. Name lookups (`strcmp` and `strlen`), about 15%.
-5. The build type of the release wheels.
+5. The build type of the release wheels. Since changed to Release.
 
 ## Reproducing
 

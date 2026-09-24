@@ -10,7 +10,9 @@ construction and the database writes are not included.
 - Files: 140 unique GPX files, 3 million track points: the 34 TET country routes and the uploads
   on the Sleipnir dev server. Most upload points carry a timestamp; the TET points mostly do not.
 - Linux: WSL2 on the desktop from [performance.md](performance.md), the Release + link-time
-  optimization wheel as shipped, Python 3.12. Windows: the same machine, the Release wheel.
+  optimization wheel as shipped at `f36982d`, Python 3.12. That is the earlier link-time
+  optimization build that did not reach the parser; see [review_decisions.md](review_decisions.md)
+  for current numbers. Windows: the same machine, the Release wheel.
 - Best of five per file, every run parsing afresh (bounds, lengths and time bounds are cached on
   the parsed objects).
 

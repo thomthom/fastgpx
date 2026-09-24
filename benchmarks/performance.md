@@ -8,8 +8,12 @@ Each "before" is the commit just before the change, built and run on the same ma
 
 | Machine | CPU | OS | Build | Notes |
 |---------|-----|----|-------|-------|
-| Desktop | AMD Ryzen 7 5800X, 8 cores / 16 threads, 32 GB | Windows 11 Pro 25H2 | MSVC 19.51 x64 RelWithDebInfo, CPython 3.12 | Native x64 |
+| Desktop | AMD Ryzen 7 5800X, 8 cores / 16 threads, 32 GB | Windows 11 Pro 25H2 | MSVC 19.51 x64, CPython 3.12 | Native x64; Linux rows are WSL2 on it, GCC 14.2 |
 | Surface | Snapdragon X Plus X1P64100 | Windows 11 | MSVC 19.44 x64 RelWithDebInfo | x64 build running under ARM64 emulation |
+
+The build type is that of the wheels at the time. Sections up to and including the regression check
+of `LatLong.time` used RelWithDebInfo; from "Release build for the wheels" on, Release (plus
+link-time optimization where a section says so).
 
 Desktop numbers are the median of five runs, with the before and after builds run in alternation.
 Surface numbers are the median of three runs, taken from the commit messages; a dash means that
@@ -29,6 +33,14 @@ Rows marked "109 real files" use a wider collection, so that no change is tuned 
 
 The speedups for that collection are the total over the 109 larger files. Smaller files take
 microseconds, so their ratios are mostly noise.
+
+That collection was not recorded, and cannot be rebuilt today. Nor can the "183 real files" of the
+Release and trim sections: most likely all 145 files of Sleipnir's upload folder, duplicates
+included, plus the 34 TET routes and the 4 in Sleipnir's `gpx/tet`, but that is unconfirmed (see
+[review_decisions.md](review_decisions.md)). Compare those rows by their ratios only. Newer
+measurements use the folders listed in [corpus_manifest.json](corpus_manifest.json):
+`gpx/sleipnir` (106 unique upload files, 1.35 million points) and `gpx/TET` (34 files, 1.66
+million points). `uv run benchmarks/corpus_manifest.py verify` checks a local copy against it.
 
 ## Faster timestamp parsing (`dev/faster-time-bounds`)
 
@@ -66,11 +78,15 @@ timestamps, so load time itself is unchanged within noise (about 12 ms for the 2
 
 | Measurement | Before | After | Speedup |
 |-------------|-------:|------:|--------:|
-| Parse one `<time>` string (C++) | 88 ns | 65 ns | 1.35× |
-| `gpx.time_bounds()` on a 20k-point file (Python) | 4.57 ms | 0.71 ms | 6.5× |
+| Parse one `<time>` string (C++) | 88 ns | 65 ns | 1.35×¹ |
+| `gpx.time_bounds()` on a 20k-point file (Python) | 4.57 ms | 0.71 ms | 6.4× |
 | `gpx.time_bounds()`, 109 real files (Python) | 366 ms | 49 ms | 7.5× |
-| `load()` + `time_bounds()`, 20k-point file (Python) | 16.1 ms | 12.6 ms | 1.27× |
+| `load()` + `time_bounds()`, 20k-point file (Python) | 16.1 ms | 12.6 ms | 1.28× |
 | `load()` + `time_bounds()`, 24 files (Python) | 272 ms | 196 ms | 1.39× |
+
+¹ `9b94af8` does not touch timestamp parsing, so it cannot account for 69 → 65 ns; that difference
+lies between measurement sessions. The gain from these changes is the 1.28× measured for
+`8c87bf1`.
 
 Every one of the 154 files gives the same time bounds before and after, with one intended
 exception. `Mojstrovka.gpx` has timestamps from 1901, which the old code rejected on Windows.
@@ -79,7 +95,12 @@ exception. `Mojstrovka.gpx` has timestamps from 1901, which the old code rejecte
 
 Commit `1b8881a`, #12 and #16. This is a feature, not a speed change. It is listed because it
 changes how points compare equal. On the desktop, comparing two points with `==` stayed at about
-55–70 ns, and none of the measurements above moved outside noise.
+55–70 ns when the coordinates differ or both times are in the same form, and none of the
+measurements above moved outside noise. One case is slower: a point whose time is still text
+against one whose time has been parsed. The `1b8881a` commit message, measured separately through
+the bindings, gives 475 ns for it against 109–122 ns for the other cases, of which about 110 ns is
+the `==` call itself. Equality changed again later, to microsecond resolution; see "Inline
+timestamp text" below.
 
 ## Release build for the wheels
 
@@ -130,13 +151,15 @@ machine.
 | `load()`, 183 real files (Python, Windows) | 1.65 s | 1.42 s | 1.16× |
 | `LoadGpx`, TET files (C++, Linux) | 139 ns/point | 143 ns/point | no change within noise |
 
-On Linux the rounds varied by about 25%, and no gain could be seen. GCC may already have made the
-old search cheap; that has not been checked.
+On Linux the rounds varied by about 25%, and no gain could be seen. [load_profile.md](load_profile.md)
+put the trim at 13% of Linux load time, but that profile was of a RelWithDebInfo (`-O2`) build,
+while these rounds are Release (`-O3`). The likely reason is that GCC at `-O3` already made the old
+search cheap. That is unconfirmed: the Release build was not profiled.
 
 ## Link-time optimization for the Linux wheels
 
-The Linux wheels are now built with link-time optimization, which lets the compiler inline across
-source files, for example pugixml's lookups into fastgpx's loop. Windows wheels are not, because
+`58189f2` built the Linux wheels with link-time optimization, which lets the compiler inline across
+source files, for example pugixml's lookups into fastgpx's loop. Windows wheels were not, because
 there it made polyline decoding slower. Linux is WSL2 on the desktop, GCC 14, measured in C++.
 Details are in [build_settings.md](build_settings.md).
 
@@ -147,7 +170,62 @@ Details are in [build_settings.md](build_settings.md).
 | Time bounds of a 5,189-point segment | 61.6 µs | 55.3 µs | 1.12× |
 | `parse_gpx_time`, one timestamp | 24 ns | 35 ns | 0.69× |
 
-Single-timestamp parsing gets slower, but bulk timestamp work (time bounds) is still faster.
+Single-timestamp parsing gets slower, but bulk timestamp work (time bounds) is still faster. Other
+sessions measured the same `parse_gpx_time` pair as 24 → 36 ns and 25 → 36 ns
+([build_settings.md](build_settings.md)), and 23.6 → 35.0 ns with the build of the next section.
+
+This build was later found to make parsing from Python slower, not faster, and was reverted. See
+the next section.
+
+## Link-time optimization that reaches the parser (`dev/latlong-time-review`)
+
+Commits `b01d107` and `7a03e1d`. In the extension, link-time optimization did not reach the parser.
+GCC's inlining report points to two reasons: pugixml's functions could be replaced at load time,
+so GCC would not inline them, and nanobind's `-Os` copies of shared helpers could not be inlined
+into `-O3` code. Measured on Sleipnir's upload path from Python, it made parsing slower (186
+against 169 ns per point), so `b01d107` made the wheels Release everywhere. `7a03e1d` then built pugixml and the core library with hidden
+visibility and the Linux extension with nanobind's `NOMINSIZE`, and turned link-time optimization
+back on for Linux. Windows wheels stay Release without it.
+
+Linux, `gpx/sleipnir` (106 files, 1.35 million points), the upload path after
+thomthom/sleipnir#596 (`no_copy`), ns per point, median of 5 alternated runs:
+
+| Measurement | Release | Release, hidden, `NOMINSIZE`, LTO | Speedup |
+|---|---:|---:|---:|
+| `fastgpx.parse(text)` | 167.4 | 136.6 | 1.23× |
+| `list(segment.points)` | 58.2 | 50.4 | 1.15× |
+| Upload path total | 359.4 | 322.4 | 1.11× |
+| Upload path total, `gpx/TET` | 320.5 | 301.6 | 1.06× |
+| `parse_gpx_time` (C++) | 23.6 ns | 35.0 ns | 0.67× |
+
+The `parse_gpx_time` cost does not reach the upload path, which never reads a point's time; time
+bounds got faster (11.7 → 9.8 ns per point). A reviewer's build in the `manylinux_2_28` image
+showed the same gain (parse 175.1 → 144.8, total 392.1 → 347.9). Linux ARM is unmeasured.
+
+## Inline timestamp text (`dev/latlong-time-review`)
+
+Commit `24b3d2f`. Since `9b94af8`, points keep their `<time>` text, and a timestamp is too long for
+`std::string`'s built-in buffer, so parsing, copying and freeing a point each allocated. The text
+is now stored inside the point (up to 38 characters). Equality now compares at microsecond
+resolution and `LatLong` gained a matching hash. Linux as in the previous section; Windows is
+Release, runs 3–4 of 5 (the session was noisy; medians are in the decision log):
+
+| Measurement | Before | After | Speedup |
+|---|---:|---:|---:|
+| `fastgpx.parse(text)`, Linux | 142.7 | 135.7 | 1.05× |
+| `list(segment.points)`, Linux | 55.2 | 40.1 | 1.38× |
+| Freeing the point lists, Linux | 20.9 | 13.3 | 1.57× |
+| Upload path total, Linux | 338.0 | 307.5 | 1.10× |
+| Upload path total, Windows | 686–687 | 622–623 | 1.10× |
+| Copy and free 19,962 points (C++, Linux) | 525 µs | 81 µs | 6.5× |
+| Copy and free 19,962 points (C++, Windows) | 1,489 µs | 374 µs | 4.0× |
+
+## Where the multi-run numbers are
+
+The two sections above, and the re-measurements behind them, are recorded in full in
+[review_decisions.md](review_decisions.md), with the builds by extension MD5 and the range over
+runs. Older commit messages keep their original single-run figures; where they disagree with the
+multi-run figures, the decision log is the one to trust.
 
 ## Earlier measurements
 
