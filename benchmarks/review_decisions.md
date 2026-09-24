@@ -388,3 +388,165 @@ before. It is worth revisiting if the Windows upload path ever matters more.
 - The fuzzing instructions in `Development.md` configure with `BUILD_TESTING=OFF`, which leaves
   no `fuzz_*_corpus` tests for `ctest` to run. The replays here needed `BUILD_TESTING=ON`. The
   instructions were not changed.
+
+## Item: copying a point allocates, and `LatLong` equality and hashing
+
+**Found.** Since 9b94af8, track time bounds parse only the earliest and latest timestamp, so every
+point keeps its `<time>` text. `TimePoint` held that text in a `std::string`, and a 20- or
+24-character timestamp is too long for the string's built-in buffer. So every point copy that
+`list(segment.points)` makes allocated, and freeing the list released it. Parsing allocated one
+per point as well. The previous item measured the cost at about 20 ns per point on Linux and 37 on
+Windows.
+
+Two smaller problems sat next to it. `LatLong` equality compared instants at the clock's
+resolution, which is 100 ns with MSVC and 1 ns with libstdc++, while `LatLong.time` only carries
+microseconds. So a point rebuilt from its own `.time` could compare unequal to it. And the Python
+`LatLong` compared by value but hashed by identity. Separately, the `time` setter and the
+`LatLong(...)` time argument accepted `datetime.date` and `datetime.time`, which the conversion
+turned into midnight or a time on 1970-01-01.
+
+**Done.**
+
+- `TimePoint` stores unparsed text of up to 38 characters inside the object. That covers every
+  form `parse_gpx_time` accepts short of a very long fraction. Longer text goes on the heap. The
+  object is still 40 bytes (a `static_assert` checks it), so `LatLong` stays 72 bytes. The storage
+  is a byte buffer read and written with `memcpy`, which lets the length and the kind tag sit where
+  a union's tail padding would be. Copying inline text or a parsed instant is a fixed-size copy.
+- `raw()` now returns `std::optional<std::string_view>` instead of `const std::string*`. The time
+  bounds fast path, equality and `__repr__` use it as before.
+- Equality compares instants floored to microseconds, which is how the conversion to `datetime`
+  truncates, before 1970 too. Identical text is still equal without parsing. Unparseable text is
+  equal only to identical text.
+- `LatLong::Hash()` is consistent with that equality. It hashes the coordinates and elevation, with
+  -0.0 hashed as 0.0 and every NaN alike. For the time it hashes the microsecond instant, or the
+  text when the text does not parse. Python's `LatLong.__hash__` calls it. It parses on each call
+  and stores nothing, so loading pays nothing for it.
+- `LatLong(...)` and the `time` setter take a new `utc_datetime` argument type. Its caster accepts
+  only `datetime.datetime` and its subclasses; anything else is a `TypeError`. `TimeBounds` keeps
+  the looser conversion, because it is older than this branch.
+- The stubs changed only for the bindings: the two `time` signatures and the new `__hash__`.
+- Tests. C++: copies and moves of all three storage kinds, microsecond equality (`.0000001Z` equals
+  `.0000009Z`, including before 1970), hash against equality, a `<time>` too long for the inline
+  buffer, and an offset that crosses a year boundary. Python: a copied point keeps its time, a
+  point rebuilt from `p.time` equals `p` with the same hash, `len({p, q}) == 1` for a parsed and a
+  constructed point, -0.0, NaN, unparseable text, the setter and constructor rejecting `date`,
+  `time`, `str` and `int`, the year-boundary offset, and whitespace-padded coordinates in a
+  pretty-printed document.
+- `fuzz_gpx` now copies every point before the time bounds, parses the copy's time, and asserts
+  that the copy still equals the original and that equal points hash alike. It has to come first,
+  because time bounds throw on the first malformed `<time>`.
+- A new Catch2 benchmark, `[!benchmark][latlong]`, copies and frees the 19,962 points of the TopCamp
+  file.
+
+Linux (WSL2, GCC 14.2 pinned with `CC=gcc-14 CXX=g++-14`, Python 3.12.3, the wheel configuration
+of `pyproject.toml`: Release, link-time optimization, `NOMINSIZE`). `gpx/sleipnir`, 106 files,
+1.35 million points. ns per point, the sum of each file's best of 5 rounds, median of 5 alternated
+runs, with the range over the runs:
+
+| `no_copy` step | HEAD | this change |
+|---|---:|---:|
+| `content.decode` | 6.8 | 6.4 |
+| `fastgpx.parse(text)` | 142.7 (141.8–145.7) | **135.7** (134.9–136.5) |
+| track time bounds | 10.1 | 10.1 |
+| `list(segment.points)` | 55.2 (53.9–56.6) | **40.1** (38.9–41.2) |
+| `(lon, lat)` tuples | 70.2 | 70.1 |
+| segment bounds, length, time bounds | 31.3 | 31.0 |
+| freeing the point lists | 20.9 (19.6–21.4) | **13.3** (13.0–13.5) |
+| **total** | 338.0 (332.8–344.9) | **307.5** (304.5–310.1) |
+
+| `current` | HEAD | this change |
+|---|---:|---:|
+| `list(segment.points)` | 53.8 | 41.1 |
+| freeing the point lists | 38.5 | 27.9 |
+| **total** | 483.9 | 452.8 |
+
+On the path production is moving to, the total drops by 9%. Copying and freeing are back at or
+below `main` as shipped (45.3 and 13.3 in the second item). Parsing is 7 ns per point faster,
+because it no longer allocates the string either. Time bounds did not change.
+
+Windows (MSVC 19.51, Python 3.12.7, Release wheels). The machine was noisy through the whole
+session: `parse` ranged from 395 to 520 ns per point on the same build. The load changed between
+runs and hit both builds of a pair alike. So the table gives the two quiet runs (3 and 4) as well
+as the median of all 5:
+
+| `no_copy` step | HEAD, runs 3–4 | this change, runs 3–4 | HEAD, median of 5 | this change, median of 5 |
+|---|---:|---:|---:|---:|
+| `fastgpx.parse(text)` | 413–416 | 395–397 | 451.2 | 483.2 |
+| track time bounds | 18.8–19.0 | 14.4 | 20.7 | 15.3 |
+| `list(segment.points)` | 87 | 57–58 | 98.7 | 65.0 |
+| freeing the point lists | 26–27 | 15 | 30.3 | 17.4 |
+| **total** | 686–687 | **622–623** | 748.4 | 737.6 |
+| `current` total | 869–875 | 816 | 962.9 | 974.8 |
+
+In each of the 5 pairs, the `no_copy` total was lower with this change, by 62, 76, 65, 62 and 11 ns
+per point.
+
+Catch2, median of the means over 5 alternated runs, 50 samples each:
+
+| Benchmark | Linux HEAD | Linux change | Windows HEAD | Windows change |
+|---|---:|---:|---:|---:|
+| copy and free 19,962 points (new) | 525 µs | **81 µs** | 1,489 µs | **374 µs** |
+| `parse_gpx_time` | 22 ns | 22 ns | 69 ns | 65 ns |
+| `LoadGpx` TopCamp 20240518 | 3.51 ms | 3.22 ms | 15.5 ms | 11.8 ms |
+| `LoadGpx` TopCamp 20240520 | 4.49 ms | 3.88 ms | 15.2 ms | 14.6 ms |
+| `Segment::GetTimeBounds` | 53.9 µs | 57.7 µs | 159 µs | 120 µs |
+
+The Linux `GetTimeBounds` median is 7% higher, but the ranges overlap (53.5–59.6 against
+53.4–60.0), and the same step from Python did not change (10.1 ns per point on both). The Windows
+Catch2 figures come from the same noisy session.
+
+Where the numbers came from. HEAD is 7a03e1d. The candidate is that commit plus this change,
+uncommitted. Wheels were built with `uv build --wheel`, each installed into its own venv.
+`benchmark_ingest.py` ran over `gpx/sleipnir` on each platform's own file system, and
+`corpus_manifest.py verify` passed on both. The raw output stayed outside the repository: on Linux
+in `~/fastgpx-review/v3/results/{ingest,c2}/linux-<build>-run<N>.*`, on Windows in the session
+scratchpad as `v3win/{ingest,c2}/win-<build>-run<N>.*`. Extensions by MD5:
+
+| Build | Linux `.so` | Windows `.pyd` |
+|---|---|---|
+| HEAD | c40607a1a9 (same as "shipped" in the previous item) | 1476727abe |
+| this change | 5d7562f1c4 | 26032136cb |
+
+Verified:
+
+- The Catch2 suite with MSVC and with GCC 14.
+- The Python suite on the new wheels, with no marker filter: 200 passed on Windows; 199 passed and
+  1 skipped on Linux.
+- The stubs changed only as described above.
+- Sanitizer and fuzz verification is deferred to the final pass over the branch, after the last
+  item. They had already been run on this change before that was decided. The sanitized Clang 18
+  build (`FASTGPX_BUILD_FUZZERS=ON`, `BUILD_TESTING=ON`) passed the Catch2 suite, whose tests link
+  the sanitized core library, and all four `fuzz_*_corpus` replays. A 3-minute `fuzz_gpx` run with
+  the new checks and a 2-minute `fuzz_datetime` run found nothing.
+
+The review of this item fixed two edge cases and added tests for them:
+- `memcpy` from the null pointer of an empty `string_view`, which is undefined even for zero
+  bytes. It is reachable through the public `TimePoint` constructor.
+- A missing `catch (...)` in the `noexcept` converter for a point's time.
+
+The new tests cover text at the 38/39-character edge between inline and heap storage, a failed
+parse of heap text, and self-move. The reviewer then passed the Catch2 suite on MSVC, GCC 14 and
+sanitized Clang 18, all four corpus replays, and a 90-second `fuzz_gpx` run.
+
+**Open for the user: a mutable object is now hashable.** `latitude`, `longitude`, `elevation` and
+`time` can all be assigned. A point changed while it is in a set or used as a dict key is no
+longer found there. This is the trade-off of option (b), which was chosen up front. `LatLongList`
+went the other way (`__hash__ = None`, like `list`). The alternative is to drop `__hash__` and make
+`LatLong` unhashable, which is option (a). Kept as (b), as decided; revisit if it bites.
+
+**Why.** Storing the text inline removes the allocation from all three places that paid for it:
+parse, copy and free. The time-bounds gain depends on points keeping their text, and they still do.
+The heap fallback keeps any text exactly, so odd or long timestamps behave as before. Microsecond
+equality matches what Python can see, and it gives the same answer on every platform. The hash had
+to follow equality, and computing it only on request keeps it off the load path.
+
+**Not done.**
+
+- The bulk coordinate accessor proposed in #73 was not looked at. With copies this cheap it matters
+  less, but it would still save creating a wrapper per point.
+- Linux ARM remains unmeasured, and the wheels were not built in the `manylinux_2_28` image.
+- `TimeBounds` still accepts `datetime.date` and `datetime.time`. Changing that would break an API
+  that is older than this branch.
+- The unexplained 10 ns per point from the second item was not re-checked on its own: copying
+  freshly parsed points was slower on the branch than on `main`. Copying and freeing are now at or
+  below `main`'s figures, so it no longer shows.

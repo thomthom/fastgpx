@@ -15,6 +15,10 @@
 // CRT differences (`_mkgmtime` rejects dates before 1970, glibc's `timegm` does not) and lets the
 // range check happen before any arithmetic that could overflow `system_clock::duration`.
 //
+// `utc_datetime` is the same conversion restricted to `datetime.datetime` (and its subclasses), for
+// arguments where a bare date or time of day makes no sense, such as the time of a GPX point.
+// Anything else fails the conversion, which nanobind reports as a TypeError.
+//
 // An explicit specialization takes precedence over the partial specialization in the nanobind
 // header, so the stock `std::chrono::duration` caster (used for `utcoffset()`) and the generic
 // time point caster remain available.
@@ -168,6 +172,62 @@ public:
 
   NB_TYPE_CASTER(type,
                  io_name("datetime.datetime | datetime.date | datetime.time", "datetime.datetime"))
+};
+
+struct utc_datetime
+{
+  std::chrono::system_clock::time_point value;
+};
+
+template<>
+class type_caster<utc_datetime>
+{
+public:
+  bool from_python(handle src, uint32_t flags, cleanup_list* cleanup) noexcept
+  {
+    if (!src)
+    {
+      return false;
+    }
+    const utc_datetime_types* types;
+    try
+    {
+      types = &utc_datetime_types::get();
+    }
+    catch (python_error& e)
+    {
+      e.discard_as_unraisable(src.ptr());
+      return false;
+    }
+    catch (...)
+    {
+      // Nothing may escape a `noexcept` function; treat any other failure as "not convertible".
+      return false;
+    }
+    const int is_datetime = PyObject_IsInstance(src.ptr(), types->datetime_type);
+    if (is_datetime <= 0)
+    {
+      if (is_datetime < 0)
+      {
+        PyErr_Clear();
+      }
+      return false;
+    }
+    type_caster<std::chrono::system_clock::time_point> time_point_caster;
+    if (!time_point_caster.from_python(src, flags, cleanup))
+    {
+      return false;
+    }
+    value.value = time_point_caster.value;
+    return true;
+  }
+
+  static handle from_cpp(const utc_datetime& src, rv_policy policy, cleanup_list* cleanup) noexcept
+  {
+    return type_caster<std::chrono::system_clock::time_point>::from_cpp(src.value, policy, cleanup);
+  }
+
+  NB_TYPE_CASTER(utc_datetime, const_name("datetime.datetime"))
 };
 
 } // namespace nanobind::detail

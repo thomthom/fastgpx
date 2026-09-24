@@ -3,16 +3,21 @@
 #include <pugixml.hpp>
 
 #include <algorithm>
+#include <bit>
 #include <cassert>
 #include <cerrno>
 #include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <cstdlib>
 #include <filesystem>
 #include <format>
+#include <functional>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -21,6 +26,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <type_traits>
 
 #include "fastgpx/datetime.hpp"
 #include "fastgpx/errors.hpp"
@@ -30,30 +36,202 @@ namespace fastgpx {
 
 // TimePoint
 
-std::chrono::system_clock::time_point TimePoint::value() const
+static_assert(sizeof(TimePoint) == 40);
+static_assert(sizeof(char*) + sizeof(std::size_t) <= TimePoint::kInlineCapacity);
+static_assert(sizeof(std::chrono::system_clock::time_point) <= TimePoint::kInlineCapacity);
+static_assert(std::is_trivially_copyable_v<std::chrono::system_clock::time_point>);
+
+TimePoint::TimePoint(const std::string_view time_string)
 {
-  if (std::holds_alternative<std::string>(data_))
-  {
-    const auto& time_string = std::get<std::string>(data_);
-    data_ = parse_gpx_time(time_string);
-  }
-  assert(std::holds_alternative<std::chrono::system_clock::time_point>(data_));
-  return std::get<std::chrono::system_clock::time_point>(data_);
+  StoreText(time_string);
 }
 
-const std::string* TimePoint::raw() const
+TimePoint::TimePoint(const std::chrono::system_clock::time_point time_point) noexcept
 {
-  return std::get_if<std::string>(&data_);
+  StoreParsed(time_point);
 }
+
+TimePoint::TimePoint(const TimePoint& other)
+{
+  if (other.kind_ == Kind::kHeapText)
+  {
+    StoreText(other.Text());
+    return;
+  }
+  // Inline text and a parsed time point are plain bytes. Copying all of them, rather than only
+  // the text, is a fixed-size copy the compiler turns into a few moves.
+  std::memcpy(storage_, other.storage_, sizeof(storage_));
+  inline_size_ = other.inline_size_;
+  kind_ = other.kind_;
+}
+
+TimePoint::TimePoint(TimePoint&& other) noexcept
+{
+  // Heap text changes owner along with the pointer; the moved-from object is left empty text.
+  std::memcpy(storage_, other.storage_, sizeof(storage_));
+  inline_size_ = other.inline_size_;
+  kind_ = other.kind_;
+  other.inline_size_ = 0;
+  other.kind_ = Kind::kInlineText;
+}
+
+TimePoint& TimePoint::operator=(const TimePoint& other)
+{
+  if (this != &other)
+  {
+    *this = TimePoint(other);
+  }
+  return *this;
+}
+
+TimePoint& TimePoint::operator=(TimePoint&& other) noexcept
+{
+  if (this != &other)
+  {
+    ReleaseHeapText();
+    std::memcpy(storage_, other.storage_, sizeof(storage_));
+    inline_size_ = other.inline_size_;
+    kind_ = other.kind_;
+    other.inline_size_ = 0;
+    other.kind_ = Kind::kInlineText;
+  }
+  return *this;
+}
+
+TimePoint::~TimePoint()
+{
+  ReleaseHeapText();
+}
+
+void TimePoint::StoreText(const std::string_view text)
+{
+  if (text.size() <= kInlineCapacity)
+  {
+    // An empty view may have a null `data()`, and `memcpy` from a null pointer is undefined even
+    // for a size of zero.
+    if (!text.empty())
+    {
+      std::memcpy(storage_, text.data(), text.size());
+    }
+    inline_size_ = static_cast<unsigned char>(text.size());
+    kind_ = Kind::kInlineText;
+    return;
+  }
+  char* const data = new char[text.size()];
+  std::memcpy(data, text.data(), text.size());
+  const std::size_t size = text.size();
+  std::memcpy(storage_, &data, sizeof(data));
+  std::memcpy(storage_ + sizeof(data), &size, sizeof(size));
+  kind_ = Kind::kHeapText;
+}
+
+void TimePoint::ReleaseHeapText() const noexcept
+{
+  if (kind_ == Kind::kHeapText)
+  {
+    char* data = nullptr;
+    std::memcpy(&data, storage_, sizeof(data));
+    delete[] data;
+    inline_size_ = 0;
+    kind_ = Kind::kInlineText;
+  }
+}
+
+std::string_view TimePoint::Text() const noexcept
+{
+  assert(kind_ != Kind::kParsed);
+  if (kind_ == Kind::kHeapText)
+  {
+    const char* data = nullptr;
+    std::size_t size = 0;
+    std::memcpy(&data, storage_, sizeof(data));
+    std::memcpy(&size, storage_ + sizeof(data), sizeof(size));
+    return {data, size};
+  }
+  return {reinterpret_cast<const char*>(storage_), inline_size_};
+}
+
+void TimePoint::StoreParsed(const std::chrono::system_clock::time_point time_point) const noexcept
+{
+  std::memcpy(storage_, &time_point, sizeof(time_point));
+  kind_ = Kind::kParsed;
+}
+
+std::chrono::system_clock::time_point TimePoint::LoadParsed() const noexcept
+{
+  assert(kind_ == Kind::kParsed);
+  std::chrono::system_clock::time_point time_point;
+  std::memcpy(&time_point, storage_, sizeof(time_point));
+  return time_point;
+}
+
+std::chrono::system_clock::time_point TimePoint::value() const
+{
+  if (kind_ != Kind::kParsed)
+  {
+    // Parse first: if it throws, the text is left as it was.
+    const auto time_point = parse_gpx_time(Text());
+    ReleaseHeapText();
+    StoreParsed(time_point);
+  }
+  return LoadParsed();
+}
+
+std::optional<std::string_view> TimePoint::raw() const
+{
+  if (kind_ == Kind::kParsed)
+  {
+    return std::nullopt;
+  }
+  return Text();
+}
+
+namespace {
+
+// The instant `time` names, or nullopt for text that cannot be parsed. Unlike `value()` this
+// neither throws nor stores the result: see `TimePoint::operator==`.
+std::optional<std::chrono::sys_time<std::chrono::microseconds>> TryInstant(
+    const std::optional<std::string_view>& text, const TimePoint& time)
+{
+  const auto time_point = text.has_value() ? try_parse_gpx_time(*text) : std::optional(time.value());
+  if (!time_point.has_value())
+  {
+    return std::nullopt;
+  }
+  return std::chrono::floor<std::chrono::microseconds>(*time_point);
+}
+
+// Folds `value` into `seed`, the combining step of boost::hash_combine with a 64-bit constant.
+std::size_t HashCombine(std::size_t seed, std::size_t value)
+{
+  return seed ^ (value + 0x9e3779b97f4a7c15ull + (seed << 6) + (seed >> 2));
+}
+
+// Hashes a double consistently with `==`: 0.0 and -0.0 compare equal, so they hash alike. NaN is
+// equal to nothing, so any value is consistent; a fixed one keeps a point's hash stable.
+std::size_t HashDouble(double value)
+{
+  if (value == 0.0)
+  {
+    value = 0.0;
+  }
+  if (std::isnan(value))
+  {
+    value = std::numeric_limits<double>::quiet_NaN();
+  }
+  return std::hash<std::uint64_t>{}(std::bit_cast<std::uint64_t>(value));
+}
+
+} // namespace
 
 bool TimePoint::operator==(const TimePoint& other) const
 {
-  const std::string* text = raw();
-  const std::string* other_text = other.raw();
+  const auto text = raw();
+  const auto other_text = other.raw();
 
   // Identical text names the same instant. This is the common case, two points read from the same
   // document that nothing has asked the time of yet, and it needs no parsing at all.
-  if (text != nullptr && other_text != nullptr && *text == *other_text)
+  if (text.has_value() && other_text.has_value() && *text == *other_text)
   {
     return true;
   }
@@ -62,10 +240,31 @@ bool TimePoint::operator==(const TimePoint& other) const
   // for two reasons: a timestamp the parser rejects must not make a comparison throw, and a
   // comparison should not write the parsed value back into the point, which would make comparing
   // the same point from two threads a data race.
-  const auto time = (text != nullptr) ? try_parse_gpx_time(*text) : std::optional(value());
-  const auto other_time =
-      (other_text != nullptr) ? try_parse_gpx_time(*other_text) : std::optional(other.value());
+  const auto time = TryInstant(text, *this);
+  const auto other_time = TryInstant(other_text, other);
   return time.has_value() && other_time.has_value() && *time == *other_time;
+}
+
+std::size_t TimePoint::Hash() const
+{
+  // Equal time points either name the same instant, or have identical text that does not parse.
+  const auto text = raw();
+  if (const auto instant = TryInstant(text, *this); instant.has_value())
+  {
+    return HashCombine(1, std::hash<std::int64_t>{}(instant->time_since_epoch().count()));
+  }
+  return HashCombine(2, std::hash<std::string_view>{}(*text));
+}
+
+// LatLong
+
+std::size_t LatLong::Hash() const
+{
+  std::size_t seed = HashDouble(latitude);
+  seed = HashCombine(seed, HashDouble(longitude));
+  seed = HashCombine(seed, HashDouble(elevation));
+  seed = HashCombine(seed, time.has_value() ? time->Hash() : 0);
+  return seed;
 }
 
 // TimeBounds
@@ -253,20 +452,20 @@ namespace {
 // otherwise skip over.
 std::optional<TimeBounds> ComputeTimeBoundsFromStrings(std::span<const LatLong> points)
 {
-  const std::string* earliest = nullptr;
-  const std::string* latest = nullptr;
+  std::optional<std::string_view> earliest;
+  std::optional<std::string_view> latest;
   for (const auto& point : points)
   {
     if (!point.time.has_value())
     {
       continue;
     }
-    const std::string* time_string = point.time->raw();
-    if (time_string == nullptr || !is_sortable_gpx_time(*time_string))
+    const auto time_string = point.time->raw();
+    if (!time_string.has_value() || !is_sortable_gpx_time(*time_string))
     {
       return std::nullopt;
     }
-    if (earliest == nullptr)
+    if (!earliest.has_value())
     {
       earliest = time_string;
       latest = time_string;
@@ -289,7 +488,7 @@ std::optional<TimeBounds> ComputeTimeBoundsFromStrings(std::span<const LatLong> 
   }
 
   TimeBounds computed_bounds;
-  if (earliest != nullptr)
+  if (earliest.has_value())
   {
     // Anything between these two is within the range of `system_clock` if they both are, so
     // parsing only the two still reports every timestamp the slow path would have rejected.
@@ -622,7 +821,7 @@ Gpx ReadGpxXml(const pugi::xml_node& doc)
         {
           // Read only the raw string, but don't parse it. This is done on demand
           // when the value is read.
-          point.time.emplace(std::string(time.text().as_string()));
+          point.time.emplace(std::string_view(time.text().as_string()));
         }
       }
     }

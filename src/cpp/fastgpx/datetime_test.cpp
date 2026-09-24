@@ -116,6 +116,16 @@ TEST_CASE("Parse iso8601 extended date time negative timezone", "[datetime][gpxt
   CHECK(actual_timestamp == expected_timestamp);
 }
 
+TEST_CASE("Parse GPX time with a timezone offset across a year boundary", "[datetime][gpxtime]")
+{
+  const auto actual_time = fastgpx::parse_gpx_time("2023-12-31T23:00:00-02:00");
+  CHECK(actual_time == fastgpx::parse_gpx_time("2024-01-01T01:00:00Z"));
+  CHECK(format_iso8601(actual_time) == "2024-01-01T01:00:00Z");
+
+  const auto backwards = fastgpx::parse_gpx_time("2024-01-01T01:00:00+02:00");
+  CHECK(format_iso8601(backwards) == "2023-12-31T23:00:00Z");
+}
+
 TEST_CASE("Parse iso8601 extended date time milliseconds positive timezone", "[datetime][gpxtime]")
 {
   // "2024-11-17T06:14:13.123+08:30"

@@ -28,6 +28,7 @@
 #include "python_utc_chrono_nanobind.hpp"
 
 using chrono_timepoint = std::chrono::system_clock::time_point;
+using nanobind::detail::utc_datetime;
 using namespace fastgpx;
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -89,13 +90,13 @@ std::optional<chrono_timepoint> ReadTimePoint(const std::optional<fastgpx::TimeP
   return time->value();
 }
 
-std::optional<fastgpx::TimePoint> MakeTimePoint(const std::optional<chrono_timepoint>& time)
+std::optional<fastgpx::TimePoint> MakeTimePoint(const std::optional<utc_datetime>& time)
 {
   if (!time.has_value())
   {
     return std::nullopt;
   }
-  return fastgpx::TimePoint(*time);
+  return fastgpx::TimePoint(time->value);
 }
 
 // Formats `LatLong::time` for `__repr__` and `__str__`, where raising would make a point with a
@@ -108,7 +109,7 @@ std::string FormatLatLongTime(const std::optional<fastgpx::TimePoint>& time, FOR
   {
     return "None";
   }
-  if (const std::string* text = time->raw(); text != nullptr)
+  if (const auto text = time->raw(); text.has_value())
   {
     const auto parsed = fastgpx::try_parse_gpx_time(*text);
     return parsed.has_value() ? format_time(*parsed) : std::format("'{}'", *text);
@@ -371,7 +372,7 @@ NB_MODULE(fastgpx, m)
       .def(
           "__init__",
           [](LatLong* self, double latitude, double longitude, double elevation,
-             std::optional<chrono_timepoint> time) {
+             std::optional<utc_datetime> time) {
             new (self) LatLong{latitude, longitude, elevation, MakeTimePoint(time)};
           },
           "latitude"_a, "longitude"_a, "elevation"_a = 0.0, "time"_a.none() = nb::none())
@@ -382,7 +383,7 @@ NB_MODULE(fastgpx, m)
       .def_rw("elevation", &LatLong::elevation, "The elevation of the point in meters.")
       .def_prop_rw(
           "time", [](const LatLong& ll) { return ReadTimePoint(ll.time); },
-          [](LatLong& ll, std::optional<chrono_timepoint> time) { ll.time = MakeTimePoint(time); },
+          [](LatLong& ll, std::optional<utc_datetime> time) { ll.time = MakeTimePoint(time); },
           "time"_a.none(),
           "Creation/modification timestamp for the point, or ``None`` when the ``<trkpt>`` has "
           "no ``<time>``. Always UTC, not local time.\n"
@@ -398,6 +399,9 @@ NB_MODULE(fastgpx, m)
           "attribute of ``points[0]`` changes a temporary. Assign a whole point back to "
           "``points[0]`` instead.\n")
       .def(nb::self == nb::self, nb::sig("def __eq__(self, arg: object, /) -> bool"))
+      // Consistent with `__eq__`, which compares the time at microsecond resolution: see
+      // `LatLong::Hash`. Computed on each call, so loading a document pays nothing for it.
+      .def("__hash__", [](const LatLong& ll) { return ll.Hash(); })
       .def("__repr__",
            [](const LatLong& ll) {
              const auto time = FormatLatLongTime(
