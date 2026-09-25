@@ -1,14 +1,14 @@
 // Fuzz target: fastgpx::ParseGpx.
 //
-// Feeds arbitrary bytes to the GPX parser and then walks every lazily computed property. That
+// Feeds arbitrary bytes to the GPX parser and then asks for every lazily computed property. That
 // covers the XML parsing (pugixml), the coordinate parsing, the geometry calculations and the
-// on-demand <time> parsing. Each segment's points are then passed to polyline::encode, as a
-// user converting a track to a polyline would. The parser range-checks coordinates, so the
-// encoder must accept every parsed point; a value_error from it is a finding.
+// on-demand <time> parsing. Each segment's points then go to polyline::encode, as they would for
+// a user converting a track to a polyline. The parser range-checks coordinates, so the encoder
+// must accept every parsed point; a value_error from it is a finding.
 //
-// Before that, every point is copied, and the copy's time parsed, to check that a copy keeps its
-// time whether the text is stored inline or on the heap. This comes first because time bounds
-// throw on the first malformed <time>.
+// It also copies every point and parses the copy's time, to check that a copy keeps its time
+// whether the text is stored inline or on the heap. This runs before the time bounds, which throw
+// at the first malformed <time> and so end the run for that input.
 
 #include <cassert>
 #include <cstddef>

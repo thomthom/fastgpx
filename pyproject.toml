@@ -86,16 +86,17 @@ minimum-version = "0.11"
 build-dir = "build/{wheel_tag}"
 
 # https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html#configuring-cmake-arguments-and-defines
-# Release rather than RelWithDebInfo: MSVC only inlines at /Ob2, and nanobind strips the Linux
-# extension only in Release, which otherwise ships ~12 MB of debug info. See
-# benchmarks/build_settings.md.
+# Release rather than RelWithDebInfo. On MSVC, RelWithDebInfo uses /Ob1, which only inlines
+# functions marked inline or defined in the class. Release uses /Ob2, which lets the compiler
+# inline any function it chooses. And nanobind strips the Linux extension only in Release, which
+# otherwise ships ~12 MB of debug info. See benchmarks/build_settings.md.
 cmake.build-type = "Release"
 
 # No cmake.define table here on purpose. The tests are left out of the wheel by CMakeLists.txt,
 # which defaults BUILD_TESTING to off when scikit-build-core drives the build, so no define is
-# needed for that and an override below cannot lose it.
+# needed for that and a platform override below cannot accidentally drop it.
 
-# Link-time optimization for the Linux wheels, which is what production runs. It pays off only
+# Link-time optimization for the Linux wheels. Production runs on Linux. It pays off only
 # because pugixml and the core library are built with hidden visibility (src/cpp/CMakeLists.txt),
 # which lets GCC inline pugixml into the parse loop inside the extension. Not on Windows, where it
 # made polyline decoding slower. See benchmarks/review_decisions.md.

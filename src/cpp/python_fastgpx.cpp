@@ -100,7 +100,7 @@ std::optional<fastgpx::TimePoint> MakeTimePoint(const std::optional<chrono_timep
 
 // Formats `LatLong::time` for `__repr__` and `__str__`, where raising would make a point with a
 // malformed `<time>` unprintable. `format_time` renders an instant; a timestamp the parser rejects
-// is rendered as its own text instead, which is more use than reporting it as absent.
+// is rendered as its own text instead, which is more useful than showing None.
 template<typename FORMAT>
 std::string FormatLatLongTime(const std::optional<fastgpx::TimePoint>& time, FORMAT format_time)
 {
@@ -388,7 +388,7 @@ NB_MODULE(fastgpx, m)
         const auto end_time = FormatTimePointAsISO8601(tb.end_time);
         return std::format("TimeBounds({} to {})", start_time, end_time);
       });
-  // Value equality on a mutable object: unhashable, as `LatLong` is.
+  // Compares by value and can be modified, so it must not be hashable (like LatLong).
   nb::type<TimeBounds>().attr("__hash__") = nb::none();
 
   nb::class_<LatLong>(m, "LatLong")
@@ -438,8 +438,8 @@ NB_MODULE(fastgpx, m)
                                 time);
            })
       .doc() = "Represent ``<trkpt>`` data in GPX files.";
-  // Value equality on a mutable object: unhashable, as `list` is. A point changed while it was in
-  // a set or used as a dict key would no longer be found there.
+  // Compares by value and can be modified, so it must not be hashable (like list). A point changed
+  // while it was in a set or used as a dict key would no longer be found there.
   nb::type<LatLong>().attr("__hash__") = nb::none();
 
   // Containers
@@ -540,7 +540,7 @@ NB_MODULE(fastgpx, m)
           },
           nb::sig("def __iadd__(self, values: LatLongList | collections.abc.Iterable[LatLong]) "
                   "-> LatLongList"));
-  // Value equality without a matching hash: unhashable, as `list` is.
+  // Compares by value and can be modified, so it must not be hashable (like list).
   latlong_list.attr("__hash__") = nb::none();
   RegisterAbc(latlong_list, "MutableSequence");
   latlong_list.doc() =
@@ -644,7 +644,7 @@ NB_MODULE(fastgpx, m)
         const auto max = FormatLatLongAsTuples(ll.max);
         return std::format("Bounds(min={}, max={})", min, max);
       });
-  // Value equality on a mutable object: unhashable, as `LatLong` is.
+  // Compares by value and can be modified, so it must not be hashable (like LatLong).
   nb::type<Bounds>().attr("__hash__") = nb::none();
 
   nb::class_<Segment>(m, "Segment")

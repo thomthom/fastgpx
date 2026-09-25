@@ -1,11 +1,13 @@
 // Fuzz target: fastgpx::parse_gpx_time (the parser used for <time> elements).
 //
-// An input with a NUL byte in it is also read as two timestamps, and checks the property
-// `Segment::ComputeTimeBounds` relies on: for two strings of the same length that
-// `is_sortable_gpx_time` accepts, comparing the strings gives the same answer as comparing the
-// times they parse to. Inputs without a NUL exercise the parser alone, as they always did. A NUL
-// is the separator because git leaves a file that contains one byte for byte, so the paired
-// corpus seeds mean the same thing on every platform.
+// An input that contains a NUL byte is also split at the first NUL and read as two timestamps.
+// That checks the property `Segment::ComputeTimeBounds` relies on: for two strings of the same
+// length that `is_sortable_gpx_time` accepts, comparing the strings orders them the same way as
+// comparing the times they parse to. Inputs without a NUL test the parser alone.
+//
+// The separator is a NUL rather than a newline because git may convert line endings when it
+// checks files out on Windows (core.autocrlf), which would change the bytes of a seed file. Git
+// treats a file that contains a NUL byte as binary and never converts it.
 
 #include <cassert>
 #include <chrono>

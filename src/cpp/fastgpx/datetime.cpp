@@ -39,15 +39,15 @@ struct CivilTime
 // `sys_days` carries a day past the end of the month into the next month the way `timegm` did,
 // so 2008-02-31 still reads as 2008-03-02.
 //
-// Two range checks stand between the string and the result:
+// The result is checked against two ranges:
 //
 // - `system_clock::duration` is nanoseconds on libstdc++, so dates outside roughly
 //   1677-09-21..2262-04-11 overflow `int64_t`, which is undefined behaviour. Found by fuzzing
 //   (#48). Other implementations use coarser ticks and reach much further.
-// - The result has to stay within a four digit year, which is all the format can write and all
-//   that `datetime.datetime` in the Python bindings can hold. The year in the string is already
-//   [0, 9999], but year 0 is not a year and a timezone offset can push either end past the
-//   boundary.
+// - The result has to stay within years 1 to 9999. GPX timestamps are XML Schema 1.0
+//   `xsd:dateTime`, which has no year 0000. Python's `datetime` starts at year 1 and ends at
+//   9999. The parser limits the year in the string to [0, 9999], so this check rejects year 0000.
+//   It also rejects a time that a timezone offset pushes out of year 0001 or 9999.
 std::chrono::system_clock::time_point to_system_clock_time(const CivilTime& civil,
                                                            std::chrono::minutes offset,
                                                            std::chrono::nanoseconds fraction,
@@ -92,6 +92,10 @@ std::chrono::system_clock::time_point to_system_clock_time(const CivilTime& civi
 
 // Reads `count` decimal digits starting at `offset`, or -1 if any of them is not a digit.
 // `offset + count` must be within `time_str`.
+//
+// This is hand-rolled rather than `std::from_chars` because the field must be exactly `count`
+// digits with nothing else. `std::from_chars` accepts a leading '-' for a signed type, and it
+// stops at the first non-digit and reports success for the digits before it.
 int ReadDigits(std::string_view time_str, std::size_t offset, std::size_t count)
 {
   int value = 0;
@@ -460,8 +464,10 @@ bool is_sortable_gpx_time(std::string_view time_str)
     return false;
   }
 
-  // `parse_gpx_time` accepts hour 24 and second 60, which name a time in the following day or
-  // minute. Both sort before strings that are chronologically earlier, so they are not sortable.
+  // `parse_gpx_time` accepts hour 24 and second 60, which roll over into the next day or minute.
+  // As strings they don't sort in time order. For example, `2008-07-18T24:00:30Z` is the same
+  // time as `2008-07-19T00:00:30Z`, so it is later than `2008-07-19T00:00:00Z`, yet it sorts
+  // before it.
   if (hour > 23 || minute > 59 || second > 59)
   {
     return false;
