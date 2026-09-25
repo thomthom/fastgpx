@@ -31,11 +31,11 @@ for the shipped build, so how `NOMINSIZE` helps there is inferred.
 WSL2 on the desktop, GCC 14.2, `gpx/sleipnir`, Sleipnir's upload path after
 thomthom/sleipnir#596 (`no_copy`), ns per point, median of 5 alternated runs:
 
-| Measurement | Release | hidden + `NOMINSIZE` + LTO (shipped) | hidden + LTO | hidden + `NOMINSIZE` |
-|---|---:|---:|---:|---:|
-| `fastgpx.parse(text)` | 167.4 | 136.6 | 157.3 | 154.3 |
-| Upload path total | 359.4 | 322.4 | 348.4 | 341.0 |
-| Upload path total, `gpx/TET` | 320.5 | 301.6 | 307.9 | 317.3 |
+| Measurement                  | Release | hidden + `NOMINSIZE` + LTO (shipped) | hidden + LTO | hidden + `NOMINSIZE` |
+|------------------------------|--------:|-------------------------------------:|-------------:|---------------------:|
+| `fastgpx.parse(text)`        |   167.4 |                                136.6 |        157.3 |                154.3 |
+| Upload path total            |   359.4 |                                322.4 |        348.4 |                341.0 |
+| Upload path total, `gpx/TET` |   320.5 |                                301.6 |        307.9 |                317.3 |
 
 Parsing is 18% faster and the upload path 10% faster than a plain Release build. A reviewer's build
 in the `manylinux_2_28` image, which production's wheels come from, showed the same gain (parse
@@ -77,12 +77,12 @@ unreachable, which is a simulation.
 MSVC 19.51, ns per point. The upload-path rows are `gpx/sleipnir`, median of 5 alternated runs.
 The polyline rows cover every segment of `gpx/sleipnir`, best of 7, over three alternated runs:
 
-| Measurement | Release (shipped) | `NOMINSIZE` | LTO | `NOMINSIZE` + LTO |
-|---|---:|---:|---:|---:|
-| `gpx/sleipnir` `fastgpx.parse(text)` | 394.6 | 406.4 | 334.8 | 325.9 |
-| `gpx/sleipnir`, `no_copy` total | 652.0 | 659.8 | 592.2 | 580.4 |
-| `polyline.encode` from Python | 10.1 | 10.2 | 10.9 | 11.1 |
-| `polyline.decode` from Python | 60 | 59 | 63 | 64 |
+| Measurement                          | Release (shipped) | `NOMINSIZE` |   LTO | `NOMINSIZE` + LTO |
+|--------------------------------------|------------------:|------------:|------:|------------------:|
+| `gpx/sleipnir` `fastgpx.parse(text)` |             394.6 |       406.4 | 334.8 |             325.9 |
+| `gpx/sleipnir`, `no_copy` total      |             652.0 |       659.8 | 592.2 |             580.4 |
+| `polyline.encode` from Python        |              10.1 |        10.2 |  10.9 |              11.1 |
+| `polyline.decode` from Python        |                60 |          59 |    63 |                64 |
 
 `NOMINSIZE` alone made parsing slightly slower. Link-time optimization makes the upload path about
 11% faster, but polyline work slower: 4–33% in C++ and 5–8% from Python. Windows is used for
@@ -141,12 +141,12 @@ that is unconfirmed. New measurements use the folders in [corpus_manifest.json](
 
 #### Variants
 
-| | Build | MSVC 19.51 | GCC 14.2 |
-|---|---|---|---|
-| A | RelWithDebInfo, as shipped | `/O2 /Ob1`, linked `/INCREMENTAL` | `-O2 -g`, not stripped |
-| B | Release | `/O2 /Ob2` | `-O3`, stripped |
-| C | Release + link-time optimization | B + `/GL /LTCG` | B + `-flto` |
-| D | Release, binding code not optimized for size | B, extension without `/Os` | – |
+|     | Build                                        | MSVC 19.51                        | GCC 14.2               |
+|-----|----------------------------------------------|-----------------------------------|------------------------|
+| A   | RelWithDebInfo, as shipped                   | `/O2 /Ob1`, linked `/INCREMENTAL` | `-O2 -g`, not stripped |
+| B   | Release                                      | `/O2 /Ob2`                        | `-O3`, stripped        |
+| C   | Release + link-time optimization             | B + `/GL /LTCG`                   | B + `-flto`            |
+| D   | Release, binding code not optimized for size | B, extension without `/Os`        | –                      |
 
 nanobind compiles the extension module (not the parser) with `/Os` / `-Os` in every optimized build
 type, and only strips it and drops the stack protector in Release. D turns the size optimization
@@ -157,34 +157,34 @@ in alternation. Speedup is against A; below 1× is slower.
 
 #### Windows
 
-| Measurement | A | B | C | D |
-|---|---:|---:|---:|---:|
-| `LoadGpx`, TET files (C++) | 482 ns/point | 1.06× | 1.16× | – |
-| `load()`, 183 real files (Python) | 1.50 s | 1.04× | 1.18× | 1.03× |
-| `time_bounds()`, 183 real files (Python) | 39.7 ms | 1.28× | 1.37× | 1.29× |
-| `length_2d()`, 183 real files (Python) | 71.4 ms | 0.99× | 1.04× | 0.99× |
-| Reading every point's coordinates (Python) | 22.1 ms | 1.13× | 1.13× | 1.12× |
-| `polyline.encode`, all segments of one file (Python) | 2.93 ms | 1.12× | **0.43×** | 1.13× |
-| `polyline::encode`, 10k points (C++) | 187 µs | 1.16× | **0.38×** | – |
-| `polyline::decode`, 10k points (C++) | 139 µs | 1.16× | 0.87× | – |
-| `parse_gpx_time` (C++) | 70 ns | 1.05× | 1.02× | – |
+| Measurement                                          |            A |     B |         C |     D |
+|------------------------------------------------------|-------------:|------:|----------:|------:|
+| `LoadGpx`, TET files (C++)                           | 482 ns/point | 1.06× |     1.16× |     – |
+| `load()`, 183 real files (Python)                    |       1.50 s | 1.04× |     1.18× | 1.03× |
+| `time_bounds()`, 183 real files (Python)             |      39.7 ms | 1.28× |     1.37× | 1.29× |
+| `length_2d()`, 183 real files (Python)               |      71.4 ms | 0.99× |     1.04× | 0.99× |
+| Reading every point's coordinates (Python)           |      22.1 ms | 1.13× |     1.13× | 1.12× |
+| `polyline.encode`, all segments of one file (Python) |      2.93 ms | 1.12× | **0.43×** | 1.13× |
+| `polyline::encode`, 10k points (C++)                 |       187 µs | 1.16× | **0.38×** |     – |
+| `polyline::decode`, 10k points (C++)                 |       139 µs | 1.16× |     0.87× |     – |
+| `parse_gpx_time` (C++)                               |        70 ns | 1.05× |     1.02× |     – |
 
 #### Linux
 
-| Measurement | A | B | C |
-|---|---:|---:|---:|
-| `LoadGpx`, TET files (C++) | 138 ns/point | 1.01× | 1.23× |
-| Parse a 20k-point file (C++) | 4.10 ms | 1.08× | 1.23× |
-| Time bounds of a 5,189-point segment (C++) | 70 µs | 1.13× | 1.32× |
-| `polyline::encode`, 10k points (C++) | 127 µs | 1.00× | 0.96× |
-| `polyline::decode`, 10k points (C++) | 101 µs | 1.67× | 1.74× |
-| `parse_gpx_time` (C++) | 37 ns | 1.56× | 1.03× |
+| Measurement                                |            A |     B |     C |
+|--------------------------------------------|-------------:|------:|------:|
+| `LoadGpx`, TET files (C++)                 | 138 ns/point | 1.01× | 1.23× |
+| Parse a 20k-point file (C++)               |      4.10 ms | 1.08× | 1.23× |
+| Time bounds of a 5,189-point segment (C++) |        70 µs | 1.13× | 1.32× |
+| `polyline::encode`, 10k points (C++)       |       127 µs | 1.00× | 0.96× |
+| `polyline::decode`, 10k points (C++)       |       101 µs | 1.67× | 1.74× |
+| `parse_gpx_time` (C++)                     |        37 ns | 1.56× | 1.03× |
 
 #### Size
 
-| | A | B |
-|---|---:|---:|
-| Windows `fastgpx.pyd` | 1.47 MB | 0.45 MB |
+|                                                      |                                     A |        B |
+|------------------------------------------------------|--------------------------------------:|---------:|
+| Windows `fastgpx.pyd`                                |                               1.47 MB |  0.45 MB |
 | Linux `fastgpx.abi3.so` in the published 0.7.0 wheel | 13.6 MB, of which 12 MB is debug info | stripped |
 
 The Linux wheel is about ten times the size of the Windows one because RelWithDebInfo is never
@@ -238,15 +238,15 @@ configuration is at the top of this file.
 Measured again at `e66b8a2`, Release (B) against Release + link-time optimization (C). Median of
 five runs, alternated; Windows had background load, so smaller Windows differences are uncertain.
 
-| Measurement | Windows C/B | Linux C/B |
-|---|---:|---:|
-| `LoadGpx`, TET files (C++) | 1.16× | 1.22× |
-| `load()`, 183 real files (Python) | 1.08× | – |
-| Time bounds of a 5,189-point segment (C++) | within noise | 1.12× |
-| `polyline::encode`, 10k points (C++) | within noise | within noise |
-| `polyline::decode`, 10k points (C++) | **0.73×** | within noise |
-| `parse_gpx_time` (C++) | **0.93×** | **0.69×** |
-| `polyline.encode`, one file (Python) | 0.94× | – |
+| Measurement                                |  Windows C/B |    Linux C/B |
+|--------------------------------------------|-------------:|-------------:|
+| `LoadGpx`, TET files (C++)                 |        1.16× |        1.22× |
+| `load()`, 183 real files (Python)          |        1.08× |            – |
+| Time bounds of a 5,189-point segment (C++) | within noise |        1.12× |
+| `polyline::encode`, 10k points (C++)       | within noise | within noise |
+| `polyline::decode`, 10k points (C++)       |    **0.73×** | within noise |
+| `parse_gpx_time` (C++)                     |    **0.93×** |    **0.69×** |
+| `polyline.encode`, one file (Python)       |        0.94× |            – |
 
 Above 1× is faster with link-time optimization.
 
@@ -296,11 +296,11 @@ segment, are faster with link-time optimization, and reading every point's time 
 
 Two fixes were tried and reverted, both on GCC 14 in WSL2, median of five alternated runs:
 
-| Attempt | Release | Release + link-time optimization |
-|---|---:|---:|
-| Before either | 24 ns | 36 ns |
-| Digit count as a template parameter, `ExtractInt<N>()` | 28 ns | 31 ns |
-| Force-inlining `ExtractInt` | 38 ns | 45 ns |
+| Attempt                                                | Release | Release + link-time optimization |
+|--------------------------------------------------------|--------:|---------------------------------:|
+| Before either                                          |   24 ns |                            36 ns |
+| Digit count as a template parameter, `ExtractInt<N>()` |   28 ns |                            31 ns |
+| Force-inlining `ExtractInt`                            |   38 ns |                            45 ns |
 
 The template kept the calls out of line and made the Release build slower (MSVC too, by 20%).
 Force-inlining did inline every call, but made both builds slower. So inlining alone was not what

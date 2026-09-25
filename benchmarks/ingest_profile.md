@@ -25,27 +25,27 @@ construction and the database writes are not included.
 
 Time per track point:
 
-| Step | Linux | Windows |
-|---|---:|---:|
-| `content.decode("utf-8")` | 15 ns | 23 ns |
-| `fastgpx.parse(text)` | 177 ns | 424 ns |
-| `list(segment.points)` | 77 ns | 98 ns |
-| A new `LatLong` per point, copying latitude and longitude | 145 ns | 174 ns |
-| `(lon, lat)` tuples for GEOS | 97 ns | 106 ns |
-| `length_2d()`, bounds, time bounds | 39 ns | 37 ns |
-| **Total** | **550 ns** | **862 ns** |
+| Step                                                      |      Linux |    Windows |
+|-----------------------------------------------------------|-----------:|-----------:|
+| `content.decode("utf-8")`                                 |      15 ns |      23 ns |
+| `fastgpx.parse(text)`                                     |     177 ns |     424 ns |
+| `list(segment.points)`                                    |      77 ns |      98 ns |
+| A new `LatLong` per point, copying latitude and longitude |     145 ns |     174 ns |
+| `(lon, lat)` tuples for GEOS                              |      97 ns |     106 ns |
+| `length_2d()`, bounds, time bounds                        |      39 ns |      37 ns |
+| **Total**                                                 | **550 ns** | **862 ns** |
 
 On Linux, parsing is about a third of the fastgpx time. The three passes over the points after
 parsing are more than half.
 
 Parsing from Python compared with C++, same files, Linux:
 
-| | ns/point |
-|---|---:|
-| C++ `LoadGpx` | 142 |
-| Python `fastgpx.load(path)` | 166 |
-| Python `fastgpx.parse(text)` | 177 |
-| Python `content.decode()` + `fastgpx.parse(text)` | 193 |
+|                                                   | ns/point |
+|---------------------------------------------------|---------:|
+| C++ `LoadGpx`                                     |      142 |
+| Python `fastgpx.load(path)`                       |      166 |
+| Python `fastgpx.parse(text)`                      |      177 |
+| Python `content.decode()` + `fastgpx.parse(text)` |      193 |
 
 ## Findings
 

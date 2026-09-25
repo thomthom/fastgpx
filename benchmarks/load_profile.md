@@ -13,12 +13,12 @@ the whitespace trim was rewritten; see [performance.md](performance.md).
 
 ## Setup
 
-| | Windows | Linux |
-|---|---|---|
-| Machine | AMD Ryzen 7 5800X, 32 GB, Windows 11 Pro 25H2 | Same machine, WSL2 Ubuntu 24.04 |
-| Compiler | MSVC 19.51 | GCC 14.2 |
-| Build | RelWithDebInfo: `/O2 /Ob1`, linked `/INCREMENTAL` | RelWithDebInfo: `-O2 -g` |
-| Profiler | Windows Performance Recorder, CPU sampling with stacks | `perf record`, user code only |
+|          | Windows                                                | Linux                           |
+|----------|--------------------------------------------------------|---------------------------------|
+| Machine  | AMD Ryzen 7 5800X, 32 GB, Windows 11 Pro 25H2          | Same machine, WSL2 Ubuntu 24.04 |
+| Compiler | MSVC 19.51                                             | GCC 14.2                        |
+| Build    | RelWithDebInfo: `/O2 /Ob1`, linked `/INCREMENTAL`      | RelWithDebInfo: `-O2 -g`        |
+| Profiler | Windows Performance Recorder, CPU sampling with stacks | `perf record`, user code only   |
 
 Both builds use the build type the release wheels used at the time (`cmake.build-type` in
 `pyproject.toml`).
@@ -33,15 +33,15 @@ Linux loads the same files 3.3 times faster: **140 ns per point against 461 ns**
 
 Time per track point, by area:
 
-| Area | Windows | Linux |
-|---|---:|---:|
-| Converting numbers (`std::from_chars`) | 212 ns | 34 ns |
-| Rest of `TryParseDouble`, mostly trimming whitespace | 57 ns | 18 ns |
-| pugixml building the XML tree | 45 ns | 47 ns |
-| Looking up attributes and elements by name | 50 ns | 21 ns |
-| fastgpx's own loop and point lists | 40 ns | 15 ns |
-| Kernel and memory: reading the file, freeing, page faults | ~90 ns | not measured |
-| **Total** | **461 ns** | **140 ns** |
+| Area                                                      |    Windows |        Linux |
+|-----------------------------------------------------------|-----------:|-------------:|
+| Converting numbers (`std::from_chars`)                    |     212 ns |        34 ns |
+| Rest of `TryParseDouble`, mostly trimming whitespace      |      57 ns |        18 ns |
+| pugixml building the XML tree                             |      45 ns |        47 ns |
+| Looking up attributes and elements by name                |      50 ns |        21 ns |
+| fastgpx's own loop and point lists                        |      40 ns |        15 ns |
+| Kernel and memory: reading the file, freeing, page faults |     ~90 ns | not measured |
+| **Total**                                                 | **461 ns** |   **140 ns** |
 
 The shares come from the profiles and are converted to nanoseconds with the total from a run
 without the profiler. The Linux profile could not see kernel time, so its rows are slightly high.

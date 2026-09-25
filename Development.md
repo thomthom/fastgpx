@@ -205,9 +205,9 @@ build\src\cpp\RelWithDebInfo\fastgpx_test.exe [!benchmark]
 
 The parsers have libFuzzer targets in `src/cpp/fuzz`:
 
-| Target                 | Entry point                              |
-|------------------------|------------------------------------------|
-| `fuzz_gpx`             | `fastgpx::ParseGpx` and the derived data |
+| Target                 | Entry point                               |
+|------------------------|-------------------------------------------|
+| `fuzz_gpx`             | `fastgpx::ParseGpx` and the derived data  |
 | `fuzz_polyline`        | `polyline::decode` + re-encode round trip |
 | `fuzz_polyline_encode` | `polyline::encode` checked against decode |
 | `fuzz_datetime`        | `parse_gpx_time`                          |
