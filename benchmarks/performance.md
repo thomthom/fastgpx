@@ -25,32 +25,38 @@ They are ns per point, the sum of each file's best of 5 rounds, median of 5 runs
 the desktop below, under WSL2 (x86_64, GCC 14.2), with wheels built locally from each commit's
 own `pyproject.toml`.
 
-No single run measured `main` against the branch as it is now. The columns below come from two
-separate sessions:
+### `main` against the branch, one session (2026-09-25, quiet machine)
 
-- "`main` as shipped" is `f4953bf` with its own build settings (RelWithDebInfo), measured in the
-  session of `b01d107`.
-- The branch columns are `b841e82`, measured in its own session. `no_copy` is the upload path
-  after thomthom/sleipnir#596. `lonlat` is the same path with `segment.lonlat()`, which Sleipnir
-  does not use yet.
+`main` as shipped (`f4953bf`, RelWithDebInfo per its own `pyproject.toml`) against the branch at
+`9016114` (Release with link-time optimization), measured in one session on 2026-09-25 with the
+machine quiet (no browser, editor or games). The two builds alternated run by run. `no_copy` is
+the upload path after thomthom/sleipnir#596. `lonlat` is the same path with `segment.lonlat()`,
+which Sleipnir does not use yet; `main` does not have it.
 
 | Step | `main` as shipped, `no_copy` | branch, `no_copy` | branch, `lonlat` |
 |---|---:|---:|---:|
-| `content.decode("utf-8")` | 6.2 | 5.7 | 5.7 |
-| `fastgpx.parse(text)` | 172.3 | 131.5 | 131.5 |
-| track time bounds | 72.2 | 9.8 | 9.8 |
-| `list(segment.points)` | 45.3 | 39.4 | – |
-| `(lon, lat)` tuples from the points | 71.7 | 68.2 | – |
-| `segment.lonlat()` | – | – | 37.2 |
-| segment bounds, length, time bounds | 30.8 | 30.1 | 29.8 |
-| freeing the point lists | 13.3 | 13.0 | – |
-| merge bounds | not reported | 0.3 | 0.3 |
-| **total** | **414.8** | **297.7** | **214.3** |
+| `content.decode("utf-8")` | 5.7 | 5.0 | 4.7 |
+| `fastgpx.parse(text)` | 183.2 | 135.5 | 136.1 |
+| track time bounds | 76.0 | 10.3 | 10.3 |
+| `list(segment.points)` | 47.6 | 38.1 | – |
+| `(lon, lat)` tuples from the points | 74.8 | 70.1 | – |
+| `segment.lonlat()` | – | – | 38.6 |
+| segment bounds, length, time bounds | 33.1 | 31.6 | 31.4 |
+| freeing the point lists | 15.2 | 13.2 | – |
+| merge bounds | 0.3 | 0.3 | 0.3 |
+| **total** | **433.5** | **304.0** | **221.5** |
 
-So 414.8 → 214.3 is not one measured ratio. How the total got from there to here, one measured
-step at a time: each row compares two builds, or for `b841e82` two variants on one build, run in
-alternation in one session. The first two rows share a session with the "`main` as shipped"
-column, measured for `b01d107` on the branch as it stood at `3b35bae`:
+The total is the median of the per-run totals, so the steps need not add up to it exactly. Per-run
+totals: `main` 427.3–457.4, branch `no_copy` 298.5–335.1, branch `lonlat` 215.6–249.0. The branch
+was faster in every one of the 5 run pairs. As it stands, the branch takes 30% off `main`'s upload
+path (1.43×), and 49% (1.96×) once Sleipnir calls `segment.lonlat()`.
+
+### Per-change measurements
+
+How the total got from `main` to the branch, one measured step at a time. Each row compares two
+builds, or for `b841e82` two variants on one build, run in alternation in one session. These
+sessions were taken with the machine in normal use. The first two rows share a session, measured
+for `b01d107` on the branch as it stood at `3b35bae`:
 
 | Commit | Change | Before | After |
 |---|---|---:|---:|
@@ -125,8 +131,9 @@ Commit `24b3d2f`. Since `9b94af8`, points keep their `<time>` text, and a timest
 `std::string`'s built-in buffer, so parsing, copying and freeing a point each allocated. The text
 is now stored inside the point (up to 38 characters). Equality now compares at microsecond
 resolution and `LatLong` gained a matching hash (since dropped: `LatLong` is now unhashable).
-Linux as in the next section; Windows is Release, runs 3–4 of 5 (the session was noisy;
-medians are in the decision log):
+Linux as in the next section. Windows is the Release wheel of each commit, median of 5 alternated
+runs, re-measured on a quiet machine on 2026-09-25 (the first session was noisy; both are in the
+decision log):
 
 | Measurement | Before | After | Speedup |
 |---|---:|---:|---:|
@@ -134,7 +141,7 @@ medians are in the decision log):
 | `list(segment.points)`, Linux | 55.2 | 40.1 | 1.38× |
 | Freeing the point lists, Linux | 20.9 | 13.3 | 1.57× |
 | Upload path total, Linux | 338.0 | 307.5 | 1.10× |
-| Upload path total, Windows | 686–687 | 622–623 | 1.10× |
+| Upload path total, Windows | 630.0 | 575.4 | 1.09× |
 | Copy and free 19,962 points (C++, Linux) | 525 µs | 81 µs | 6.5× |
 | Copy and free 19,962 points (C++, Windows) | 1,489 µs | 374 µs | 4.0× |
 
