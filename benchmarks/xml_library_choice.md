@@ -1,0 +1,101 @@
+# Choosing an XML library
+
+> **Status:** historical. Measured in 2024-09, in the prototype that became fastgpx, before fastgpx
+> existed as a library. These are prototype figures. The contents of `gpx/2024 Great Roadtrip`
+> have changed since: gpxpy measured a total of 5,463,041 m then and 5,839,236 m now. The figures
+> below can therefore not be compared with current ones, which are in the
+> [README](../README.md#benchmarks) and [performance.md](performance.md).
+
+These measurements compared Python and C++ XML libraries for reading GPX. pugixml came out
+fastest, and fastgpx parses with it. The text below was in the README until 0.8.0. It is
+unchanged except that its headings moved up one level.
+
+Test machine:
+
+* AMD Ryzen 7 5800 8-Core, 3.80 GHz
+* 32 GB memory
+* m2 SSD storage
+
+## gpxpy benchmarks
+
+Comparing getting the distance of a GPX file using `gpxpy` vs manually extracting
+the data using `xml_etree`, computing distance between points using `gpxpy`
+distance functions.
+
+### gpxpy without `lxml`
+
+```
+Running benchmark with 3 iterations...
+gpxpy 5463041.784135511 meters
+gpxpy 5463041.784135511 meters
+gpxpy 5463041.784135511 meters
+gpxpy: 11.497863 seconds (Average: 3.832621 seconds)
+```
+
+### gpxpy with `lxml`
+
+```
+Running benchmark with 3 iterations...
+gpxpy 5463041.784135511 meters
+gpxpy 5463041.784135511 meters
+gpxpy 5463041.784135511 meters
+gpxpy: 37.803625 seconds (Average: 12.601208 seconds)
+```
+
+### xml_etree data extraction
+
+```
+Running benchmark with 3 iterations...
+xml_etree 5463043.740615641 meters
+xml_etree 5463043.740615641 meters
+xml_etree 5463043.740615641 meters
+xml_etree: 2.333200 seconds (Average: 0.777733 seconds)
+```
+
+Even with `gpxpy` using `etree` to parse the XML it is paster to parse it
+directly with `etree` and use `gpxpy.geo` distance functions to compute the
+distance of a GPX file. Unclear what the extra overhead is, possibly the cost
+of extraction additional data. (Some minor difference in how the total distance
+is computed in this example. Using different options for computing the distance.)
+
+## C++ benchmarks
+
+Since XML parsing itself appear to have a significant impact on performance some
+popular C++ XML libraries was tested:
+
+### tinyxml2
+```
+Total Length: 5456930.710560566
+Elapsed time: 0.4980144 seconds
+```
+
+### pugixml
+```
+Total Length: 5456930.710560566
+Elapsed time: 0.1890089 seconds
+```
+
+## C++ vs Python implementations
+
+
+```
+Running 5 benchmarks with 3 iterations...
+
+Running gpxpy ...
+gpxpy: 50.182288 seconds (Average: 16.727429 seconds)
+
+Running xml_etree ...
+xml_etree: 8.269050 seconds (Average: 2.756350 seconds)
+
+Running lxml ...
+lxml: 8.479702 seconds (Average: 2.826567 seconds)
+
+Running tinyxml (C++) ...
+tinyxml (C++): 2.699880 seconds (Average: 0.899960 seconds)
+
+Running pugixml (C++) ...
+pugixml (C++): 0.381095 seconds (Average: 0.127032 seconds)
+```
+
+For computing the length of a GPX file, `pugixml` in a Python C extension was ~140
+times faster than using `gpxpy`.

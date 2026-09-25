@@ -76,109 +76,42 @@ compatible method calls has been added so that one can quickly swap between `fas
 
 ## Benchmarks
 
-Test machine:
+Test machine: AMD Ryzen 7 5800X, 32 GB memory, Windows 11, and WSL2 Ubuntu 24.04 on the same
+machine. Python 3.12, fastgpx 0.8.0, gpxpy 1.6.2, lxml 6.1.3, polyline 2.0.4.
 
-* AMD Ryzen 7 5800 8-Core, 3.80 GHz
-* 32 GB memory
-* m2 SSD storage
+### Total track length
 
-### gpxpy benchmarks
+Total track length of `gpx/2024 Great Roadtrip` (24 files, 330k points), in seconds per pass.
+Lower is better.
 
-Comparing getting the distance of a GPX file using `gpxpy` vs manually extracting
-the data using `xml_etree`, computing distance between points using `gpxpy`
-distance functions.
+| Method                             | Windows |  Linux |
+|------------------------------------|--------:|-------:|
+| gpxpy                              |    13.3 |   11.7 |
+| `xml.etree` + `gpxpy.geo` distance |   0.700 |  0.610 |
+| lxml + `gpxpy.geo` distance        |   0.892 |  0.593 |
+| fastgpx (`load` + `length_2d`)     |   0.159 | 0.0538 |
 
-#### gpxpy without `lxml`
+gpxpy's and fastgpx's lengths differ by 0.08%, because they use different distance formulas.
 
-```
-Running benchmark with 3 iterations...
-gpxpy 5463041.784135511 meters
-gpxpy 5463041.784135511 meters
-gpxpy 5463041.784135511 meters
-gpxpy: 11.497863 seconds (Average: 3.832621 seconds)
-```
+### Polyline encoding
 
-#### gpxpy with `lxml`
+Encoding every segment of the same files, in seconds per pass. Both timings include loading the
+files with fastgpx.
 
-```
-Running benchmark with 3 iterations...
-gpxpy 5463041.784135511 meters
-gpxpy 5463041.784135511 meters
-gpxpy 5463041.784135511 meters
-gpxpy: 37.803625 seconds (Average: 12.601208 seconds)
-```
+| Method                    | Windows |  Linux |
+|---------------------------|--------:|-------:|
+| `fastgpx.polyline.encode` |   0.155 | 0.0464 |
+| `polyline.encode`         |   0.655 |  0.411 |
 
-#### xml_etree data extraction
+### Reproducing
 
-```
-Running benchmark with 3 iterations...
-xml_etree 5463043.740615641 meters
-xml_etree 5463043.740615641 meters
-xml_etree 5463043.740615641 meters
-xml_etree: 2.333200 seconds (Average: 0.777733 seconds)
+```sh
+uv run --group benchmarks benchmarks/benchmark_gpx.py
+uv run --group benchmarks benchmarks/benchmark_polyline.py
 ```
 
-Even with `gpxpy` using `etree` to parse the XML it is paster to parse it
-directly with `etree` and use `gpxpy.geo` distance functions to compute the
-distance of a GPX file. Unclear what the extra overhead is, possibly the cost
-of extraction additional data. (Some minor difference in how the total distance
-is computed in this example. Using different options for computing the distance.)
+`benchmark_gpx.py` prints each method's time per pass as "Average"; gpxpy runs once.
+`benchmark_polyline.py` prints the total for 10 passes, so divide it by 10 to compare with the
+table.
 
-### C++ benchmarks
-
-Since XML parsing itself appear to have a significant impact on performance some
-popular C++ XML libraries was tested:
-
-#### tinyxml2
-```
-Total Length: 5456930.710560566
-Elapsed time: 0.4980144 seconds
-```
-
-#### pugixml
-```
-Total Length: 5456930.710560566
-Elapsed time: 0.1890089 seconds
-```
-
-### C++ vs Python implementations
-
-
-```
-Running 5 benchmarks with 3 iterations...
-
-Running gpxpy ...
-gpxpy: 50.182288 seconds (Average: 16.727429 seconds)
-
-Running xml_etree ...
-xml_etree: 8.269050 seconds (Average: 2.756350 seconds)
-
-Running lxml ...
-lxml: 8.479702 seconds (Average: 2.826567 seconds)
-
-Running tinyxml (C++) ...
-tinyxml (C++): 2.699880 seconds (Average: 0.899960 seconds)
-
-Running pugixml (C++) ...
-pugixml (C++): 0.381095 seconds (Average: 0.127032 seconds)
-```
-
-For computing the length of a GPX file, `pugixml` in a Python C extension was ~140
-times faster than using `gpxpy`.
-
-## Encoding/decoding polylines
-
-`fastgpx` also provide faster alternatives to `polyline.encode` and `polyline.decode`:
-
-```
-> uv run --group benchmarks benchmarks/benchmark_polyline.py
-GPX path: ../gpx/2024 Great Roadtrip
-GPX files: 24
-Iterations: 10
-
-benchmarking fastgpx.polyline.encode
-2.988260000005539
-
-benchmarking polyline.encode
-7.145514600000752
-```
+Detailed performance notes are in [benchmarks/README.md](benchmarks/README.md).

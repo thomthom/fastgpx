@@ -16,6 +16,7 @@ benchmarks, see [Development.md](../Development.md).
 | [datetime_parse.md](datetime_parse.md) | Which timestamp parser became `parse_gpx_time`? | 2026-09-09 | historical |
 | [nanobind_vs_pybind11.md](nanobind_vs_pybind11.md) | How does fastgpx with nanobind compare with pybind11? | 2025-11-26 | historical |
 | [gpx_parse.md](gpx_parse.md) | What did adding time bounds cost the parser? | 2024-10-28 | historical |
+| [xml_library_choice.md](xml_library_choice.md) | How did gpxpy, `xml.etree`, lxml, tinyxml2 and pugixml compare in the prototype? | 2024-09-24 | historical; the test files have changed since |
 
 The date is when the note was last measured or updated, from `git log`. Each historical note says
 at its top what has changed since.
