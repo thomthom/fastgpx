@@ -92,6 +92,14 @@ and record their own checks.
 - **The fuzz instructions** worked as written once a newer CMake was on PATH. Ubuntu's 3.28 is
   below the project's minimum of 3.30.2, and `Development.md` now says so.
 
+## Where the raw results are
+
+Raw benchmark outputs stay outside the repository. After the review, the WSL build trees were
+deleted and their result and log files kept in `~/fastgpx-review-results/` (30 MB), with the same
+subfolder names the entries below use. `~/fastgpx-review/cmk/` keeps the CMake that the WSL fuzz
+build needs. The Windows quiet-machine results are in `C:\Users\Thomas\fgr9\results`. Outputs kept
+only in the session scratchpad are temporary.
+
 ## Decisions made up front
 
 - **The 183-file figure.** `performance.md` and `build_settings.md` quote a 183-file collection
@@ -410,7 +418,7 @@ Where the numbers came from. Wheels were built with `uv build --wheel` from HEAD
 from the working tree with this change, each installed into its own venv. The variants were built
 from the same tree, with `-C cmake.define.…` on the command line. `corpus_manifest.py verify`
 passed on both platforms. The raw output stayed outside the repository: on Linux in
-`~/fastgpx-review/v2/results/ingest/linux-<build>-run<N>.json`, on Windows in the session
+`~/fastgpx-review-results/v2/results/ingest/linux-<build>-run<N>.json`, on Windows in the session
 scratchpad as `win/results/ingest/win-<build>-run<N>.json`. Builds, by the MD5 of the extension:
 
 | Build | Settings | Linux `.so` | Windows `.pyd` |
@@ -588,7 +596,7 @@ Where the numbers came from. HEAD is 7a03e1d. The candidate is that commit plus 
 uncommitted. Wheels were built with `uv build --wheel`, each installed into its own venv.
 `benchmark_ingest.py` ran over `gpx/sleipnir` on each platform's own file system, and
 `corpus_manifest.py verify` passed on both. The raw output stayed outside the repository: on Linux
-in `~/fastgpx-review/v3/results/{ingest,c2}/linux-<build>-run<N>.*`, on Windows in the session
+in `~/fastgpx-review-results/v3/results/{ingest,c2}/linux-<build>-run<N>.*`, on Windows in the session
 scratchpad as `v3win/{ingest,c2}/win-<build>-run<N>.*`. Extensions by MD5:
 
 | Build | Linux `.so` | Windows `.pyd` |
@@ -776,7 +784,7 @@ Verified:
   `fuzz_*_corpus` replays, including `fuzz_gpx`), with no sanitizer reports. A 2-minute
   `fuzz_gpx` run: 960k runs, no crashes, leaks or timeouts.
 
-Raw logs are outside the repository, in `~/fastgpx-review/v5/` (`build-{prev,cand}-gcc.log`,
+Raw logs are outside the repository, in `~/fastgpx-review-results/v5/` (`build-{prev,cand}-gcc.log`,
 `build-{prev,cand}-noar.log`, `build-cand-clang.log`, `cmds-{prev,cand}.txt`, `fuzz-*.log`).
 
 **Why.** An unhashable `LatLong` cannot be silently lost in a set or dict, and it matches `list`
@@ -883,7 +891,7 @@ Verified:
   and Catch2 plus the corpus replays through CTest pass, 62/62.
 - Sphinx with `-W --keep-going --fresh-env` builds clean.
 
-Raw logs are outside the repository, in `~/fastgpx-review/v7/` (`build-wheel.log`,
+Raw logs are outside the repository, in `~/fastgpx-review-results/v7/` (`build-wheel.log`,
 `build-noinherit.log`, `build-on.log`, `plain.log`, `skb-on.log`, `skb-def.log`).
 
 **Why.** Unhashable `TimeBounds` and `Bounds` cannot be lost in a set or dict after a change, and
@@ -1021,7 +1029,7 @@ Verified:
 - `benchmark_ingest.py compare` of an older Linux output against a new one prints `current` and
   `no_copy` and leaves `lonlat` out.
 
-Raw outputs are outside the repository, in `~/fastgpx-review/v8/` (`linux-{1..5}.json`,
+Raw outputs are outside the repository, in `~/fastgpx-review-results/v8/` (`linux-{1..5}.json`,
 `ab-venv*-{1..5}.json` for the untracking trial, `build-wheel*.log`, and `windows/win-{1..5}.json`
 for Windows).
 
@@ -1133,7 +1141,7 @@ change), which bears out that the earlier Windows absolutes were inflated. On Li
 at 433.5 against the 414.8 of the `b01d107` session, so absolutes still differ between sessions by
 a few percent; the ratio within the session is the figure to use.
 
-Raw outputs are outside the repository: Linux in `~/fastgpx-review/v9/results/linux-{main,head}-{1..5}.json`,
+Raw outputs are outside the repository: Linux in `~/fastgpx-review-results/v9/results/linux-{main,head}-{1..5}.json`,
 Windows in `C:\Users\Thomas\fgr9\results\win-{7a03e1d,24b3d2f}-{1..5}.json`, with the build logs
 beside them.
 
