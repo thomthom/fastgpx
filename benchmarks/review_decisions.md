@@ -16,13 +16,14 @@ point on the upload path after thomthom/sleipnir#596 (`no_copy`), median of 5 al
 | Benchmarks cannot be traced to their files | `3b35bae` | `corpus_manifest.json` lists `gpx/sleipnir` and `gpx/TET` by MD5; `benchmark_corpus.py` records the build and files; `benchmark_ingest.py` replaces the lost upload-path script | – |
 | Is the branch a win for the upload path; does link-time optimization help | `b01d107` | Branch is faster than `main` on both platforms. Link-time optimization as built made Linux parsing slower, so the wheels became Release everywhere | Total, `main` → branch built alike: Linux 423.6 → 382.6 (−10%, both Release+LTO), Windows 808.6 → 647.3 (−20%, both Release). Linux parse 186 with LTO, 169 without |
 | Link-time optimization that reaches the parser | `7a03e1d` | pugixml and core library built with hidden visibility, `NOMINSIZE` on (except MSVC), LTO back on for Linux. Windows unchanged | Linux parse 167.4 → 136.6 (−18%), total 359.4 → 322.4 (−10%). `manylinux_2_28`: parse 175.1 → 144.8. `parse_gpx_time` 23.6 → 35.0 ns (C++, not on the upload path) |
-| Copying a point allocates; `LatLong` equality and hashing | `24b3d2f` | Timestamp text stored inline; equality at microseconds; `LatLong.__hash__`; `time` accepts only `datetime.datetime` | Linux total 338.0 → 307.5 (−9%), `list(points)` 55.2 → 40.1, free 20.9 → 13.3. Windows total 686 → 622 (quiet runs). C++ copy+free of 19,962 points: 525 → 81 µs Linux, 1,489 → 374 µs Windows |
+| Copying a point allocates; `LatLong` equality and hashing | `24b3d2f` | Timestamp text stored inline; equality at microseconds; `LatLong.__hash__`; `time` accepts only `datetime.datetime` | Linux total 338.0 → 307.5 (−9%), `list(points)` 55.2 → 40.1, free 20.9 → 13.3. Windows total 630.0 → 575.4 (quiet re-run, 2026-09-25). C++ copy+free of 19,962 points: 525 → 81 µs Linux, 1,489 → 374 µs Windows |
 | Docs in line with the branch | `4c6284a` | Stale build types, collection sizes, wrong ratios and the fuzz instructions fixed; `performance.md` gained sections for the last two items | – |
 | Unhashable `LatLong`; link-time optimization only where supported; strict `TimeBounds` | `9a39c91` | `LatLong.__hash__` is `None` and `LatLong::Hash()` is gone; `FASTGPX_LTO` asks for link-time optimization and falls back with a warning; `TimeBounds` takes only `datetime.datetime` (behaviour change) | – (GCC 14 wheel flags identical to before) |
 | CI fix, not a review item: the wheel workflow failed on 32-bit builds | `efdcdf3` | No more `win32` and `i686` wheels (user-visible: 0.5.0–0.7.0 shipped `win32`) | – |
 | Unhashable `TimeBounds` and `Bounds`; tests off in any scikit-build-core build | `e3f3651` | `TimeBounds.__hash__` and `Bounds.__hash__` are `None` (behaviour change); CMake defaults `BUILD_TESTING` to off when `SKBUILD` is set, and `pyproject.toml` no longer defines it | – (build configuration only) |
 | Bulk coordinate accessor (#73) | `b841e82` | `Segment.lonlat()` returns a new list of `(longitude, latitude)` float tuples, built in C++; `benchmark_ingest.py` gained a `lonlat` variant. Sleipnir not changed | Total, `no_copy` → `lonlat`: Linux 297.7 → 214.3 (−28%), Windows 777.9 → 625.0 (−20%). Coordinates (list, tuples, free) Linux 120.6 → 37.2 |
 | Current and historical benchmark numbers | `cbe1668` | `performance.md` and `build_settings.md` put current, verified numbers first and move the rest below a line as historical; the older notes got a status line; `README.md` indexes the notes and scripts | – (nothing re-measured) |
+| Quiet-machine re-runs | – | `main` against the branch in one Linux session is the headline of `performance.md`; the Windows gain of the inline timestamp storage is confirmed | Linux `no_copy` total, `main` → `9016114`: 433.5 → 304.0 (−30%), `lonlat` 221.5. Windows, `7a03e1d` → `24b3d2f`: `no_copy` 630.0 → 575.4 (−9%), `current` 795.7 → 734.8 (−8%) |
 
 Open for the user, most production impact first:
 
@@ -42,12 +43,12 @@ Open for the user, most production impact first:
   can no longer turn them back on. See the item on unhashable `TimeBounds` and `Bounds`.
 - ~~Look at the bulk coordinate accessor (#73).~~ Done as `Segment.lonlat()`; Sleipnir still
   has to switch to it. See the item on the bulk coordinate accessor.
-- **Re-run the Windows numbers for the inline timestamp storage in a quiet session.** The machine
-  was noisy. The two quiet runs show `no_copy` 686 → 622 ns per point, and all 5 run pairs favoured
-  the change. But over all 5 runs the median `current` total and parse got slightly worse. Linux
-  is unaffected and is the production figure.
-  The machine was in normal use throughout the review, for Windows and WSL runs alike. The runs
-  alternated builds, so ratios hold; absolute figures, Windows especially, may be high.
+- ~~Re-run the Windows numbers for the inline timestamp storage in a quiet session.~~ Resolved:
+  on a quiet machine the change is faster on Windows in every run pair, `no_copy` 630.0 → 575.4
+  and `current` 795.7 → 734.8 ns per point, with parsing faster too (384.2 → 371.8). The earlier
+  session's slightly worse `current` median was noise. See the item on the quiet-machine re-runs.
+  The rest of the review's runs were taken with the machine in normal use. They alternated builds,
+  so ratios hold; absolute figures, Windows especially, may be high.
 - **Revisit link-time optimization on Windows if the Windows upload path starts to matter.** It
   makes that path about 11% faster but polyline work 4–33% slower in C++.
 - ~~Decide whether `TimeBounds` should stop accepting `datetime.date` and `datetime.time`.~~
@@ -1079,3 +1080,62 @@ that can be identified, over several runs, with the build recorded.
 
 - The Surface rows of `8c87bf1` and `9b94af8` are counted as verified because their commit
   messages give three runs; the Surface Python figure gives one and moved.
+
+## Item: quiet-machine re-runs
+
+**Why.** Every earlier run in this review was taken with the machine in normal use. No session
+measured `main` against the branch as it now stands, and the Windows figures for the inline
+timestamp storage were noisy enough that the median `current` total came out slightly worse.
+
+**Done.** On 2026-09-25, with the browser, editor and games closed, both comparisons were re-run.
+Before timing, the busiest processes were a Visual Studio Installer background download (up to
+half a core, finished before timing started), CrashPlan's service and Sleipnir's development
+server (each under a fifth of a core); WSL was idle. All wheels were built before any timing, with
+`uv build --wheel` from each commit's own `pyproject.toml`, each into its own venv.
+`benchmark_ingest.py` from `9016114` ran over `gpx/sleipnir`, which passed
+`corpus_manifest.py verify` on both file systems. Median of 5 runs, the two builds alternating.
+
+Linux: WSL2, GCC 14.2 (`CC=gcc-14 CXX=g++-14`), CMake 4.4.3, Python 3.12.3. `main` is `f4953bf`
+as shipped (RelWithDebInfo); the branch is `9016114` (Release, `FASTGPX_LTO`).
+
+| Step | `main`, `no_copy` | branch, `no_copy` | branch, `lonlat` |
+|---|---:|---:|---:|
+| `content.decode("utf-8")` | 5.7 | 5.0 | 4.7 |
+| `fastgpx.parse(text)` | 183.2 | 135.5 | 136.1 |
+| `track.time_bounds()` and its start/end | 76.0 | 10.3 | 10.3 |
+| `list(segment.points)` | 47.6 | 38.1 | – |
+| `(lon, lat)` tuples from the points | 74.8 | 70.1 | – |
+| `segment.lonlat()` | – | – | 38.6 |
+| segment bounds, `length_2d`, time bounds | 33.1 | 31.6 | 31.4 |
+| freeing the point lists | 15.2 | 13.2 | – |
+| merge bounds | 0.3 | 0.3 | 0.3 |
+| **total** | **433.5** | **304.0** | **221.5** |
+
+Per-run totals: `main` 427.3–457.4, branch `no_copy` 298.5–335.1, `lonlat` 215.6–249.0. Every
+pair favoured the branch.
+
+Windows: MSVC 19.51, Python 3.12.7, the Release wheel of `7a03e1d` against that of `24b3d2f`.
+
+| Step | `7a03e1d`, `no_copy` | `24b3d2f`, `no_copy` | `7a03e1d`, `current` | `24b3d2f`, `current` |
+|---|---:|---:|---:|---:|
+| `fastgpx.parse(text)` | 384.2 | 371.8 | 386.1 | 369.2 |
+| `list(segment.points)` | 73.4 | 47.9 | 73.6 | 47.6 |
+| freeing the point lists | 25.0 | 14.2 | 39.4 | 29.0 |
+| **total** | **630.0** | **575.4** | **795.7** | **734.8** |
+
+Per-run `no_copy` totals: 627.2–641.7 before, 566.6–597.2 after; `current` 789.7–807.0 before,
+726.5–748.8 after. Every pair favoured the change, in both variants.
+
+**Result.** The Windows gain of the inline timestamp storage holds: 9% off `no_copy` and 8% off
+`current`, the same order as on Linux, and parsing is faster rather than slower. The quiet
+session's Windows `no_copy` figures are well below the noisy session's (630 against 748 before the
+change), which bears out that the earlier Windows absolutes were inflated. On Linux, `main` came out
+at 433.5 against the 414.8 of the `b01d107` session, so absolutes still differ between sessions by
+a few percent; the ratio within the session is the figure to use.
+
+Raw outputs are outside the repository: Linux in `~/fastgpx-review/v9/results/linux-{main,head}-{1..5}.json`,
+Windows in `C:\Users\Thomas\fgr9\results\win-{7a03e1d,24b3d2f}-{1..5}.json`, with the build logs
+beside them.
+
+**Not done.** Neither build ran in the `manylinux_2_28` image, and the C++ Catch2 figures were not
+re-run.

@@ -7,9 +7,9 @@ benchmarks, see [Development.md](../Development.md).
 
 | Doc | Question it answers | Date | Status |
 |---|---|---|---|
-| [performance.md](performance.md) | How fast is Sleipnir's upload path now, and what did each speed change gain? | 2026-09-24 | current; older figures below its line |
+| [performance.md](performance.md) | How fast is Sleipnir's upload path now, and what did each speed change gain? | 2026-09-25 | current; older figures below its line |
 | [build_settings.md](build_settings.md) | How are the wheels built, and why? | 2026-09-24 | current; older experiments below its line |
-| [review_decisions.md](review_decisions.md) | What did the review of `dev/latlong-time` find and decide, with the full tables? | 2026-09-24 | the record of that review |
+| [review_decisions.md](review_decisions.md) | What did the review of `dev/latlong-time` find and decide, with the full tables? | 2026-09-25 | the record of that review |
 | [ingest_profile.md](ingest_profile.md) | Where does the fastgpx side of Sleipnir's upload spend its time? | 2026-09-24 | historical |
 | [load_profile.md](load_profile.md) | Where does `LoadGpx` spend its time on Windows and Linux? | 2026-09-24 | historical |
 | [nanobind3.md](nanobind3.md) | Does nanobind 3 in split mode pay off? | 2026-09-09 | historical numbers; split mode is still used |
