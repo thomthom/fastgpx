@@ -19,8 +19,9 @@ class TimePoint
 public:
   // Keeps a copy of the unparsed <time> text. Timestamps up to `kInlineCapacity` characters, which
   // covers every form `parse_gpx_time` accepts short of an unusually long fraction, are stored in
-  // the object itself; longer text goes on the heap. Parsing stores one per point and
-  // `list(segment.points)` copies every point, so an allocation here was paid on both.
+  // the object itself; longer text goes on the heap. Parsing creates one TimePoint per point, and
+  // `list(segment.points)` copies every point. A heap allocation for the text would happen in both
+  // places, which is why normal timestamps are kept inline.
   TimePoint(std::string_view time_string);
   TimePoint(std::chrono::system_clock::time_point time_point) noexcept;
 
@@ -30,21 +31,21 @@ public:
   TimePoint& operator=(TimePoint&& other) noexcept;
   ~TimePoint();
 
-  // Two time points are equal when they name the same instant, whether or not `value()` has
-  // already parsed either of them. A timestamp that cannot be parsed at all is equal only to the
-  // identical text, so comparing points from a file with a malformed <time> is still well defined
-  // and cannot throw. See #16.
+  // Two time points are equal when they represent the same time, whether or not `value()` has
+  // parsed either of them. Identical text is equal without being parsed. Text that cannot be
+  // parsed is equal only to identical text. A malformed <time> never makes the comparison throw.
+  // See #16.
   //
-  // Instants are compared at microsecond resolution, truncated towards the past. That is what
-  // `datetime.datetime` holds, so a point rebuilt from its own `LatLong.time` compares equal to
-  // it, and the result is the same on every platform whatever the resolution of `system_clock`.
+  // Times are compared at microsecond resolution, the finest that Python's `datetime` can hold,
+  // and finer digits are dropped. That way a point rebuilt in Python from its own `LatLong.time`
+  // compares equal to the original, on every platform.
   //
-  // "Cannot be parsed" includes a date outside the range of `system_clock`, which is narrower on
-  // some platforms than the four digit years the format allows, so two spellings of one instant
-  // outside that range compare equal where the clock reaches them and unequal where it does not.
+  // A date outside the range of `system_clock` counts as text that cannot be parsed. That range is
+  // narrower on libstdc++ (about 1677 to 2262) than on MSVC and libc++, so the result for such
+  // dates differs by platform.
   //
-  // There is deliberately no ordering. Comparing the raw text would order same-length Zulu
-  // strings correctly and nothing else, and nothing in the library orders time points.
+  // There is deliberately no ordering. Comparing the raw text would only order Zulu strings of the
+  // same length correctly, and nothing in the library orders time points.
   bool operator==(const TimePoint& other) const;
 
   std::chrono::system_clock::time_point value() const;
@@ -58,26 +59,31 @@ public:
   static constexpr std::size_t kInlineCapacity = 38;
 
 private:
-  enum class Kind : unsigned char
+  enum class Type : unsigned char
   {
     kInlineText,
     kHeapText,
     kParsed,
   };
 
-  // `storage_` holds, by `kind_`: the text itself (`inline_size_` bytes), a `char*` and a
-  // `std::size_t` size for heap text, or the parsed `time_point`. They are read and written with
-  // `std::memcpy`, which keeps the size and the tag in what would otherwise be the tail padding of
-  // a union, so a `TimePoint` is 40 bytes like the `std::variant` it replaced.
   void StoreText(std::string_view text);
   void ReleaseHeapText() const noexcept;
   std::string_view Text() const noexcept;
   void StoreParsed(std::chrono::system_clock::time_point time_point) const noexcept;
   std::chrono::system_clock::time_point LoadParsed() const noexcept;
 
+  // The inline text, the heap pointer and size, and the parsed time share one byte buffer.
+  // `type_` says which one it holds, and `inline_size_` is the length of inline text.
+  //
+  // This is a byte buffer rather than a union to keep a `TimePoint` at 40 bytes, the same as the
+  // `std::variant` it replaced. A union holding the 38-byte text would be padded to 40 bytes, and
+  // `inline_size_` and `type_` would then make the object 48 bytes. With a byte buffer they use
+  // the two bytes that would otherwise be padding. The pointer, size and time point are written
+  // and read back with `std::memcpy`, which is the standard-conforming way to store an object in
+  // raw bytes, with no alignment or aliasing concerns.
   alignas(8) mutable unsigned char storage_[kInlineCapacity] = {};
   mutable unsigned char inline_size_ = 0;
-  mutable Kind kind_ = Kind::kInlineText;
+  mutable Type type_ = Type::kInlineText;
 };
 
 struct TimeBounds

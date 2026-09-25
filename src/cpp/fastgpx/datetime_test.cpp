@@ -449,9 +449,8 @@ TEST_CASE("Parse GPX time outside a four digit year", "[datetime][gpxtime]")
   // boundary have to be rejected on every platform, not only on the ones whose `system_clock`
   // happens to be too narrow for them. See #19.
   //
-  // These are the same parse_error either way, so on a nanosecond `system_clock` the assertions
-  // hold through the narrower `system_clock` check instead; the four digit year check is only
-  // reachable on a clock that reaches further than year 9999.
+  // On libstdc++ these dates already fail the narrower `system_clock` range check. So the four
+  // digit year check itself is only exercised on MSVC and libc++.
   CHECK_THROWS_AS(fastgpx::parse_gpx_time("0000-01-01T00:00:00Z"), fastgpx::parse_error);
   CHECK_THROWS_AS(fastgpx::parse_gpx_time("0000-12-31T23:59:59Z"), fastgpx::parse_error);
   CHECK_THROWS_AS(fastgpx::parse_gpx_time("0001-01-01T00:00:00+01:00"), fastgpx::parse_error);

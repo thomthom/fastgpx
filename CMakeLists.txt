@@ -99,10 +99,13 @@ endif()
 # > they are not needed.
 #
 # The tests are not needed in a Python package build. scikit-build-core defines SKBUILD, so default
-# BUILD_TESTING to off there, before CTest's option() would default it to on. This lives here
-# rather than in pyproject.toml's cmake.define table, which a platform override there replaces
-# unless it says `inherit.cmake.define = "append"`; that once turned the tests back on in the Linux
-# wheels. An explicit -DBUILD_TESTING=ON still wins, and plain CMake builds keep the tests on.
+# BUILD_TESTING to off there, before CTest's option() would default it to on.
+#
+# The default is set here rather than in pyproject.toml's cmake.define table. A platform override
+# in pyproject.toml replaces that table unless it sets `inherit.cmake.define = "append"`. The
+# Linux override once dropped it, which turned the tests back on in the Linux wheel builds.
+#
+# An explicit -DBUILD_TESTING=ON still wins, and plain CMake builds keep the tests on.
 if(SKBUILD AND NOT DEFINED BUILD_TESTING)
   set(BUILD_TESTING OFF CACHE BOOL "Build the testing tree.")
 endif()

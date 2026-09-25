@@ -62,7 +62,8 @@ int main(int argc, char** argv)
   std::sort(files.begin(), files.end());
 
   // Counting the points uses each result, so the loads cannot be optimised away.
-  // The try block is outside the loop, so the profiled loop only gains recording the current file.
+  // The try block wraps the whole loop, so the only extra work inside the loop is remembering the
+  // current file for the error message.
   std::size_t points = 0;
   const std::filesystem::path* current = nullptr;
   const auto start = std::chrono::steady_clock::now();

@@ -50,26 +50,28 @@ TimePoint::TimePoint(const std::chrono::system_clock::time_point time_point) noe
 
 TimePoint::TimePoint(const TimePoint& other)
 {
-  if (other.kind_ == Kind::kHeapText)
+  if (other.type_ == Type::kHeapText)
   {
     StoreText(other.Text());
     return;
   }
   // Inline text and a parsed time point are plain bytes. Copying all of them, rather than only
-  // the text, is a fixed-size copy the compiler turns into a few moves.
+  // the text, is a fixed-size copy of 38 bytes that the compiler turns into a few load and store
+  // instructions.
   std::memcpy(storage_, other.storage_, sizeof(storage_));
   inline_size_ = other.inline_size_;
-  kind_ = other.kind_;
+  type_ = other.type_;
 }
 
 TimePoint::TimePoint(TimePoint&& other) noexcept
 {
-  // Heap text changes owner along with the pointer; the moved-from object is left empty text.
+  // Heap text changes owner along with the pointer; the moved-from object is left holding empty
+  // inline text.
   std::memcpy(storage_, other.storage_, sizeof(storage_));
   inline_size_ = other.inline_size_;
-  kind_ = other.kind_;
+  type_ = other.type_;
   other.inline_size_ = 0;
-  other.kind_ = Kind::kInlineText;
+  other.type_ = Type::kInlineText;
 }
 
 TimePoint& TimePoint::operator=(const TimePoint& other)
@@ -88,9 +90,9 @@ TimePoint& TimePoint::operator=(TimePoint&& other) noexcept
     ReleaseHeapText();
     std::memcpy(storage_, other.storage_, sizeof(storage_));
     inline_size_ = other.inline_size_;
-    kind_ = other.kind_;
+    type_ = other.type_;
     other.inline_size_ = 0;
-    other.kind_ = Kind::kInlineText;
+    other.type_ = Type::kInlineText;
   }
   return *this;
 }
@@ -111,7 +113,7 @@ void TimePoint::StoreText(const std::string_view text)
       std::memcpy(storage_, text.data(), text.size());
     }
     inline_size_ = static_cast<unsigned char>(text.size());
-    kind_ = Kind::kInlineText;
+    type_ = Type::kInlineText;
     return;
   }
   char* const data = new char[text.size()];
@@ -119,25 +121,25 @@ void TimePoint::StoreText(const std::string_view text)
   const std::size_t size = text.size();
   std::memcpy(storage_, &data, sizeof(data));
   std::memcpy(storage_ + sizeof(data), &size, sizeof(size));
-  kind_ = Kind::kHeapText;
+  type_ = Type::kHeapText;
 }
 
 void TimePoint::ReleaseHeapText() const noexcept
 {
-  if (kind_ == Kind::kHeapText)
+  if (type_ == Type::kHeapText)
   {
     char* data = nullptr;
     std::memcpy(&data, storage_, sizeof(data));
     delete[] data;
     inline_size_ = 0;
-    kind_ = Kind::kInlineText;
+    type_ = Type::kInlineText;
   }
 }
 
 std::string_view TimePoint::Text() const noexcept
 {
-  assert(kind_ != Kind::kParsed);
-  if (kind_ == Kind::kHeapText)
+  assert(type_ != Type::kParsed);
+  if (type_ == Type::kHeapText)
   {
     const char* data = nullptr;
     std::size_t size = 0;
@@ -151,12 +153,12 @@ std::string_view TimePoint::Text() const noexcept
 void TimePoint::StoreParsed(const std::chrono::system_clock::time_point time_point) const noexcept
 {
   std::memcpy(storage_, &time_point, sizeof(time_point));
-  kind_ = Kind::kParsed;
+  type_ = Type::kParsed;
 }
 
 std::chrono::system_clock::time_point TimePoint::LoadParsed() const noexcept
 {
-  assert(kind_ == Kind::kParsed);
+  assert(type_ == Type::kParsed);
   std::chrono::system_clock::time_point time_point;
   std::memcpy(&time_point, storage_, sizeof(time_point));
   return time_point;
@@ -164,7 +166,7 @@ std::chrono::system_clock::time_point TimePoint::LoadParsed() const noexcept
 
 std::chrono::system_clock::time_point TimePoint::value() const
 {
-  if (kind_ != Kind::kParsed)
+  if (type_ != Type::kParsed)
   {
     // Parse first: if it throws, the text is left as it was.
     const auto time_point = parse_gpx_time(Text());
@@ -176,7 +178,7 @@ std::chrono::system_clock::time_point TimePoint::value() const
 
 std::optional<std::string_view> TimePoint::raw() const
 {
-  if (kind_ == Kind::kParsed)
+  if (type_ == Type::kParsed)
   {
     return std::nullopt;
   }
@@ -185,7 +187,7 @@ std::optional<std::string_view> TimePoint::raw() const
 
 namespace {
 
-// The instant `time` names, or nullopt for text that cannot be parsed. Unlike `value()` this
+// The time that `time` represents, or nullopt if its text cannot be parsed. Unlike `value()` this
 // neither throws nor stores the result: see `TimePoint::operator==`.
 std::optional<std::chrono::sys_time<std::chrono::microseconds>> TryInstant(
     const std::optional<std::string_view>& text, const TimePoint& time)
@@ -205,7 +207,7 @@ bool TimePoint::operator==(const TimePoint& other) const
   const auto text = raw();
   const auto other_text = other.raw();
 
-  // Identical text names the same instant. This is the common case, two points read from the same
+  // Identical text represents the same time. This is the common case, two points read from the same
   // document that nothing has asked the time of yet, and it needs no parsing at all.
   if (text.has_value() && other_text.has_value() && *text == *other_text)
   {
@@ -276,10 +278,10 @@ bool Bounds::IsEmpty() const
 
 void Bounds::Add(const LatLong& location)
 {
-  // A corner of a bounding box is a place, not one of the points that produced it, so it gets the
-  // coordinates and not the timestamp. Seeding it with the whole point used to leave the first
-  // point's <time> on the corner, which made `min.time` an arbitrary timestamp and made comparing
-  // a parsed `Bounds` to a constructed one fail.
+  // A corner of the bounds is a coordinate (latitude, longitude, elevation), not a track point, so
+  // it doesn't carry a timestamp. Copying the whole point used to put the first point's <time>
+  // into `min`, which gave `min.time` an arbitrary value and made a parsed `Bounds` compare
+  // unequal to a constructed one.
   const LatLong corner{location.latitude, location.longitude, location.elevation};
 
   // TODO: compare all values? In case min/max is not initialized correctly.
@@ -396,8 +398,9 @@ double Segment::ComputeLength3D() const
 
 namespace {
 
-// Finds the earliest and latest timestamp of `points` by comparing the unparsed strings, so that
-// only those two have to be parsed instead of every one of them. See #19.
+// Finds the earliest and latest timestamp of `points`. Parsing every timestamp made time bounds
+// slow, about 95 ns per point (#19), so this compares the unparsed text to find the earliest and
+// latest and parses only those two.
 //
 // Returns nullopt when the strings do not describe the order of the times they parse to: a
 // timestamp that `value()` has already replaced with a time point, a form that
@@ -425,8 +428,8 @@ std::optional<TimeBounds> ComputeTimeBoundsFromStrings(std::span<const LatLong> 
       latest = time_string;
       continue;
     }
-    // Every string is compared against `earliest`, which is only ever replaced by one of the same
-    // length, so this holds all of them to a single length.
+    // Every string must be as long as the first one. Otherwise fall back to parsing every
+    // timestamp.
     if (time_string->size() != earliest->size())
     {
       return std::nullopt;
@@ -444,8 +447,10 @@ std::optional<TimeBounds> ComputeTimeBoundsFromStrings(std::span<const LatLong> 
   TimeBounds computed_bounds;
   if (earliest.has_value())
   {
-    // Anything between these two is within the range of `system_clock` if they both are, so
-    // parsing only the two still reports every timestamp the slow path would have rejected.
+    // Every string has passed `is_sortable_gpx_time`, so it is well formed. Parsing it can only
+    // fail on a date out of range: outside the range of `system_clock`, or in year 0000. If the
+    // earliest and latest are in range, every time between them is too. So parsing just these two
+    // catches the same errors as parsing all of them.
     computed_bounds.Add(parse_gpx_time(*earliest));
     computed_bounds.Add(parse_gpx_time(*latest));
   }

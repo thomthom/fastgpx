@@ -11,11 +11,13 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(pugixml)
 
-# pugixml and fastgpx-static are linked only into the extension and the executables in this tree,
-# so nothing outside needs their symbols. With default visibility, a -fPIC build makes every
-# function interposable at load time, and GCC then refuses to inline pugixml into the parse loop
-# under link-time optimization ("function body can be overwritten at link time"). Hidden
-# visibility makes the functions local to the extension. No effect with MSVC.
+# pugixml and fastgpx-static are linked only into the binaries in this project (the Python
+# extension, the tests, the fuzzers, fastgpxcli and profile_load), so nothing outside needs their
+# symbols. With default visibility, a -fPIC build makes every function interposable: another
+# library loaded into the process can replace it with its own definition at load time. GCC then
+# refuses to inline pugixml into the parse loop under link-time optimization ("function body can
+# be overwritten at link time"). Hidden visibility makes the functions local to the extension. No
+# effect with MSVC.
 # See benchmarks/review_decisions.md.
 set_target_properties(pugixml-static PROPERTIES
   CXX_VISIBILITY_PRESET hidden
@@ -167,10 +169,13 @@ else()
   set(FASTGPX_NANOBIND_BACKEND nanobind_backend)
 endif()
 
-# nanobind compiles the binding code for size. With GCC, the libstdc++ helpers the linker keeps
-# then come from the -Os object and cannot be inlined into the -O3 parser under link-time
-# optimization; compiling for speed makes the Linux wheel's upload path about 7% faster. With MSVC
-# it made parsing slightly slower, so it stays off there. See benchmarks/review_decisions.md.
+# By default nanobind compiles the binding code for size (-Os, or /Os with MSVC) in Release,
+# RelWithDebInfo and MinSizeRel builds. Its NOMINSIZE option ("no minimum size") turns that off,
+# so the binding code gets the build's normal optimization level. With GCC and -Os, the
+# libstdc++ helpers the linker keeps come from the -Os object and cannot be inlined into the -O3
+# parser under link-time optimization; compiling for speed makes the Linux wheel's upload path
+# about 7% faster. With MSVC it made parsing slightly slower, so it stays off there.
+# See benchmarks/review_decisions.md.
 if(MSVC)
   set(FASTGPX_NOMINSIZE_DEFAULT OFF)
 else()

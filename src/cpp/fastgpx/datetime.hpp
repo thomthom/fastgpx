@@ -36,9 +36,8 @@ std::chrono::system_clock::time_point parse_gpx_time(std::string_view time_str);
 /**
  * @brief Parses `time_str` the way `parse_gpx_time` does, returning nullopt instead of throwing.
  *
- * For callers that have to do something sensible with a timestamp they cannot read, rather than
- * report it. `TimePoint::operator==` uses it so that comparing two points from a file with a
- * malformed `<time>` is still well defined.
+ * For callers that must not throw on a malformed timestamp. `TimePoint::operator==` uses it, so
+ * comparing points never throws.
  *
  * @param time_str The ISO 8601 date-time string to parse.
  */
@@ -47,10 +46,10 @@ std::optional<std::chrono::system_clock::time_point> try_parse_gpx_time(std::str
 /**
  * @brief Reports whether the byte order of `time_str` matches its chronological order.
  *
- * True for `YYYY-MM-DDThh:mm:ssZ` and `YYYY-MM-DDThh:mm:ss.sssZ` when every field names a real
- * calendar date and time. Two such strings compare the same way as the time points they parse
- * to, as long as they are the same length; a 20 character string compares its `Z` against the
- * fraction separator of a 24 character one, which is not the order of the times.
+ * Returns true for `YYYY-MM-DDThh:mm:ssZ` and `YYYY-MM-DDThh:mm:ss.sssZ` when every field is a
+ * valid date and time. Two such strings of the same length sort in the same order as the times
+ * they represent. Strings of different lengths don't, because the short form's `Z` is compared
+ * with the long form's `.`.
  *
  * `Segment::ComputeTimeBounds` uses this to pick the earliest and latest timestamp of a segment
  * from the unparsed strings, so that only those two have to be parsed.
