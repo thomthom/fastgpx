@@ -6,7 +6,7 @@
 
 ## Test machine
 
-| Device name   |	HAL-9000                                      |
+| Device name   | HAL-9000                                      |
 |---------------|-----------------------------------------------|
 | Processor     | AMD Ryzen 7 5800X 8-Core Processor (3.80 GHz) |
 | Installed RAM | 32.0 GB                                       |

@@ -34,14 +34,14 @@ emulation on an ARM64 machine (Snapdragon X X1P64100, Windows 11), so the absolu
 higher than on native x64 hardware. An earlier native x64 measurement quoted in #47 (`v6` around
 86 ns, the others 450 to 720 ns) was never written down beyond the issue. The ordering is the same.
 
-| Variant                                | Run 1   | Run 2   | Run 3   |
-|----------------------------------------|---------|---------|---------|
-| v1 `std::get_time`                     | 1.55 us | 1.55 us | 1.58 us |
-| v2 `std::chrono::parse` (`utc_clock`)  | 3.38 us | 3.56 us | 3.77 us |
-| v3 `std::chrono::parse` (`sys_time`)   | 4.02 us | 4.02 us | 3.75 us |
-| v4 `std::from_chars`, unchecked        | 70.0 ns | 74.9 ns | 67.3 ns |
-| v5 tokenising parser                   | 2.60 us | 3.51 us | 3.06 us |
-| v6 `parse_gpx_time`                    | 355 ns  | 324 ns  | 353 ns  |
+| Variant                               | Run 1   | Run 2   | Run 3   |
+|---------------------------------------|---------|---------|---------|
+| v1 `std::get_time`                    | 1.55 us | 1.55 us | 1.58 us |
+| v2 `std::chrono::parse` (`utc_clock`) | 3.38 us | 3.56 us | 3.77 us |
+| v3 `std::chrono::parse` (`sys_time`)  | 4.02 us | 4.02 us | 3.75 us |
+| v4 `std::from_chars`, unchecked       | 70.0 ns | 74.9 ns | 67.3 ns |
+| v5 tokenising parser                  | 2.60 us | 3.51 us | 3.06 us |
+| v6 `parse_gpx_time`                   | 355 ns  | 324 ns  | 353 ns  |
 
 Takeaways:
 

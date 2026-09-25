@@ -77,12 +77,12 @@ and record their own checks.
   `fuzz_*_corpus` replays. No sanitizer reports.
 - **Fuzz runs.** No crashes, leaks or timeouts:
 
-  | Target | Time | Runs |
-  |---|---:|---:|
-  | `fuzz_gpx` | 6 min | 2.0M |
-  | `fuzz_datetime` | 6 min | 9.3M |
-  | `fuzz_polyline` | 2 min | 2.3M |
-  | `fuzz_polyline_encode` | 2 min | 2.2M |
+| Target                 |  Time | Runs |
+|------------------------|------:|-----:|
+| `fuzz_gpx`             | 6 min | 2.0M |
+| `fuzz_datetime`        | 6 min | 9.3M |
+| `fuzz_polyline`        | 2 min | 2.3M |
+| `fuzz_polyline_encode` | 2 min | 2.2M |
 
 - **MSVC 19.51:** Catch2 and CTest pass (62/62).
 - **Python on Windows:** 200 passed, and the stubs did not drift.
@@ -201,46 +201,46 @@ Linux (WSL2, GCC 14.2, Python 3.12.3), `gpx/sleipnir`, 106 files, 1.35 million p
 point, the sum of each file's best of 5 rounds, median of 5 alternated runs. The first column is
 `main` as it ships (RelWithDebInfo), for reference; the comparison is between the next two.
 
-| `no_copy` step | main as shipped | main Release+LTO | branch Release+LTO | branch Release |
-|---|---:|---:|---:|---:|
-| `content.decode` | 6.2 | 5.9 | 6.2 | 6.0 |
-| `fastgpx.parse(text)` | 172.3 | 192.6 | 185.7 | **169.1** |
-| track time bounds | 72.2 | 64.8 | **12.6** | 11.8 |
-| `list(segment.points)` | 45.3 | 45.2 | **57.7** | 59.2 |
-| `(lon, lat)` tuples | 71.7 | 69.7 | 68.2 | 68.7 |
-| segment bounds, length, time bounds | 30.8 | 30.5 | 30.7 | 31.2 |
-| freeing the point lists | 13.3 | 13.2 | **21.4** | 21.5 |
-| **total** | 414.8 | 423.6 | **382.6** | **367.6** |
+| `no_copy` step                      | main as shipped | main Release+LTO | branch Release+LTO | branch Release |
+|-------------------------------------|----------------:|-----------------:|-------------------:|---------------:|
+| `content.decode`                    |             6.2 |              5.9 |                6.2 |            6.0 |
+| `fastgpx.parse(text)`               |           172.3 |            192.6 |              185.7 |      **169.1** |
+| track time bounds                   |            72.2 |             64.8 |           **12.6** |           11.8 |
+| `list(segment.points)`              |            45.3 |             45.2 |           **57.7** |           59.2 |
+| `(lon, lat)` tuples                 |            71.7 |             69.7 |               68.2 |           68.7 |
+| segment bounds, length, time bounds |            30.8 |             30.5 |               30.7 |           31.2 |
+| freeing the point lists             |            13.3 |             13.2 |           **21.4** |           21.5 |
+| **total**                           |           414.8 |            423.6 |          **382.6** |      **367.6** |
 
-| `current` step | main as shipped | main Release+LTO | branch Release+LTO | branch Release |
-|---|---:|---:|---:|---:|
-| `fastgpx.parse(text)` | 172.3 | 192.5 | 185.0 | 168.6 |
-| track time bounds | 72.1 | 64.6 | 12.6 | 11.8 |
-| `list(segment.points)` | 45.2 | 45.7 | 56.6 | 58.4 |
-| a new `LatLong` per point | 122.3 | 118.8 | 122.3 | 127.5 |
-| tuples from the copies | 75.4 | 72.9 | 71.4 | 71.4 |
-| freeing the point lists | 27.0 | 27.3 | 38.8 | 38.5 |
-| **total** (all steps) | 553.1 | 559.9 | 525.5 | 512.3 |
+| `current` step            | main as shipped | main Release+LTO | branch Release+LTO | branch Release |
+|---------------------------|----------------:|-----------------:|-------------------:|---------------:|
+| `fastgpx.parse(text)`     |           172.3 |            192.5 |              185.0 |          168.6 |
+| track time bounds         |            72.1 |             64.6 |               12.6 |           11.8 |
+| `list(segment.points)`    |            45.2 |             45.7 |               56.6 |           58.4 |
+| a new `LatLong` per point |           122.3 |            118.8 |              122.3 |          127.5 |
+| tuples from the copies    |            75.4 |             72.9 |               71.4 |           71.4 |
+| freeing the point lists   |            27.0 |             27.3 |               38.8 |           38.5 |
+| **total** (all steps)     |           553.1 |            559.9 |              525.5 |          512.3 |
 
 Windows (MSVC, Python 3.12.7), same files and method. Release on both sides:
 
-| `gpx/sleipnir` step | main as shipped | main Release | branch Release |
-|---|---:|---:|---:|
-| `fastgpx.parse(text)` | 503.1 | 438.2 | 397.6 |
-| track time bounds | 184.1 | 173.5 | 18.0 |
-| `list(segment.points)` | 51.7 | 50.3 | 75.9 |
-| freeing the point lists | 14.2 | 14.2 | 25.5 |
-| **`no_copy` total** | 885.5 | 808.6 | 647.3 |
-| **`current` total** | 1060.8 | 979.0 | 815.3 |
+| `gpx/sleipnir` step     | main as shipped | main Release | branch Release |
+|-------------------------|----------------:|-------------:|---------------:|
+| `fastgpx.parse(text)`   |           503.1 |        438.2 |          397.6 |
+| track time bounds       |           184.1 |        173.5 |           18.0 |
+| `list(segment.points)`  |            51.7 |         50.3 |           75.9 |
+| freeing the point lists |            14.2 |         14.2 |           25.5 |
+| **`no_copy` total**     |           885.5 |        808.6 |          647.3 |
+| **`current` total**     |          1060.8 |        979.0 |          815.3 |
 
 `gpx/TET` (34 files, 1.66 million points, mostly untimed), totals only:
 
-| | main as shipped | main Release(+LTO on Linux) | branch Release+LTO | branch Release |
-|---|---:|---:|---:|---:|
-| Linux `no_copy` | 328.1 | 331.8 | 326.3 | 324.7 |
-| Linux `current` | 461.5 | 467.6 | 461.9 | 470.1 |
-| Windows `no_copy` | 708.0 | 664.8 | – | 605.4 |
-| Windows `current` | 876.5 | 826.8 | – | 762.4 |
+|                   | main as shipped | main Release(+LTO on Linux) | branch Release+LTO | branch Release |
+|-------------------|----------------:|----------------------------:|-------------------:|---------------:|
+| Linux `no_copy`   |           328.1 |                       331.8 |              326.3 |          324.7 |
+| Linux `current`   |           461.5 |                       467.6 |              461.9 |          470.1 |
+| Windows `no_copy` |           708.0 |                       664.8 |                  – |          605.4 |
+| Windows `current` |           876.5 |                       826.8 |                  – |          762.4 |
 
 A separate check of `parse(text)` and `load(path)` alone, three alternated runs, agreed: on the
 Sleipnir files the branch parses in 161–169 ns per point without link-time optimization and
@@ -282,13 +282,13 @@ inferred from the report; the hot instructions were not profiled):
 
 Parse time per point on Linux (GCC 14.2), three alternated rounds:
 
-| Build | `gpx/sleipnir` | `gpx/TET` |
-|---|---:|---:|
-| Release (what this item ships) | 164 | 109–111 |
-| Release + link-time optimization | 182–183 | 113–116 |
-| nanobind `NOMINSIZE`, no link-time optimization | 154–164 | 105–110 |
-| `NOMINSIZE` + link-time optimization | 159–163 | 105–109 |
-| `NOMINSIZE` + link-time optimization + `-fno-semantic-interposition` | **130–140** | **86–92** |
+| Build                                                                | `gpx/sleipnir` | `gpx/TET` |
+|----------------------------------------------------------------------|---------------:|----------:|
+| Release (what this item ships)                                       |            164 |   109–111 |
+| Release + link-time optimization                                     |        182–183 |   113–116 |
+| nanobind `NOMINSIZE`, no link-time optimization                      |        154–164 |   105–110 |
+| `NOMINSIZE` + link-time optimization                                 |        159–163 |   105–109 |
+| `NOMINSIZE` + link-time optimization + `-fno-semantic-interposition` |    **130–140** | **86–92** |
 
 With both fixes, the extension's inlining report looks like `profile_load`'s. `NOMINSIZE` alone
 also makes `list(points)` plus the free about 10 ns per point faster. That last build is a
@@ -348,23 +348,23 @@ slower there.
 Linux (WSL2, GCC 14.2 pinned with `CC=gcc-14 CXX=g++-14`, Python 3.12.3). ns per point, the sum
 of each file's best of 5 rounds, median of 5 alternated runs. "Hidden" is the visibility change.
 
-| `gpx/sleipnir`, `no_copy` step | HEAD (Release) | hidden + `NOMINSIZE` + LTO (**shipped**) | hidden + LTO | hidden + `NOMINSIZE` |
-|---|---:|---:|---:|---:|
-| `content.decode` | 5.4 | 5.3 | 5.6 | 5.5 |
-| `fastgpx.parse(text)` | 167.4 | **136.6** | 157.3 | 154.3 |
-| track time bounds | 11.7 | 9.8 | 10.6 | 10.4 |
-| `list(segment.points)` | 58.2 | 50.4 | 56.9 | 50.8 |
-| `(lon, lat)` tuples | 67.0 | 68.6 | 68.1 | 69.2 |
-| segment bounds, length, time bounds | 30.5 | 30.1 | 30.3 | 30.6 |
-| freeing the point lists | 20.3 | 19.2 | 19.8 | 19.5 |
-| **total** | 359.4 | **322.4** | 348.4 | 341.0 |
+| `gpx/sleipnir`, `no_copy` step      | HEAD (Release) | hidden + `NOMINSIZE` + LTO (**shipped**) | hidden + LTO | hidden + `NOMINSIZE` |
+|-------------------------------------|---------------:|-----------------------------------------:|-------------:|---------------------:|
+| `content.decode`                    |            5.4 |                                      5.3 |          5.6 |                  5.5 |
+| `fastgpx.parse(text)`               |          167.4 |                                **136.6** |        157.3 |                154.3 |
+| track time bounds                   |           11.7 |                                      9.8 |         10.6 |                 10.4 |
+| `list(segment.points)`              |           58.2 |                                     50.4 |         56.9 |                 50.8 |
+| `(lon, lat)` tuples                 |           67.0 |                                     68.6 |         68.1 |                 69.2 |
+| segment bounds, length, time bounds |           30.5 |                                     30.1 |         30.3 |                 30.6 |
+| freeing the point lists             |           20.3 |                                     19.2 |         19.8 |                 19.5 |
+| **total**                           |          359.4 |                                **322.4** |        348.4 |                341.0 |
 
-| Totals | HEAD | shipped | hidden + LTO | hidden + `NOMINSIZE` |
-|---|---:|---:|---:|---:|
-| `gpx/sleipnir`, `current` | 497.6 | **456.7** | 485.6 | 477.3 |
-| `gpx/TET`, `no_copy` | 320.5 | **301.6** | 307.9 | 317.3 |
-| `gpx/TET`, `current` | 455.9 | **437.0** | 444.9 | 449.4 |
-| `gpx/sleipnir` parse, range over the 5 runs | 165–174 | 136–141 | 155–160 | 151–158 |
+| Totals                                      |    HEAD |   shipped | hidden + LTO | hidden + `NOMINSIZE` |
+|---------------------------------------------|--------:|----------:|-------------:|---------------------:|
+| `gpx/sleipnir`, `current`                   |   497.6 | **456.7** |        485.6 |                477.3 |
+| `gpx/TET`, `no_copy`                        |   320.5 | **301.6** |        307.9 |                317.3 |
+| `gpx/TET`, `current`                        |   455.9 | **437.0** |        444.9 |                449.4 |
+| `gpx/sleipnir` parse, range over the 5 runs | 165–174 |   136–141 |      155–160 |              151–158 |
 
 On Sleipnir's files, the path production is moving to is 10% faster in total, and parsing is 18%
 faster. `NOMINSIZE` accounts for about 26 ns per point of that. Link-time optimization gains
@@ -373,28 +373,28 @@ little without it, and it gains less without link-time optimization.
 Windows (MSVC 19.51, Python 3.12.7), same method. Hidden visibility changes nothing with MSVC, so
 the shipped Windows wheel has the same flags as HEAD:
 
-| Step or total | HEAD (**shipped**) | `NOMINSIZE` | LTO | `NOMINSIZE` + LTO |
-|---|---:|---:|---:|---:|
-| `gpx/sleipnir` `fastgpx.parse(text)` | 394.6 | 406.4 | 334.8 | 325.9 |
-| `gpx/sleipnir`, `no_copy` total | 652.0 | 659.8 | 592.2 | 580.4 |
-| `gpx/sleipnir`, `current` total | 822.8 | 837.5 | 759.2 | 751.9 |
-| `gpx/TET`, `no_copy` total | 605.0 | 603.7 | 592.0 | 567.8 |
-| `gpx/TET`, `current` total | 767.2 | 771.2 | 756.6 | 733.4 |
-| `polyline.encode` from Python, ns/point | 10.1 | 10.2 | 10.9 | 11.1 |
-| `polyline.decode` from Python, ns/point | 60 | 59 | 63 | 64 |
+| Step or total                           | HEAD (**shipped**) | `NOMINSIZE` |   LTO | `NOMINSIZE` + LTO |
+|-----------------------------------------|-------------------:|------------:|------:|------------------:|
+| `gpx/sleipnir` `fastgpx.parse(text)`    |              394.6 |       406.4 | 334.8 |             325.9 |
+| `gpx/sleipnir`, `no_copy` total         |              652.0 |       659.8 | 592.2 |             580.4 |
+| `gpx/sleipnir`, `current` total         |              822.8 |       837.5 | 759.2 |             751.9 |
+| `gpx/TET`, `no_copy` total              |              605.0 |       603.7 | 592.0 |             567.8 |
+| `gpx/TET`, `current` total              |              767.2 |       771.2 | 756.6 |             733.4 |
+| `polyline.encode` from Python, ns/point |               10.1 |        10.2 |  10.9 |              11.1 |
+| `polyline.decode` from Python, ns/point |                 60 |          59 |    63 |                64 |
 
 The Python polyline figures cover every segment of `gpx/sleipnir`, best of 7, over three
 alternated runs. The runs agreed within 0.2 ns for encoding and 3 ns for decoding.
 
 Catch2 benchmarks, median of the means over 5 alternated runs, 50 samples each:
 
-| Benchmark | Linux HEAD | Linux hidden | Linux hidden + LTO | Windows Release | Windows LTO |
-|---|---:|---:|---:|---:|---:|
-| `polyline::encode` 10k, precision 5 | 72.5 µs | 73.2 µs | 67.7 µs | 75.3 µs | 78.7 µs |
-| `polyline::encode` 10k, precision 6 | 79.4 µs | 73.7 µs | 74.2 µs | 84.3 µs | 95.9 µs |
-| `polyline::decode` 10k, precision 5 | 62.5 µs | 57.3 µs | 59.3 µs | 292 µs | 309 µs |
-| `polyline::decode` 10k, precision 6 | 67.8 µs | 65.8 µs | 67.4 µs | 247 µs | 329 µs |
-| `parse_gpx_time` | 23.6 ns | 23.7 ns | 35.0 ns | – | – |
+| Benchmark                           | Linux HEAD | Linux hidden | Linux hidden + LTO | Windows Release | Windows LTO |
+|-------------------------------------|-----------:|-------------:|-------------------:|----------------:|------------:|
+| `polyline::encode` 10k, precision 5 |    72.5 µs |      73.2 µs |            67.7 µs |         75.3 µs |     78.7 µs |
+| `polyline::encode` 10k, precision 6 |    79.4 µs |      73.7 µs |            74.2 µs |         84.3 µs |     95.9 µs |
+| `polyline::decode` 10k, precision 5 |    62.5 µs |      57.3 µs |            59.3 µs |          292 µs |      309 µs |
+| `polyline::decode` 10k, precision 6 |    67.8 µs |      65.8 µs |            67.4 µs |          247 µs |      329 µs |
+| `parse_gpx_time`                    |    23.6 ns |      23.7 ns |            35.0 ns |               – |           – |
 
 From Python on Linux, polyline encoding stayed at 8.3 ns per point, and decoding went from
 41–43 to 40 ns. The `parse_gpx_time` cost of link-time optimization is the one described in
@@ -404,15 +404,15 @@ From Python on Linux, polyline encoding stayed at 8.3 ns per point, and decoding
 Size, in bytes. The Linux extension and wheel got smaller, because the hidden symbols are no
 longer exported. `NOMINSIZE` costs about 110 KB of the extension:
 
-| Build | Linux `.so` | Linux wheel | Windows `.pyd` | Windows wheel |
-|---|---:|---:|---:|---:|
-| HEAD | 572,504 | 233,731 | 444,416 | 201,588 |
-| shipped | 377,104 | 173,184 | 444,416 | 201,589 |
-| hidden + LTO, no `NOMINSIZE` | 266,544 | 122,513 | – | – |
-| hidden + `NOMINSIZE`, no LTO | 598,616 | 259,385 | – | – |
-| `NOMINSIZE` | – | – | 455,680 | 204,529 |
-| LTO | – | – | 430,592 | 198,191 |
-| `NOMINSIZE` + LTO | – | – | 441,344 | 199,772 |
+| Build                        | Linux `.so` | Linux wheel | Windows `.pyd` | Windows wheel |
+|------------------------------|------------:|------------:|---------------:|--------------:|
+| HEAD                         |     572,504 |     233,731 |        444,416 |       201,588 |
+| shipped                      |     377,104 |     173,184 |        444,416 |       201,589 |
+| hidden + LTO, no `NOMINSIZE` |     266,544 |     122,513 |              – |             – |
+| hidden + `NOMINSIZE`, no LTO |     598,616 |     259,385 |              – |             – |
+| `NOMINSIZE`                  |           – |           – |        455,680 |       204,529 |
+| LTO                          |           – |           – |        430,592 |       198,191 |
+| `NOMINSIZE` + LTO            |           – |           – |        441,344 |       199,772 |
 
 Where the numbers came from. Wheels were built with `uv build --wheel` from HEAD (b01d107) and
 from the working tree with this change, each installed into its own venv. The variants were built
@@ -540,22 +540,22 @@ of `pyproject.toml`: Release, link-time optimization, `NOMINSIZE`). `gpx/sleipni
 1.35 million points. ns per point, the sum of each file's best of 5 rounds, median of 5 alternated
 runs, with the range over the runs:
 
-| `no_copy` step | HEAD | this change |
-|---|---:|---:|
-| `content.decode` | 6.8 | 6.4 |
-| `fastgpx.parse(text)` | 142.7 (141.8–145.7) | **135.7** (134.9–136.5) |
-| track time bounds | 10.1 | 10.1 |
-| `list(segment.points)` | 55.2 (53.9–56.6) | **40.1** (38.9–41.2) |
-| `(lon, lat)` tuples | 70.2 | 70.1 |
-| segment bounds, length, time bounds | 31.3 | 31.0 |
-| freeing the point lists | 20.9 (19.6–21.4) | **13.3** (13.0–13.5) |
-| **total** | 338.0 (332.8–344.9) | **307.5** (304.5–310.1) |
+| `no_copy` step                      |                HEAD |             this change |
+|-------------------------------------|--------------------:|------------------------:|
+| `content.decode`                    |                 6.8 |                     6.4 |
+| `fastgpx.parse(text)`               | 142.7 (141.8–145.7) | **135.7** (134.9–136.5) |
+| track time bounds                   |                10.1 |                    10.1 |
+| `list(segment.points)`              |    55.2 (53.9–56.6) |    **40.1** (38.9–41.2) |
+| `(lon, lat)` tuples                 |                70.2 |                    70.1 |
+| segment bounds, length, time bounds |                31.3 |                    31.0 |
+| freeing the point lists             |    20.9 (19.6–21.4) |    **13.3** (13.0–13.5) |
+| **total**                           | 338.0 (332.8–344.9) | **307.5** (304.5–310.1) |
 
-| `current` | HEAD | this change |
-|---|---:|---:|
-| `list(segment.points)` | 53.8 | 41.1 |
-| freeing the point lists | 38.5 | 27.9 |
-| **total** | 483.9 | 452.8 |
+| `current`               |  HEAD | this change |
+|-------------------------|------:|------------:|
+| `list(segment.points)`  |  53.8 |        41.1 |
+| freeing the point lists |  38.5 |        27.9 |
+| **total**               | 483.9 |       452.8 |
 
 On the path production is moving to, the total drops by 9%. Copying and freeing are back at or
 below `main` as shipped (45.3 and 13.3 in the second item). Parsing is 7 ns per point faster,
@@ -566,27 +566,27 @@ session: `parse` ranged from 395 to 520 ns per point on the same build. The load
 runs and hit both builds of a pair alike. So the table gives the two quiet runs (3 and 4) as well
 as the median of all 5:
 
-| `no_copy` step | HEAD, runs 3–4 | this change, runs 3–4 | HEAD, median of 5 | this change, median of 5 |
-|---|---:|---:|---:|---:|
-| `fastgpx.parse(text)` | 413–416 | 395–397 | 451.2 | 483.2 |
-| track time bounds | 18.8–19.0 | 14.4 | 20.7 | 15.3 |
-| `list(segment.points)` | 87 | 57–58 | 98.7 | 65.0 |
-| freeing the point lists | 26–27 | 15 | 30.3 | 17.4 |
-| **total** | 686–687 | **622–623** | 748.4 | 737.6 |
-| `current` total | 869–875 | 816 | 962.9 | 974.8 |
+| `no_copy` step          | HEAD, runs 3–4 | this change, runs 3–4 | HEAD, median of 5 | this change, median of 5 |
+|-------------------------|---------------:|----------------------:|------------------:|-------------------------:|
+| `fastgpx.parse(text)`   |        413–416 |               395–397 |             451.2 |                    483.2 |
+| track time bounds       |      18.8–19.0 |                  14.4 |              20.7 |                     15.3 |
+| `list(segment.points)`  |             87 |                 57–58 |              98.7 |                     65.0 |
+| freeing the point lists |          26–27 |                    15 |              30.3 |                     17.4 |
+| **total**               |        686–687 |           **622–623** |             748.4 |                    737.6 |
+| `current` total         |        869–875 |                   816 |             962.9 |                    974.8 |
 
 In each of the 5 pairs, the `no_copy` total was lower with this change, by 62, 76, 65, 62 and 11 ns
 per point.
 
 Catch2, median of the means over 5 alternated runs, 50 samples each:
 
-| Benchmark | Linux HEAD | Linux change | Windows HEAD | Windows change |
-|---|---:|---:|---:|---:|
-| copy and free 19,962 points (new) | 525 µs | **81 µs** | 1,489 µs | **374 µs** |
-| `parse_gpx_time` | 22 ns | 22 ns | 69 ns | 65 ns |
-| `LoadGpx` TopCamp 20240518 | 3.51 ms | 3.22 ms | 15.5 ms | 11.8 ms |
-| `LoadGpx` TopCamp 20240520 | 4.49 ms | 3.88 ms | 15.2 ms | 14.6 ms |
-| `Segment::GetTimeBounds` | 53.9 µs | 57.7 µs | 159 µs | 120 µs |
+| Benchmark                         | Linux HEAD | Linux change | Windows HEAD | Windows change |
+|-----------------------------------|-----------:|-------------:|-------------:|---------------:|
+| copy and free 19,962 points (new) |     525 µs |    **81 µs** |     1,489 µs |     **374 µs** |
+| `parse_gpx_time`                  |      22 ns |        22 ns |        69 ns |          65 ns |
+| `LoadGpx` TopCamp 20240518        |    3.51 ms |      3.22 ms |      15.5 ms |        11.8 ms |
+| `LoadGpx` TopCamp 20240520        |    4.49 ms |      3.88 ms |      15.2 ms |        14.6 ms |
+| `Segment::GetTimeBounds`          |    53.9 µs |      57.7 µs |       159 µs |         120 µs |
 
 The Linux `GetTimeBounds` median is 7% higher, but the ranges overlap (53.5–59.6 against
 53.4–60.0), and the same step from Python did not change (10.1 ns per point on both). The Windows
@@ -599,10 +599,10 @@ uncommitted. Wheels were built with `uv build --wheel`, each installed into its 
 in `~/fastgpx-review-results/v3/results/{ingest,c2}/linux-<build>-run<N>.*`, on Windows in the session
 scratchpad as `v3win/{ingest,c2}/win-<build>-run<N>.*`. Extensions by MD5:
 
-| Build | Linux `.so` | Windows `.pyd` |
-|---|---|---|
-| HEAD | c40607a1a9 (same as "shipped" in the previous item) | 1476727abe |
-| this change | 5d7562f1c4 | 26032136cb |
+| Build       | Linux `.so`                                         | Windows `.pyd` |
+|-------------|-----------------------------------------------------|----------------|
+| HEAD        | c40607a1a9 (same as "shipped" in the previous item) | 1476727abe     |
+| this change | 5d7562f1c4                                          | 26032136cb     |
 
 Verified:
 
@@ -739,12 +739,12 @@ Three follow-ups the user decided from the open points above.
   reported as `FASTGPX_LTO: OFF`. After the fix, a GCC 14 configure without the Python module gives
   the following:
 
-  | Setting | Compile commands with `-flto` |
-  |---|---:|
-  | `FASTGPX_LTO=ON` | 6 of 6 |
-  | the same, plus `CMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF` | 0 of 6 |
-  | `CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON` alone | 6 of 6 |
-  | default | 0 of 6 |
+| Setting                                                 | Compile commands with `-flto` |
+|---------------------------------------------------------|------------------------------:|
+| `FASTGPX_LTO=ON`                                        |                        6 of 6 |
+| the same, plus `CMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF` |                        0 of 6 |
+| `CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON` alone           |                        6 of 6 |
+| default                                                 |                        0 of 6 |
 - The UTC `system_clock::time_point` caster now accepts only `datetime.datetime` and its
   subclasses; anything else is a `TypeError`. That makes the separate `utc_datetime` type from the
   previous item redundant, so it is gone and `LatLong` uses the same caster again. This covers the
@@ -968,18 +968,18 @@ Upload path on `gpx/sleipnir` (106 files, 1,349,258 points), ns per point, media
 three variants alternate within each run, so `no_copy` and `lonlat` come from the same build and
 the same runs:
 
-| Step | Linux `no_copy` | Linux `lonlat` | Windows `no_copy` | Windows `lonlat` |
-|---|---:|---:|---:|---:|
-| `content.decode("utf-8")` | 5.7 | 5.7 | 20.3 | 20.4 |
-| `fastgpx.parse(text)` | 131.5 | 131.5 | 504.1 | 507.6 |
-| `track.time_bounds()` and its start/end | 9.8 | 9.8 | 16.3 | 16.4 |
-| `list(segment.points)` | 39.4 | – | 73.6 | – |
-| `(lon, lat)` tuples from the points | 68.2 | – | 109.2 | – |
-| `segment.lonlat()` | – | 37.2 | – | 46.1 |
-| segment bounds, `length_2d`, time bounds | 30.1 | 29.8 | 33.8 | 32.6 |
-| freeing the point lists | 13.0 | – | 20.2 | – |
-| merge bounds | 0.3 | 0.3 | 0.5 | 0.5 |
-| **total** | **297.7** | **214.3** | **777.9** | **625.0** |
+| Step                                     | Linux `no_copy` | Linux `lonlat` | Windows `no_copy` | Windows `lonlat` |
+|------------------------------------------|----------------:|---------------:|------------------:|-----------------:|
+| `content.decode("utf-8")`                |             5.7 |            5.7 |              20.3 |             20.4 |
+| `fastgpx.parse(text)`                    |           131.5 |          131.5 |             504.1 |            507.6 |
+| `track.time_bounds()` and its start/end  |             9.8 |            9.8 |              16.3 |             16.4 |
+| `list(segment.points)`                   |            39.4 |              – |              73.6 |                – |
+| `(lon, lat)` tuples from the points      |            68.2 |              – |             109.2 |                – |
+| `segment.lonlat()`                       |               – |           37.2 |                 – |             46.1 |
+| segment bounds, `length_2d`, time bounds |            30.1 |           29.8 |              33.8 |             32.6 |
+| freeing the point lists                  |            13.0 |              – |              20.2 |                – |
+| merge bounds                             |             0.3 |            0.3 |               0.5 |              0.5 |
+| **total**                                |       **297.7** |      **214.3** |         **777.9** |        **625.0** |
 
 Per-run totals: Linux `no_copy` 296.6–317.8 and `lonlat` 213.5–229.8; Windows `no_copy`
 762.9–795.2 and `lonlat` 609.1–632.2. Every run favoured `lonlat`.
@@ -995,11 +995,11 @@ Per-run totals: Linux `no_copy` 296.6–317.8 and `lonlat` 213.5–229.8; Window
 One segment of 17,009 points (the largest in `gpx/sleipnir`), ns per point, median of 7 repeats
 of 5 calls with the garbage collector on:
 
-| | Linux | Windows |
-|---|---:|---:|
-| `[(p.longitude, p.latitude) for p in segment.points]` | 135.3 | 177.2 |
-| the same over `list(segment.points)` | 156.6 | 174.1 |
-| `segment.lonlat()` | 61.3 | 57.9 |
+|                                                       | Linux | Windows |
+|-------------------------------------------------------|------:|--------:|
+| `[(p.longitude, p.latitude) for p in segment.points]` | 135.3 |   177.2 |
+| the same over `list(segment.points)`                  | 156.6 |   174.1 |
+| `segment.lonlat()`                                    |  61.3 |    57.9 |
 
 `lonlat()` costs more per point on this segment than over the corpus (61 against 37 on Linux).
 With the garbage collector off it drops to 47 on Linux. The new tuples are tracked by the
@@ -1106,30 +1106,30 @@ server (each under a fifth of a core); WSL was idle. All wheels were built befor
 Linux: WSL2, GCC 14.2 (`CC=gcc-14 CXX=g++-14`), CMake 4.4.3, Python 3.12.3. `main` is `f4953bf`
 as shipped (RelWithDebInfo); the branch is `9016114` (Release, `FASTGPX_LTO`).
 
-| Step | `main`, `no_copy` | branch, `no_copy` | branch, `lonlat` |
-|---|---:|---:|---:|
-| `content.decode("utf-8")` | 5.7 | 5.0 | 4.7 |
-| `fastgpx.parse(text)` | 183.2 | 135.5 | 136.1 |
-| `track.time_bounds()` and its start/end | 76.0 | 10.3 | 10.3 |
-| `list(segment.points)` | 47.6 | 38.1 | – |
-| `(lon, lat)` tuples from the points | 74.8 | 70.1 | – |
-| `segment.lonlat()` | – | – | 38.6 |
-| segment bounds, `length_2d`, time bounds | 33.1 | 31.6 | 31.4 |
-| freeing the point lists | 15.2 | 13.2 | – |
-| merge bounds | 0.3 | 0.3 | 0.3 |
-| **total** | **433.5** | **304.0** | **221.5** |
+| Step                                     | `main`, `no_copy` | branch, `no_copy` | branch, `lonlat` |
+|------------------------------------------|------------------:|------------------:|-----------------:|
+| `content.decode("utf-8")`                |               5.7 |               5.0 |              4.7 |
+| `fastgpx.parse(text)`                    |             183.2 |             135.5 |            136.1 |
+| `track.time_bounds()` and its start/end  |              76.0 |              10.3 |             10.3 |
+| `list(segment.points)`                   |              47.6 |              38.1 |                – |
+| `(lon, lat)` tuples from the points      |              74.8 |              70.1 |                – |
+| `segment.lonlat()`                       |                 – |                 – |             38.6 |
+| segment bounds, `length_2d`, time bounds |              33.1 |              31.6 |             31.4 |
+| freeing the point lists                  |              15.2 |              13.2 |                – |
+| merge bounds                             |               0.3 |               0.3 |              0.3 |
+| **total**                                |         **433.5** |         **304.0** |        **221.5** |
 
 Per-run totals: `main` 427.3–457.4, branch `no_copy` 298.5–335.1, `lonlat` 215.6–249.0. Every
 pair favoured the branch.
 
 Windows: MSVC 19.51, Python 3.12.7, the Release wheel of `7a03e1d` against that of `24b3d2f`.
 
-| Step | `7a03e1d`, `no_copy` | `24b3d2f`, `no_copy` | `7a03e1d`, `current` | `24b3d2f`, `current` |
-|---|---:|---:|---:|---:|
-| `fastgpx.parse(text)` | 384.2 | 371.8 | 386.1 | 369.2 |
-| `list(segment.points)` | 73.4 | 47.9 | 73.6 | 47.6 |
-| freeing the point lists | 25.0 | 14.2 | 39.4 | 29.0 |
-| **total** | **630.0** | **575.4** | **795.7** | **734.8** |
+| Step                    | `7a03e1d`, `no_copy` | `24b3d2f`, `no_copy` | `7a03e1d`, `current` | `24b3d2f`, `current` |
+|-------------------------|---------------------:|---------------------:|---------------------:|---------------------:|
+| `fastgpx.parse(text)`   |                384.2 |                371.8 |                386.1 |                369.2 |
+| `list(segment.points)`  |                 73.4 |                 47.9 |                 73.6 |                 47.6 |
+| freeing the point lists |                 25.0 |                 14.2 |                 39.4 |                 29.0 |
+| **total**               |            **630.0** |            **575.4** |            **795.7** |            **734.8** |
 
 Per-run `no_copy` totals: 627.2–641.7 before, 566.6–597.2 after; `current` 789.7–807.0 before,
 726.5–748.8 after. Every pair favoured the change, in both variants.

@@ -8,8 +8,8 @@
 Measurements made for the nanobind 2.15 to 3.0.1 upgrade (#59). The C++ library is identical in
 every build; only the binding layer differs. Three builds of the same sources were compared:
 
-| Build | nanobind | Mode                                                           |
-|-------|----------|----------------------------------------------------------------|
+| Build | nanobind | Mode                                                            |
+|-------|----------|-----------------------------------------------------------------|
 | A     | 2.15.0   | linked, `NB_STATIC` + `STABLE_ABI` (the previous configuration) |
 | B     | 3.0.1    | linked, `NB_STATIC` + `STABLE_ABI`                              |
 | C     | 3.0.1    | split mode, `BACKEND_MODULE nanobind_backend` (adopted)         |
@@ -25,23 +25,23 @@ three builds were run interleaved (A, B, C, A, B, C, ...) on an otherwise idle m
 The GPX data is `gpx/2024 Great Roadtrip` (24 files); the segment used for the per-segment rows has
 5809 points.
 
-| Path                                          | A 2.15 linked | B 3.0.1 linked | C 3.0.1 split | B/A  | C/A  |
-|-----------------------------------------------|--------------:|---------------:|--------------:|-----:|-----:|
-| `load` + `length_2d`, all files               |        243778 |         261958 |        244735 | 1.07 | 1.00 |
-| `segment.points` (vector to list)             |          83.2 |           85.8 |          62.0 | 1.03 | 0.75 |
-| `gpx.tracks` (vector to list, 1 track)        |         0.087 |          0.088 |         0.088 | 1.01 | 1.01 |
-| `LatLong` attribute loop, 5809 points         |          1039 |           1068 |          1036 | 1.03 | 1.00 |
-| `LatLong(lat, lon, ele)`                      |         0.120 |          0.113 |         0.100 | 0.94 | 0.83 |
-| `latlong.latitude`                            |         0.064 |          0.066 |         0.064 | 1.03 | 1.00 |
-| `gpx.time_bounds()` (object only)             |         0.093 |          0.093 |         0.089 | 1.00 | 0.96 |
-| `tb.start_time` (C++ to `datetime`)           |          1.50 |           0.32 |          0.32 | 0.21 | 0.21 |
-| `TimeBounds(start, end)` (`datetime` to C++)  |          2.57 |           2.44 |          0.51 | 0.95 | 0.20 |
-| `TimeBounds().add(aware +02:00)`              |          1.79 |           1.70 |          0.71 | 0.95 | 0.40 |
-| `TimeBounds().add(naive)`                     |          0.88 |           0.83 |          0.16 | 0.95 | 0.18 |
-| `polyline.encode`, all segments of one file   |          3560 |           3532 |          2970 | 0.99 | 0.83 |
-| `polyline.decode`, one segment                |           561 |            569 |           529 | 1.01 | 0.94 |
-| `geo.haversine(ll, ll)`                       |         0.187 |          0.189 |         0.184 | 1.01 | 0.98 |
-| `repr(TimeBounds)`                            |          5.70 |           3.02 |          3.03 | 0.53 | 0.53 |
+| Path                                         | A 2.15 linked | B 3.0.1 linked | C 3.0.1 split |  B/A |  C/A |
+|----------------------------------------------|--------------:|---------------:|--------------:|-----:|-----:|
+| `load` + `length_2d`, all files              |        243778 |         261958 |        244735 | 1.07 | 1.00 |
+| `segment.points` (vector to list)            |          83.2 |           85.8 |          62.0 | 1.03 | 0.75 |
+| `gpx.tracks` (vector to list, 1 track)       |         0.087 |          0.088 |         0.088 | 1.01 | 1.01 |
+| `LatLong` attribute loop, 5809 points        |          1039 |           1068 |          1036 | 1.03 | 1.00 |
+| `LatLong(lat, lon, ele)`                     |         0.120 |          0.113 |         0.100 | 0.94 | 0.83 |
+| `latlong.latitude`                           |         0.064 |          0.066 |         0.064 | 1.03 | 1.00 |
+| `gpx.time_bounds()` (object only)            |         0.093 |          0.093 |         0.089 | 1.00 | 0.96 |
+| `tb.start_time` (C++ to `datetime`)          |          1.50 |           0.32 |          0.32 | 0.21 | 0.21 |
+| `TimeBounds(start, end)` (`datetime` to C++) |          2.57 |           2.44 |          0.51 | 0.95 | 0.20 |
+| `TimeBounds().add(aware +02:00)`             |          1.79 |           1.70 |          0.71 | 0.95 | 0.40 |
+| `TimeBounds().add(naive)`                    |          0.88 |           0.83 |          0.16 | 0.95 | 0.18 |
+| `polyline.encode`, all segments of one file  |          3560 |           3532 |          2970 | 0.99 | 0.83 |
+| `polyline.decode`, one segment               |           561 |            569 |           529 | 1.01 | 0.94 |
+| `geo.haversine(ll, ll)`                      |         0.187 |          0.189 |         0.184 | 1.01 | 0.98 |
+| `repr(TimeBounds)`                           |          5.70 |           3.02 |          3.03 | 0.53 | 0.53 |
 
 ## Benchmark scripts
 
